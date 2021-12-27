@@ -6,6 +6,8 @@ from .database import tanksInTrucks
 from .database import lastAssign
 from .database import database as connection
 
+from .schemas import UserBaseModel
+
 app = FastAPI(
     title='SCADA-IRGE',
     description='Api para servir OPC',
@@ -32,7 +34,13 @@ def shutdown():
 async def index():
     return 'Hola mundo desde FastApi'
 
+@app.post('/users/')
+async def register(user: UserBaseModel):
+    user = User.create(
+        username = user.username,
+        password = user.password,
+        categoria = user.categoria,
+        departamento = user.departamento
+    )
 
-@app.get('/about')
-async def about():
-    return 'About'
+    return user.id
