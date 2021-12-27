@@ -1,3 +1,4 @@
+from datetime import date, datetime, time
 from typing import Any
 from pydantic import validator
 from pydantic import BaseModel
@@ -63,6 +64,8 @@ class UserRequestModel(BaseModel):
 class UserResponseModel(ResponseModel):
     id: int
     username: str
+    categoria: int
+    departamento: str
 
 # --------- TanksWaiting ---------
 class TankWaitingRequestModel(BaseModel):
@@ -86,8 +89,8 @@ class TankWaitingResponseModel(ResponseModel):
     embarque: int
     capacidad: int
     conector: int
-    horaEntrada: str
-    fechaEntrada: str
+    horaEntrada: time
+    fechaEntrada: date
 
 class TankInServiceRequestModel(BaseModel):
     productoNombre: str
@@ -121,8 +124,8 @@ class TankInServiceResponseModel(ResponseModel):
     commSAP: int
     estatus: int
     llenadera: int
-    horaEntrada: str
-    fechaEntrada: str
+    horaEntrada: time
+    fechaEntrada: date
 
 
 class TankInTrucksRequestModel(BaseModel):
@@ -193,11 +196,11 @@ class TankInTrucksResponseModel(ResponseModel):
     temperatura: float
     presion: float
     modo: str
-    fechaEntrada: str
-    fechaInicio: str
-    fechaFin: str
-    fechaSalida: str
-    fechaJornada: str
+    fechaEntrada: datetime
+    fechaInicio: datetime
+    fechaFin: datetime
+    fechaSalida: datetime = None
+    fechaJornada: date
     tipoCarga: int
 
 
@@ -223,6 +226,6 @@ class TankAssignResponseModel(ResponseModel):
     conector: int
     embarque: int
     password: int
-    fecha: str
+    fecha: datetime
     llenadera: int
     posicion: int
