@@ -1,4 +1,9 @@
 from fastapi import FastAPI
+from .database import User
+from .database import tanksWaiting
+from .database import tanksInService
+from .database import tanksInTrucks
+from .database import lastAssign
 from .database import database as connection
 
 app = FastAPI(
@@ -12,7 +17,8 @@ app = FastAPI(
 def startup():
     if connection.is_closed():
         connection.connect()
-        print('connecting...')
+    
+    connection.create_tables([User, tanksWaiting, tanksInService, tanksInTrucks, lastAssign])
 
 
 @app.on_event('shutdown')
