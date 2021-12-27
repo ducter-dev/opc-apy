@@ -63,6 +63,8 @@ class UserRequestModel(BaseModel):
 class UserResponseModel(ResponseModel):
     id: int
     username: str
+    categoria: int
+    departamento: str
 
 # --------- TanksWaiting ---------
 class TankWaitingRequestModel(BaseModel):

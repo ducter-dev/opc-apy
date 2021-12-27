@@ -1,5 +1,7 @@
+from typing import List
 from fastapi import FastAPI
 from fastapi import HTTPException
+
 from .database import User
 from .database import TankWaiting
 from .database import TankInService
@@ -161,3 +163,8 @@ async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
     )
 
     return tankAssign
+
+@app.get('/users', response_model=List[UserResponseModel])
+async def get_users():
+    users = User.select()
+    return [ user for user in users ]
