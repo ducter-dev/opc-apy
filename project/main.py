@@ -50,4 +50,4 @@ async def create_user(user: UserRequestModel):
         departamento = user.departamento
     )
 
-    return UserResponseModel(success=True,id=user.id, username=user.username)
+    return user
