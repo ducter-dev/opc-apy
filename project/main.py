@@ -7,7 +7,8 @@ from .database import tanksInTrucks
 from .database import lastAssign
 from .database import database as connection
 
-from .schemas import UserBaseModel
+from .schemas import UserRequestModel
+from .schemas import UserResponseModel
 
 app = FastAPI(
     title='SCADA-IRGE',
@@ -35,8 +36,8 @@ def shutdown():
 async def index():
     return 'Hola mundo desde FastApi'
 
-@app.post('/users')
-async def create_user(user: UserBaseModel):
+@app.post('/users', response_model=UserResponseModel)
+async def create_user(user: UserRequestModel):
 
     if User.select().where(User.username == user.username).exists():
         return HTTPException(409, 'El usuario ya se encuentra en uso.')
@@ -49,8 +50,4 @@ async def create_user(user: UserBaseModel):
         departamento = user.departamento
     )
 
-    return {
-        'success': True,
-        'id': user.id,
-        'usuario': user.username
-    }
+    return UserResponseModel(success=True,id=user.id, username=user.username)

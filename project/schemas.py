@@ -1,7 +1,8 @@
+from peewee import BlobField
 from pydantic import validator
 from pydantic import BaseModel
 
-class UserBaseModel(BaseModel):
+class UserRequestModel(BaseModel):
     username: str
     password: str
     categoria: int
@@ -38,3 +39,8 @@ class UserBaseModel(BaseModel):
             raise ValueError('El departamento debe ser entre 3 y 20 caracteres.')
 
         return departamento
+
+class UserResponseModel(BaseModel):
+    success: bool
+    id: int
+    username: str
