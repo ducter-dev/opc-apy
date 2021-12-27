@@ -35,10 +35,11 @@ async def index():
     return 'Hola mundo desde FastApi'
 
 @app.post('/users')
-async def register(user: UserBaseModel):
+async def create_user(user: UserBaseModel):
+    hash_password = User.create_password(user.password)
     user = User.create(
         username = user.username,
-        password = user.password,
+        password = hash_password,
         categoria = user.categoria,
         departamento = user.departamento
     )
