@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi import HTTPException
 from .database import User
 from .database import tanksWaiting
 from .database import tanksInService
@@ -36,6 +37,10 @@ async def index():
 
 @app.post('/users')
 async def create_user(user: UserBaseModel):
+
+    if User.select().where(User.username == user.username).exists():
+        return HTTPException(409, 'El usuario ya se encuentra en uso.')
+
     hash_password = User.create_password(user.password)
     user = User.create(
         username = user.username,
