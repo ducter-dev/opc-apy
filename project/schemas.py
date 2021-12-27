@@ -20,14 +20,7 @@ class ResponseModel(BaseModel):
       getter_dict = PeeweeGetterDict
 
 
-# --------- user ---------
-class UserRequestModel(BaseModel):
-    username: str
-    password: str
-    categoria: int
-    departamento: str
-
-
+class UserValidator():
     @validator('username')
     def username_validator(cls, username):
         if len(username) < 3 or len(username) > 20:
@@ -60,6 +53,13 @@ class UserRequestModel(BaseModel):
         return departamento
 
 
+
+# --------- user ---------
+class UserRequestModel(BaseModel, UserValidator):
+    username: str
+    password: str
+    categoria: int
+    departamento: str
 
 class UserResponseModel(ResponseModel):
     id: int
@@ -229,3 +229,21 @@ class TankAssignResponseModel(ResponseModel):
     fecha: datetime
     llenadera: int
     posicion: int
+
+
+class UserRequestPutModel(BaseModel, UserValidator):
+    username: str
+    categoria: int
+    departamento: str
+  
+class TankWaitingRequestPutModel(BaseModel, UserValidator):
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    password: int
+    embarque: int
+    capacidad: int
+    conector: int
+    horaEntrada: str
+    fechaEntrada: str
