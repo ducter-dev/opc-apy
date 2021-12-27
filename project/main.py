@@ -11,14 +11,21 @@ from .database import database as connection
 
 from .schemas import UserRequestModel
 from .schemas import UserResponseModel
+from .schemas import UserRequestPutModel
+
 from .schemas import TankWaitingRequestModel
 from .schemas import TankWaitingResponseModel
+from .schemas import TankWaitingRequestPutModel
+
 from .schemas import TankInServiceRequestModel
 from .schemas import TankInServiceResponseModel
+
 from .schemas import TankInTrucksRequestModel
 from .schemas import TankInTrucksResponseModel
+
 from .schemas import TankAssignRequestModel
 from .schemas import TankAssignResponseModel
+
 
 
 
@@ -192,3 +199,25 @@ async def get_tanksInTrucks():
 async def get_tanksAssign():
     tanks = TankAssign.select()
     return [ tankAssign for tankAssign in tanks ]
+
+
+@app.put('/tanques/espera/{tank_id}', response_model=TankWaitingResponseModel)
+async def update_user(tank_id: int, tank_request: TankWaitingRequestPutModel):
+    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+
+    if tank is None:
+        raise HTTPException(status_code=404, detail='Entrada de Tanque no encontrada')
+    
+    tank.posicion = tank_request.posicion
+    tank.atId = tank_request.atId
+    tank.atTipo = tank_request.atTipo
+    tank.atName = tank_request.atName
+    tank.password = tank_request.password
+    tank.embarque = tank_request.embarque
+    tank.capacidad = tank_request.capacidad
+    tank.conector = tank_request.conector
+    tank.horaEntrada = tank_request.horaEntrada
+    tank.fechaEntrada = tank_request.fechaEntrada
+    tank.save()
+
+    return tank
