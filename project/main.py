@@ -49,4 +49,8 @@ async def create_user(user: UserBaseModel):
         departamento = user.departamento
     )
 
-    return user.id
+    return {
+        'success': True,
+        'id': user.id,
+        'usuario': user.username
+    }
