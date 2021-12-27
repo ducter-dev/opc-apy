@@ -200,9 +200,22 @@ async def get_tanksAssign():
     tanks = TankAssign.select()
     return [ tankAssign for tankAssign in tanks ]
 
+@app.put('/users/{user_id}', response_model=UserResponseModel)
+async def update_user(user_id: int, user_request: UserRequestPutModel):
+    user = User.select().where(User.id == user_id).first()
+
+    if user is None:
+        raise HTTPException(status_code=404, detail='Usuario no encontrado')
+    
+    user.username = user_request.username
+    user.categoria = user_request.categoria
+    user.departamento = user_request.departamento
+    user.save()
+
+    return user
 
 @app.put('/tanques/espera/{tank_id}', response_model=TankWaitingResponseModel)
-async def update_user(tank_id: int, tank_request: TankWaitingRequestPutModel):
+async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutModel):
     tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
 
     if tank is None:
@@ -219,5 +232,29 @@ async def update_user(tank_id: int, tank_request: TankWaitingRequestPutModel):
     tank.horaEntrada = tank_request.horaEntrada
     tank.fechaEntrada = tank_request.fechaEntrada
     tank.save()
+
+    return tank
+
+
+@app.delete('/users/{user_id}', response_model=UserResponseModel)
+async def delete_user(user_id: int):
+    user = User.select().where(User.id == user_id).first()
+
+    if user is None:
+        raise HTTPException(status_code=404, detail='Usuario no encontrado')
+
+    user.delete_instance()
+
+    return user
+
+
+@app.delete('/tanques/espera/{tank_id}', response_model=TankWaitingResponseModel)
+async def delete_tankWaiting(tank_id: int):
+    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+
+    if tank is None:
+        raise HTTPException(status_code=404, detail='Entrada de tanque no encontrada')
+
+    tank.delete_instance()
 
     return tank
