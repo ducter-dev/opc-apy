@@ -1,3 +1,4 @@
+import bcrypt
 from peewee import *
 from datetime import datetime
 
@@ -21,7 +22,11 @@ class User(Model):
   class Meta:
       database = database
       table_name = 'users'
-          
+
+  @classmethod
+  def create_password(cls, password):
+      hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+      return hashed.hex()
 
 class tanksWaiting(Model):
     posicion =  IntegerField(null=True)
