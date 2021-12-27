@@ -1,14 +1,24 @@
 from fastapi import FastAPI
 from fastapi import HTTPException
 from .database import User
-from .database import tanksWaiting
-from .database import tanksInService
-from .database import tanksInTrucks
-from .database import lastAssign
+from .database import TankWaiting
+from .database import TankInService
+from .database import TankInTrucks
+from .database import TankAssign
 from .database import database as connection
 
 from .schemas import UserRequestModel
 from .schemas import UserResponseModel
+from .schemas import TankWaitingRequestModel
+from .schemas import TankWaitingResponseModel
+from .schemas import TankInServiceRequestModel
+from .schemas import TankInServiceResponseModel
+from .schemas import TankInTrucksRequestModel
+from .schemas import TankInTrucksResponseModel
+from .schemas import TankAssignRequestModel
+from .schemas import TankAssignResponseModel
+
+
 
 app = FastAPI(
     title='SCADA-IRGE',
@@ -22,7 +32,7 @@ def startup():
     if connection.is_closed():
         connection.connect()
     
-    connection.create_tables([User, tanksWaiting, tanksInService, tanksInTrucks, lastAssign])
+    connection.create_tables([User, TankWaiting, TankInService, TankInTrucks, TankAssign])
 
 
 @app.on_event('shutdown')
@@ -51,3 +61,103 @@ async def create_user(user: UserRequestModel):
     )
 
     return user
+
+@app.post('/tanques/espera', response_model=TankWaitingResponseModel)
+async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
+    tankWaiting = TankWaiting.create(
+        posicion = tankWaiting.posicion,
+        atId = tankWaiting.atId,
+        atTipo = tankWaiting.atTipo,
+        atName = tankWaiting.atName,
+        password = tankWaiting.password,
+        embarque = tankWaiting.embarque,
+        capacidad = tankWaiting.capacidad,
+        conector = tankWaiting.conector,
+        horaEntrada = tankWaiting.horaEntrada,
+        fechaEntrada = tankWaiting.fechaEntrada
+    )
+
+    return tankWaiting
+
+
+@app.post('/tanques/servicio', response_model=TankInServiceResponseModel)
+async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
+    tankInService = TankInService.create(
+        productoNombre = tankInService.productoNombre,
+        productoDescripcion = tankInService.productoDescripcion,
+        atID = tankInService.atID,
+        atTipo = tankInService.atTipo,
+        atName = tankInService.atName,
+        claveCarga = tankInService.claveCarga,
+        conector = tankInService.conector,
+        Embarque = tankInService.Embarque,
+        capacidad = tankInService.capacidad,
+        estandar = tankInService.estandar,
+        commSAP = tankInService.commSAP,
+        estatus = tankInService.estatus,
+        llenadera = tankInService.llenadera,
+        horaEntrada = tankInService.horaEntrada,
+        fechaEntrada = tankInService.fechaEntrada
+    )
+
+    return tankInService
+
+
+@app.post('/tanques/despacho', response_model=TankInTrucksResponseModel)
+async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
+    tankInTrucks = TankInTrucks.create(
+        productoNombre = tankInTrucks.productoNombre,
+        productoDescripcion = tankInTrucks.productoDescripcion,
+        atID = tankInTrucks.atID,
+        atTipo = tankInTrucks.atTipo,
+        atName = tankInTrucks.atName,
+        conector = tankInTrucks.conector,
+        embarque = tankInTrucks.embarque,
+        capacidad = tankInTrucks.capacidad,
+        estandarCapacidad = tankInTrucks.estandarCapacidad,
+        commSAP = tankInTrucks.commSAP,
+        respuestaMsgA = tankInTrucks.respuestaMsgA,
+        respuestaMsgB = tankInTrucks.respuestaMsgB,
+        respuestaMsgI = tankInTrucks.respuestaMsgI,
+        atEstatus = tankInTrucks.atEstatus,
+        llenadera = tankInTrucks.llenadera,
+        folioPLC = tankInTrucks.folioPLC,
+        volNatLts = tankInTrucks.volNatLts,
+        volNatBls = tankInTrucks.volNatBls,
+        volCorLts = tankInTrucks.volCorLts,
+        volCorBls = tankInTrucks.volCorBls,
+        masa = tankInTrucks.masa,
+        masaTons = tankInTrucks.masaTons,
+        densidadNat = tankInTrucks.densidadNat,
+        densidadCor = tankInTrucks.densidadCor,
+        porcentaje = tankInTrucks.porcentaje,
+        temperaturaBase = tankInTrucks.temperaturaBase,
+        temperatura = tankInTrucks.temperatura,
+        presion = tankInTrucks.presion,
+        modo = tankInTrucks.modo,
+        fechaEntrada = tankInTrucks.fechaEntrada,
+        fechaInicio = tankInTrucks.fechaInicio,
+        fechaFin = tankInTrucks.fechaFin,
+        fechaSalida = tankInTrucks.fechaSalida,
+        fechaJornada = tankInTrucks.fechaJornada,
+        tipoCarga = tankInTrucks.tipoCarga,
+    )
+
+    return tankInTrucks
+
+@app.post('/tanques/servicio/ultimo', response_model=TankAssignResponseModel)
+async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
+    tankAssign = TankAssign.create(
+        atNum = tankAssign.atNum,
+        atTipo = tankAssign.atTipo,
+        atName = tankAssign.atName,
+        volProg = tankAssign.volProg,
+        conector = tankAssign.conector,
+        embarque = tankAssign.embarque,
+        password = tankAssign.password,
+        fecha = tankAssign.fecha,
+        llenadera = tankAssign.llenadera,
+        posicion = tankAssign.posicion,
+    )
+
+    return tankAssign

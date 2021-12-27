@@ -28,10 +28,11 @@ class User(Model):
       hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
       return hashed.hex()
 
-class tanksWaiting(Model):
+class TankWaiting(Model):
     posicion =  IntegerField(null=True)
     atId =  IntegerField(null=True)
     atTipo =  IntegerField(null=True)
+    atName = CharField(12, null=True)
     password =  IntegerField(null=True)
     embarque =  IntegerField(null=True)
     capacidad =  IntegerField(null=True)
@@ -47,7 +48,7 @@ class tanksWaiting(Model):
         database = database
         table_name = 'lista_espera'
 
-class tanksInService(Model):
+class TankInService(Model):
     productoNombre = CharField(45, null=True)
     productoDescripcion = CharField(100, null=True)
     atID = IntegerField(null=True)
@@ -61,8 +62,7 @@ class tanksInService(Model):
     commSAP = IntegerField(null=True)
     estatus = IntegerField(null=True)
     llenadera = IntegerField(null=True)
-    horaEntrada = IntegerField(null=True)
-    minEntrada = IntegerField(null=True)
+    horaEntrada = TimeField(default=datetime.now, formats='%H:%M:%S')
     fechaEntrada = DateField(default=datetime.now, formats='%Y-%m-%d')
     created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
@@ -70,11 +70,12 @@ class tanksInService(Model):
         database = database
         table_name = 'lista_servicio'
 
-class tanksInTrucks(Model):
+class TankInTrucks(Model):
     productoNombre = CharField(45, null=True)
     productoDescripcion = CharField(100, null=True)
     atID = IntegerField(null=True)
     atTipo = IntegerField(null=True)
+    atName = CharField(12, null=True)
     conector = IntegerField(null=True)
     embarque = IntegerField(null=True)
     capacidad = IntegerField(null=True)
@@ -111,9 +112,10 @@ class tanksInTrucks(Model):
         database = database
         table_name = 'lista_cargas'
 
-class lastAssign(Model):
+class TankAssign(Model):
     atNum = IntegerField(null=True)
     atTipo = IntegerField(null=True)
+    atName = CharField(12, null=True)
     volProg = IntegerField(null=True)
     conector = IntegerField(null=True)
     embarque = IntegerField(null=True)

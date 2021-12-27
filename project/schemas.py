@@ -13,7 +13,13 @@ class PeeweeGetterDict(GetterDict):
 
       return res
 
+class ResponseModel(BaseModel):
+    class Config:
+      orm_mode = True
+      getter_dict = PeeweeGetterDict
 
+
+# --------- user ---------
 class UserRequestModel(BaseModel):
     username: str
     password: str
@@ -52,10 +58,171 @@ class UserRequestModel(BaseModel):
 
         return departamento
 
-class UserResponseModel(BaseModel):
+
+
+class UserResponseModel(ResponseModel):
     id: int
     username: str
 
-    class Config:
-      orm_mode = True
-      getter_dict = PeeweeGetterDict
+# --------- TanksWaiting ---------
+class TankWaitingRequestModel(BaseModel):
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    password: int
+    embarque: int
+    capacidad: int
+    conector: int
+    horaEntrada: str
+    fechaEntrada: str
+
+class TankWaitingResponseModel(ResponseModel):
+    id: int
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    embarque: int
+    capacidad: int
+    conector: int
+    horaEntrada: str
+    fechaEntrada: str
+
+class TankInServiceRequestModel(BaseModel):
+    productoNombre: str
+    productoDescripcion: str
+    atID: int
+    atTipo: int
+    atName: str
+    claveCarga: int
+    conector: int
+    Embarque: int
+    capacidad: int
+    estandar: int
+    commSAP: int
+    estatus: int
+    llenadera: int
+    horaEntrada: str
+    fechaEntrada: str
+
+class TankInServiceResponseModel(ResponseModel):
+    id: int
+    productoNombre: str
+    productoDescripcion: str
+    atID: int
+    atTipo: int
+    atName: str
+    claveCarga: int
+    conector: int
+    Embarque: int
+    capacidad: int
+    estandar: int
+    commSAP: int
+    estatus: int
+    llenadera: int
+    horaEntrada: str
+    fechaEntrada: str
+
+
+class TankInTrucksRequestModel(BaseModel):
+    productoNombre: str
+    productoDescripcion: str
+    atID: int
+    atTipo: int
+    atName: str
+    conector: int
+    embarque: int
+    capacidad: int
+    estandarCapacidad: int
+    commSAP: int
+    respuestaMsgA: str
+    respuestaMsgB: str
+    respuestaMsgI: str
+    atEstatus: int
+    llenadera: int
+    folioPLC: int
+    volNatLts: int
+    volNatBls: float
+    volCorLts: int
+    volCorBls: float
+    masa: int
+    masaTons: float
+    densidadNat: float
+    densidadCor: float
+    porcentaje: float
+    temperaturaBase: float
+    temperatura: float
+    presion: float
+    modo: str
+    fechaEntrada: str
+    fechaInicio: str
+    fechaFin: str
+    fechaSalida: str
+    fechaJornada: str
+    tipoCarga: int
+
+class TankInTrucksResponseModel(ResponseModel):
+    id: int
+    productoNombre: str
+    productoDescripcion: str
+    atID: int
+    atTipo: int
+    atName: str
+    conector: int
+    embarque: int
+    capacidad: int
+    estandarCapacidad: int
+    commSAP: int
+    respuestaMsgA: str
+    respuestaMsgB: str
+    respuestaMsgI: str
+    atEstatus: int
+    llenadera: int
+    folioPLC: int
+    volNatLts: int
+    volNatBls: float
+    volCorLts: int
+    volCorBls: float
+    masa: int
+    masaTons: float
+    densidadNat: float
+    densidadCor: float
+    porcentaje: float
+    temperaturaBase: float
+    temperatura: float
+    presion: float
+    modo: str
+    fechaEntrada: str
+    fechaInicio: str
+    fechaFin: str
+    fechaSalida: str
+    fechaJornada: str
+    tipoCarga: int
+
+
+class TankAssignRequestModel(BaseModel):
+    atNum: int
+    atTipo: int
+    atName: str
+    volProg: int
+    conector: int
+    embarque: int
+    password: int
+    fecha: str
+    llenadera: int
+    posicion: int
+
+
+class TankAssignResponseModel(ResponseModel):
+    id: int
+    atNum: int
+    atTipo: int
+    atName: str
+    volProg: int
+    conector: int
+    embarque: int
+    password: int
+    fecha: str
+    llenadera: int
+    posicion: int
