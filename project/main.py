@@ -9,6 +9,8 @@ from .database import TankInTrucks
 from .database import TankAssign
 from .database import database as connection
 
+from .opc import OpcServices
+
 from .schemas import UserRequestModel
 from .schemas import UserResponseModel
 from .schemas import UserRequestPutModel
@@ -26,9 +28,6 @@ from .schemas import TankInTrucksResponseModel
 from .schemas import TankAssignRequestModel
 from .schemas import TankAssignResponseModel
 
-
-
-
 app = FastAPI(
     title='SCADA-IRGE',
     description='Api para servir OPC',
@@ -42,7 +41,11 @@ def startup():
         connection.connect()
     
     connection.create_tables([User, TankWaiting, TankInService, TankInTrucks, TankAssign])
-
+    
+    if OpcServices.conectarOPC():
+        print('conectado')
+    else:
+        print('No conectado')
 
 @app.on_event('shutdown')
 def shutdown():
