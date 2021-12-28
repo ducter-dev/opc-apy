@@ -261,3 +261,23 @@ async def delete_tankWaiting(tank_id: int):
     tank.delete_instance()
 
     return tank
+
+@app.get('/opc/entradasAntena')
+async def opc_read():
+    numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_NumPG')
+    tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_TipoAT')
+    return {
+        'numAT': numPG,
+        'tipoAT': tipoPG
+    }
+
+@app.get('/opc/bombas/301A')
+async def opc_read():
+    status = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Bombas.BA_301A_STATUS')
+    mode = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Bombas.BA_301A_MODE')
+    time = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Bombas.BA_301A_TIME')
+    return {
+        'status': status,
+        'mode': mode,
+        'time': time
+    }

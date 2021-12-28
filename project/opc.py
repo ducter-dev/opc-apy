@@ -25,13 +25,17 @@ HOST_OPC = os.environ.get('HOST_OPC')
 class OpcServices():
     server = SERVER_OPC
     host = HOST_OPC
-
+    opc = OpenOPC.client()
     @classmethod
     def conectarOPC(self):
         try:
-            opc = OpenOPC.client()
-            opc.connect(self.server, self.host)
+            self.opc.connect(self.server, self.host)
             return True
         except OpenOPC.TimeoutError:
             print('TimeoutError ocurred')
             return False
+
+    @classmethod
+    def readDataPLC(self, tag):
+        value = self.opc.read(tag)
+        return value[0]
