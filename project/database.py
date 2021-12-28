@@ -1,12 +1,25 @@
 import bcrypt
+import dotenv
 from peewee import *
 from datetime import datetime
+import os
+from os.path import join,dirname
+from dotenv import load_dotenv
 
-database = MySQLDatabase('scairge', 
-                        user='remote_ducter', 
-                        password='19Ducter2019$', 
-                        host='localhost',
-                        port=3306)
+dotenv_path = join(dirname(__file__), '.env')
+load_dotenv(dotenv_path)
+
+DATABASE_DB = os.environ.get('DATABASE_DB')
+USER_DB = os.environ.get('USER_DB')
+PASSWORD_DB = os.environ.get('PASSWORD_DB')
+HOST_DB = os.environ.get('HOST_DB')
+PORT_DB = os.environ.get('PORT_DB')
+
+database = MySQLDatabase(DATABASE_DB, 
+                        user=USER_DB, 
+                        password=PASSWORD_DB, 
+                        host=HOST_DB,
+                        port=int(PORT_DB))
 
 
 class User(Model):
