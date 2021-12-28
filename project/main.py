@@ -281,3 +281,12 @@ async def opc_read():
         'mode': mode,
         'time': time
     }
+
+@app.post('/opc/llenadera/folio/{value}')
+async def opc_write(value: int):
+    tag = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uLLEN01_FOLIO'
+    valor = OpcServices.writeOPC(tag, value)
+    return {
+        'tag': tag,
+        'valor': valor
+    }

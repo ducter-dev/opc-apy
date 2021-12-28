@@ -12,16 +12,6 @@ pywintypes.datetime = pywintypes.TimeType
 SERVER_OPC = os.environ.get('SERVER_OPC')
 HOST_OPC = os.environ.get('HOST_OPC')
 
-#tags = sorted(opc.list('GE_ETHERNET.PLC_SCA_TULA.Asignacion.*', flat= True))
-
-#tagsReaded = []
-#for tag in tags:
-#    try:
-#        value = opc.read(tag)
-#        tagsReaded.append(tag)
-#    except OpenOPC.TimeoutError:
-#        print('TimeoutError ocurred')
-
 class OpcServices():
     server = SERVER_OPC
     host = HOST_OPC
@@ -39,3 +29,10 @@ class OpcServices():
     def readDataPLC(self, tag):
         value = self.opc.read(tag)
         return value[0]
+    
+    @classmethod
+    def writeOPC(self, tag, value):
+        print(tag)
+        print(value)
+        self.opc.write((tag, value))
+        return value
