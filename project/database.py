@@ -1,5 +1,4 @@
 import bcrypt
-import dotenv
 from peewee import *
 from datetime import datetime
 import os
