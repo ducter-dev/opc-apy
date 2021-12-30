@@ -16,10 +16,11 @@ from ..schemas import TankWaitingRequestModel
 from ..schemas import TankWaitingResponseModel
 from ..schemas import TankWaitingRequestPutModel
 
+from ..middlewares import VerifyTokenRoute
 
-router = APIRouter(prefix='/api/v1/tanks')
+router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 
-@router.post('/tanques/espera', response_model=TankWaitingResponseModel)
+@router.post('/espera', response_model=TankWaitingResponseModel)
 async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
     tankWaiting = TankWaiting.create(
         posicion = tankWaiting.posicion,
@@ -37,7 +38,7 @@ async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
     return tankWaiting
 
 
-@router.post('/tanques/servicio', response_model=TankInServiceResponseModel)
+@router.post('/servicio', response_model=TankInServiceResponseModel)
 async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
     tankInService = TankInService.create(
         productoNombre = tankInService.productoNombre,
@@ -60,7 +61,7 @@ async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
     return tankInService
 
 
-@router.post('/tanques/despacho', response_model=TankInTrucksResponseModel)
+@router.post('/despacho', response_model=TankInTrucksResponseModel)
 async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
     tankInTrucks = TankInTrucks.create(
         productoNombre = tankInTrucks.productoNombre,
@@ -102,7 +103,7 @@ async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
 
     return tankInTrucks
 
-@router.post('/tanques/servicio/ultimo', response_model=TankAssignResponseModel)
+@router.post('/servicio/ultimo', response_model=TankAssignResponseModel)
 async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
     tankAssign = TankAssign.create(
         atNum = tankAssign.atNum,
@@ -119,30 +120,30 @@ async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
 
     return tankAssign
 
-@router.get('/tanques/espera', response_model=List[TankWaitingResponseModel])
+@router.get('/espera', response_model=List[TankWaitingResponseModel])
 async def get_tanksWaiting():
     tanks = TankWaiting.select()
     return [ tankWaiting for tankWaiting in tanks ]
 
 
-@router.get('/tanques/servicio', response_model=List[TankInServiceResponseModel])
+@router.get('/servicio', response_model=List[TankInServiceResponseModel])
 async def get_tanksInService():
     tanks = TankInService.select()
     return [ tankInService for tankInService in tanks ]
 
 
-@router.get('/tanques/despacho', response_model=List[TankInTrucksResponseModel])
+@router.get('/despacho', response_model=List[TankInTrucksResponseModel])
 async def get_tanksInTrucks():
     tanks = TankInTrucks.select()
     return [ tankInTrucks for tankInTrucks in tanks ]
 
 
-@router.get('/tanques/servicio/ultimo', response_model=List[TankAssignResponseModel])
+@router.get('/servicio/ultimo', response_model=List[TankAssignResponseModel])
 async def get_tanksAssign():
     tanks = TankAssign.select()
     return [ tankAssign for tankAssign in tanks ]
 
-@router.delete('/tanques/espera/{tank_id}', response_model=TankWaitingResponseModel)
+@router.delete('/espera/{tank_id}', response_model=TankWaitingResponseModel)
 async def delete_tankWaiting(tank_id: int):
     tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
 
@@ -153,7 +154,7 @@ async def delete_tankWaiting(tank_id: int):
 
     return tank
 
-@router.put('/tanques/espera/{tank_id}', response_model=TankWaitingResponseModel)
+@router.put('/espera/{tank_id}', response_model=TankWaitingResponseModel)
 async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutModel):
     tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
 

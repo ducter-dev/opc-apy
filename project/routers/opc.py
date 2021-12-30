@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 from ..opc import OpcServices
+from ..middlewares import VerifyTokenRoute
 
-router = APIRouter(prefix='/api/v1/opc')
+router = APIRouter(prefix='/api/v1/opc', route_class=VerifyTokenRoute)
 
 
 @router.get('/entradasAntena')

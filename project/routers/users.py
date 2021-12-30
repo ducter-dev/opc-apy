@@ -4,8 +4,9 @@ from fastapi import APIRouter
 from ..database import User
 from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel
 from typing import List
+from ..middlewares import VerifyTokenRoute
 
-router = APIRouter(prefix='/api/v1/users')
+router = APIRouter(prefix='/api/v1/users', route_class=VerifyTokenRoute)
 
 @router.post('', response_model=UserResponseModel)
 async def create_user(user: UserRequestModel):
@@ -25,6 +26,7 @@ async def create_user(user: UserRequestModel):
 
 @router.get('', response_model=List[UserResponseModel])
 async def get_users():
+
     users = User.select()
     return [ user for user in users ]
 
