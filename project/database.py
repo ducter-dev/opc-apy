@@ -1,3 +1,4 @@
+import base64
 import bcrypt
 from peewee import *
 from datetime import datetime
@@ -22,23 +23,28 @@ database = MySQLDatabase(DATABASE_DB,
 
 
 class User(Model):
-  username = CharField(max_length=50, unique=True)
-  password = CharField(max_length=50)
-  categoria = IntegerField(default=3)
-  departamento = CharField(max_length=50)
-  created_at = DateTimeField(default=datetime.now)
+    username = CharField(max_length=50, unique=True)
+    password = CharField()
+    categoria = IntegerField(default=3)
+    departamento = CharField(max_length=50)
+    created_at = DateTimeField(default=datetime.now)
 
-  def __str__(self):
-      return self.username
+    def __str__(self):
+        return self.username
 
-  class Meta:
-      database = database
-      table_name = 'users'
+    class Meta:
+        database = database
+        table_name = 'users'
 
-  @classmethod
-  def create_password(cls, password):
-      hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-      return hashed.hex()
+    @classmethod
+    def create_password(cls, password):
+        hashed = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+        return hashed
+
+    @classmethod
+    def validate_password(cls, password, hashed):
+        result = bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
+        return result
 
 class TankWaiting(Model):
     posicion =  IntegerField(null=True)
