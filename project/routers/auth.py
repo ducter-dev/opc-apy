@@ -23,7 +23,11 @@ async def login(credentials: HTTPBasicCredentials):
         "departamento": user.departamento
     }
     print(user_dict)
-    return write_token(user_dict)
+    data_dic = {
+        "ok": True,
+        "token": write_token(user_dict)
+    }
+    return data_dic
 
 @router.post('/verify/token')
 async def verify_token(Authorization: str = Header(None)):
