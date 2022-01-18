@@ -18,6 +18,7 @@ async def login(credentials: HTTPBasicCredentials):
     if user_valid is False:
         raise HTTPException(404, 'Error, debe revisar sus credenciales.')
     user_dict = {
+        "id": user.id,
         "username": user.username,
         "categoria": user.categoria,
         "departamento": user.departamento

@@ -47,8 +47,8 @@ class UserValidator():
 
     @validator('departamento')
     def departamento_validator(cls, departamento):
-        if len(departamento) < 3 or len(departamento) > 20:
-            raise ValueError('El departamento debe ser entre 3 y 20 caracteres.')
+        if departamento < 1:
+            raise ValueError('El departamento debe ser mayor a 0.')
 
         return departamento
 
@@ -59,13 +59,13 @@ class UserRequestModel(BaseModel, UserValidator):
     username: str
     password: str
     categoria: int
-    departamento: str
+    departamento: int
 
 class UserResponseModel(ResponseModel):
     id: int
     username: str
     categoria: int
-    departamento: str
+    departamento: int
 
 # --------- TanksWaiting ---------
 class TankWaitingRequestModel(BaseModel):

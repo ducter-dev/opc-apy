@@ -26,7 +26,7 @@ class User(Model):
     username = CharField(max_length=50, unique=True)
     password = CharField()
     categoria = IntegerField(default=3)
-    departamento = CharField(max_length=50)
+    departamento = IntegerField(default=3)
     created_at = DateTimeField(default=datetime.now)
 
     def __str__(self):

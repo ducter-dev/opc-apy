@@ -21,15 +21,13 @@ async def create_user(user: UserRequestModel):
         categoria = user.categoria,
         departamento = user.departamento
     )
-
     return user
 
 @router.get('', response_model=List[UserResponseModel])
 async def get_users():
-
     users = User.select()
     return [ user for user in users ]
-
+        
 
 @router.put('/{user_id}', response_model=UserResponseModel)
 async def update_user(user_id: int, user_request: UserRequestPutModel):
