@@ -92,6 +92,7 @@ class TankWaitingResponseModel(ResponseModel):
     horaEntrada: time
     fechaEntrada: date
 
+# --------- TanksService ---------
 class TankInServiceRequestModel(BaseModel):
     productoNombre: str
     productoDescripcion: str
@@ -127,7 +128,7 @@ class TankInServiceResponseModel(ResponseModel):
     horaEntrada: time
     fechaEntrada: date
 
-
+# --------- TanksCargados ---------
 class TankInTrucksRequestModel(BaseModel):
     productoNombre: str
     productoDescripcion: str
@@ -203,7 +204,7 @@ class TankInTrucksResponseModel(ResponseModel):
     fechaJornada: date
     tipoCarga: int
 
-
+# --------- TankAsignado ---------
 class TankAssignRequestModel(BaseModel):
     atNum: int
     atTipo: int
@@ -247,3 +248,22 @@ class TankWaitingRequestPutModel(BaseModel, UserValidator):
     conector: int
     horaEntrada: str
     fechaEntrada: str
+
+# --------- Tank ---------
+class TankRequestModel(BaseModel):
+    atId: int
+    atTipo: int
+    atName: str
+    conector: int
+    capacidad90: int
+    transportadora: int
+
+class TankResponseModel(ResponseModel):
+    id: int
+    atId: int
+    atTipo: int
+    atName: str
+    conector: int
+    capacidad90: int
+    transportadora: int
+    

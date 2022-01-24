@@ -46,6 +46,23 @@ class User(Model):
         result = bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
         return result
 
+class Tank(Model):
+    atId =  IntegerField(null=True)
+    atTipo =  IntegerField(null=True)
+    atName = CharField(12, null=True)
+    conector =  IntegerField(null=True)
+    capacidad90 =  IntegerField(null=True)
+    transportadora = IntegerField(null=True)
+    created_at =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    def __str__(self):
+        return self.atId
+
+    class Meta:
+        database = database
+        table_name = 'autotanques'
+
+
 class TankWaiting(Model):
     posicion =  IntegerField(null=True)
     atId =  IntegerField(null=True)

@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from fastapi import APIRouter
 from typing import List
 
-from ..database import TankAssign, TankInService, TankInTrucks, TankWaiting
+from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaiting
 from ..schemas import TankAssignRequestModel
 from ..schemas import TankAssignResponseModel
 
@@ -16,9 +16,32 @@ from ..schemas import TankWaitingRequestModel
 from ..schemas import TankWaitingResponseModel
 from ..schemas import TankWaitingRequestPutModel
 
+from ..schemas import TankRequestModel
+from ..schemas import TankResponseModel
+
 from ..middlewares import VerifyTokenRoute
 
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
+
+@router.post('', response_model=TankResponseModel)
+async def create_tanque(tank:TankRequestModel):
+    tank = Tank.create(
+        atId = tank.atId,
+        atTipo = tank.atTipo,
+        atName = tank.atName,
+        conector = tank.conector,
+        capacidad90 = tank.capacidad90,
+        traspotadora = tank.transportadora,
+    )
+
+    return tank
+
+
+@router.get('', response_model=List[TankResponseModel])
+async def get_tanks():
+    tanks = Tank.select()
+    return [ tank for tank in tanks ]
+
 
 @router.post('/espera', response_model=TankWaitingResponseModel)
 async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
