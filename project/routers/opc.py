@@ -1,17 +1,42 @@
+from multiprocessing.dummy import JoinableQueue
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from ..opc import OpcServices
 from ..middlewares import VerifyTokenRoute
 
 router = APIRouter(prefix='/api/v1/opc', route_class=VerifyTokenRoute)
 
+# --------------- Antena de Entrada ---------------
+@router.get('/antena/entrada')
+async def read_antena_entrada():
 
-@router.get('/entradasAntena')
-async def opc_read():
-    numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_NumPG')
-    tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_TipoAT')
+    try:
+        numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_NumPG')
+        tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_TipoAT')
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                'numAT': numPG,
+                'tipoAT': tipoPG
+            }
+        )
+    except:
+        return JSONResponse(
+            status_code=404,
+            content={
+                'message': 'Error, no se pueden leer los datos del OPC'
+            }
+        )
+
+
+@router.post('/llenadera/folio/{value}')
+async def opc_write(value: int):
+    tag = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uLLEN01_FOLIO'
+    valor = OpcServices.writeOPC(tag, value)
     return {
-        'numAT': numPG,
-        'tipoAT': tipoPG
+        'tag': tag,
+        'valor': valor
     }
 
 @router.get('/bombas/301A')
