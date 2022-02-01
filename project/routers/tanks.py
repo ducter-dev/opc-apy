@@ -23,6 +23,8 @@ from ..middlewares import VerifyTokenRoute
 
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 
+# ---------------- Tanques ---------------------
+
 @router.post('', response_model=TankResponseModel)
 async def create_tanque(tank:TankRequestModel):
     tank = Tank.create(
@@ -76,6 +78,8 @@ async def delete_tank(tank_id: int):
     return tank
     
 
+# ---------------- Lista de Espera ---------------------
+
 @router.post('/espera', response_model=TankWaitingResponseModel)
 async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
     tankWaiting = TankWaiting.create(
@@ -92,6 +96,52 @@ async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
     )
 
     return tankWaiting
+
+
+@router.get('/espera', response_model=List[TankWaitingResponseModel])
+async def get_tanksWaiting():
+    tanks = TankWaiting.select()
+    return [ tankWaiting for tankWaiting in tanks ]
+
+
+@router.delete('/espera/{tank_id}', response_model=TankWaitingResponseModel)
+async def delete_tankWaiting(tank_id: int):
+    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+
+    if tank is None:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Entrada de tanque no encontrada"}
+        )
+
+    tank.delete_instance()
+
+    return tank
+
+
+@router.put('/espera/{tank_id}', response_model=TankWaitingResponseModel)
+async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutModel):
+    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+
+    if tank is None:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Registro de Tanque en lista de espera no encontrada"}
+        )
+    
+    tank.posicion = tank_request.posicion
+    tank.atId = tank_request.atId
+    tank.atTipo = tank_request.atTipo
+    tank.atName = tank_request.atName
+    tank.password = tank_request.password
+    tank.embarque = tank_request.embarque
+    tank.capacidad = tank_request.capacidad
+    tank.conector = tank_request.conector
+    tank.horaEntrada = tank_request.horaEntrada
+    tank.fechaEntrada = tank_request.fechaEntrada
+    tank.save()
+
+    return tank
 
 
 @router.post('/servicio', response_model=TankInServiceResponseModel)
@@ -176,11 +226,6 @@ async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
 
     return tankAssign
 
-@router.get('/espera', response_model=List[TankWaitingResponseModel])
-async def get_tanksWaiting():
-    tanks = TankWaiting.select()
-    return [ tankWaiting for tankWaiting in tanks ]
-
 
 @router.get('/servicio', response_model=List[TankInServiceResponseModel])
 async def get_tanksInService():
@@ -199,40 +244,3 @@ async def get_tanksAssign():
     tanks = TankAssign.select()
     return [ tankAssign for tankAssign in tanks ]
 
-@router.delete('/espera/{tank_id}', response_model=TankWaitingResponseModel)
-async def delete_tankWaiting(tank_id: int):
-    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
-
-    if tank is None:
-        return JSONResponse(
-            status_code=404,
-            content={"message": "Entrada de tanque no encontrada"}
-        )
-
-    tank.delete_instance()
-
-    return tank
-
-@router.put('/espera/{tank_id}', response_model=TankWaitingResponseModel)
-async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutModel):
-    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
-
-    if tank is None:
-        return JSONResponse(
-            status_code=404,
-            content={"message": "Registro de Tanque en lista de espera no encontrada"}
-        )
-    
-    tank.posicion = tank_request.posicion
-    tank.atId = tank_request.atId
-    tank.atTipo = tank_request.atTipo
-    tank.atName = tank_request.atName
-    tank.password = tank_request.password
-    tank.embarque = tank_request.embarque
-    tank.capacidad = tank_request.capacidad
-    tank.conector = tank_request.conector
-    tank.horaEntrada = tank_request.horaEntrada
-    tank.fechaEntrada = tank_request.fechaEntrada
-    tank.save()
-
-    return tank
