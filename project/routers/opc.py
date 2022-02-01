@@ -30,6 +30,30 @@ async def read_antena_entrada():
         )
 
 
+# --------------- Antena de Verificacion ---------------
+@router.get('/antena/verificacion')
+async def read_antena_verificacion():
+
+    try:
+        numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFVER_NUMPG')
+        tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFVER_TIPOAT')
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                'numAT': numPG,
+                'tipoAT': tipoPG
+            }
+        )
+    except:
+        return JSONResponse(
+            status_code=404,
+            content={
+                'message': 'Error, no se pueden leer los datos del OPC'
+            }
+        )
+
+
 @router.post('/llenadera/folio/{value}')
 async def opc_write(value: int):
     tag = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uLLEN01_FOLIO'
