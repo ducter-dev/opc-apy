@@ -1,5 +1,5 @@
-from fastapi import HTTPException
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from typing import List
 
 from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaiting
@@ -31,7 +31,7 @@ async def create_tanque(tank:TankRequestModel):
         atName = tank.atName,
         conector = tank.conector,
         capacidad90 = tank.capacidad90,
-        traspotadora = tank.transportadora,
+        transportadora = tank.transportadora,
     )
 
     return tank
@@ -42,6 +42,39 @@ async def get_tanks():
     tanks = Tank.select()
     return [ tank for tank in tanks ]
 
+
+@router.put('/{tank_id}', response_model=TankResponseModel)
+async def edit_tank(tank_id: int, tank_request: TankRequestModel):
+    tank = Tank.select().where(Tank.id == tank_id).first()
+    if tank is None:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Tanque no encontrado"}
+        )
+
+    tank.atTipo = tank_request.atTipo
+    tank.atName = tank_request.atName
+    tank.conector = tank_request.conector
+    tank.capacidad90 = tank_request.capacidad90
+    tank.transportadora = tank_request.transportadora
+    tank.save()
+    
+    return tank
+
+
+@router.delete('/{tank_id}', response_model=TankResponseModel)
+async def delete_tank(tank_id: int):
+    tank = Tank.select().where(Tank.id == tank_id).first()
+    if tank is None:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Tanque no encontrado"}
+        )
+
+    tank.delete_instance()
+
+    return tank
+    
 
 @router.post('/espera', response_model=TankWaitingResponseModel)
 async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
@@ -171,7 +204,10 @@ async def delete_tankWaiting(tank_id: int):
     tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
 
     if tank is None:
-        raise HTTPException(status_code=404, detail='Entrada de tanque no encontrada')
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Entrada de tanque no encontrada"}
+        )
 
     tank.delete_instance()
 
@@ -182,7 +218,10 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutMo
     tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
 
     if tank is None:
-        raise HTTPException(status_code=404, detail='Entrada de Tanque no encontrada')
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Registro de Tanque en lista de espera no encontrada"}
+        )
     
     tank.posicion = tank_request.posicion
     tank.atId = tank_request.atId
