@@ -162,3 +162,13 @@ class TankAssign(Model):
     class Meta:
         database = database
         table_name = 'ultima_asignacion'
+
+# ----- Llenaderas -----
+class Llenaderas(Model):
+    numero = IntegerField(null=True)
+    conector = IntegerField(null=True)
+    tipo = IntegerField(null=True)
+
+    class Meta:
+        database = database
+        table_name = 'llenaderas'
