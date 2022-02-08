@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import user_router, tank_router, opc_router, auth_router
+from .routers import user_router, tank_router, opc_router, auth_router, llenadera_router
 
 from .database import User
 from .database import TankWaiting
@@ -9,7 +9,7 @@ from .database import TankInService
 from .database import TankInTrucks
 from .database import TankAssign
 from .database import Tank
-from .database import Llenaderas
+from .database import Llenadera
 from .database import database as connection
 
 from .opc import OpcServices
@@ -38,13 +38,14 @@ app.include_router(user_router)
 app.include_router(tank_router)
 app.include_router(opc_router)
 app.include_router(auth_router)
+app.include_router(llenadera_router)
 
 @app.on_event('startup')
 def startup():
     if connection.is_closed():
         connection.connect()
     
-    connection.create_tables([User, TankWaiting, TankInService, TankInTrucks, TankAssign, Tank, Llenaderas])
+    connection.create_tables([User, TankWaiting, TankInService, TankInTrucks, TankAssign, Tank, Llenadera])
     
     #if OpcServices.conectarOPC():
         #print('conectado')
