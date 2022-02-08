@@ -164,7 +164,7 @@ class TankAssign(Model):
         table_name = 'ultima_asignacion'
 
 # ----- Llenaderas -----
-class Llenaderas(Model):
+class Llenadera(Model):
     numero = IntegerField(null=True)
     conector = IntegerField(null=True)
     tipo = IntegerField(null=True)

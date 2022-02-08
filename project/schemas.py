@@ -237,7 +237,7 @@ class UserRequestPutModel(BaseModel, UserValidator):
     categoria: int
     departamento: str
   
-class TankWaitingRequestPutModel(BaseModel, UserValidator):
+class TankWaitingRequestPutModel(BaseModel):
     posicion: int
     atId: int
     atTipo: int
@@ -266,4 +266,17 @@ class TankResponseModel(ResponseModel):
     conector: int
     capacidad90: int
     transportadora: int
+
+
+# --------- Llenadera ---------
+class LlenaderaRequestModel(BaseModel):
+    numero: int
+    conector: int
+    tipo: int
+
+class LlenaderaResponseModel(ResponseModel):
+    id: int
+    numero: int
+    conector: int
+    tipo: int
     
