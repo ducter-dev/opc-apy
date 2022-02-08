@@ -67,6 +67,11 @@ class UserResponseModel(ResponseModel):
     categoria: int
     departamento: int
 
+class UserRequestPutModel(BaseModel, UserValidator):
+    username: str
+    categoria: int
+    departamento: str
+
 # --------- TanksWaiting ---------
 class TankWaitingRequestModel(BaseModel):
     posicion: int
@@ -79,6 +84,8 @@ class TankWaitingRequestModel(BaseModel):
     conector: int
     horaEntrada: str
     fechaEntrada: str
+    reporte24: str
+    reporte05: str
 
 class TankWaitingResponseModel(ResponseModel):
     id: int
@@ -91,6 +98,48 @@ class TankWaitingResponseModel(ResponseModel):
     conector: int
     horaEntrada: time
     fechaEntrada: date
+    reporte24: date
+    reporte05: date
+
+class TankWaitingRequestPutModel(BaseModel):
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    password: int
+    embarque: int
+    capacidad: int
+    conector: int
+    horaEntrada: str
+    fechaEntrada: str
+    reporte24: str
+    reporte05: str
+
+# --------- TanksEntry ---------
+class TankEntryRequestModel(BaseModel):
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    capacidad: int
+    conector: int
+    horaEntrada: str
+    fechaEntrada: str
+    reporte24: str
+    reporte05: str
+
+class TankEntryResponseModel(ResponseModel):
+    id: int
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    capacidad: int
+    conector: int
+    horaEntrada: time
+    fechaEntrada: date
+    reporte24: date
+    reporte05: date
 
 # --------- TanksService ---------
 class TankInServiceRequestModel(BaseModel):
@@ -109,6 +158,9 @@ class TankInServiceRequestModel(BaseModel):
     llenadera: int
     horaEntrada: str
     fechaEntrada: str
+    reporte24: str
+    reporte05: str
+
 
 class TankInServiceResponseModel(ResponseModel):
     id: int
@@ -127,6 +179,8 @@ class TankInServiceResponseModel(ResponseModel):
     llenadera: int
     horaEntrada: time
     fechaEntrada: date
+    reporte24: date
+    reporte05: date
 
 # --------- TanksCargados ---------
 class TankInTrucksRequestModel(BaseModel):
@@ -163,7 +217,8 @@ class TankInTrucksRequestModel(BaseModel):
     fechaInicio: str
     fechaFin: str
     fechaSalida: str
-    fechaJornada: str
+    reporte24: str
+    reporte05: str
     tipoCarga: int
 
 class TankInTrucksResponseModel(ResponseModel):
@@ -201,7 +256,8 @@ class TankInTrucksResponseModel(ResponseModel):
     fechaInicio: datetime
     fechaFin: datetime
     fechaSalida: datetime = None
-    fechaJornada: date
+    reporte24: date
+    reporte05: date
     tipoCarga: int
 
 # --------- TankAsignado ---------
@@ -217,7 +273,6 @@ class TankAssignRequestModel(BaseModel):
     llenadera: int
     posicion: int
 
-
 class TankAssignResponseModel(ResponseModel):
     id: int
     atNum: int
@@ -230,24 +285,6 @@ class TankAssignResponseModel(ResponseModel):
     fecha: datetime
     llenadera: int
     posicion: int
-
-
-class UserRequestPutModel(BaseModel, UserValidator):
-    username: str
-    categoria: int
-    departamento: str
-  
-class TankWaitingRequestPutModel(BaseModel):
-    posicion: int
-    atId: int
-    atTipo: int
-    atName: str
-    password: int
-    embarque: int
-    capacidad: int
-    conector: int
-    horaEntrada: str
-    fechaEntrada: str
 
 # --------- Tank ---------
 class TankRequestModel(BaseModel):
@@ -266,7 +303,6 @@ class TankResponseModel(ResponseModel):
     conector: int
     capacidad90: int
     transportadora: int
-
 
 # --------- Llenadera ---------
 class LlenaderaRequestModel(BaseModel):

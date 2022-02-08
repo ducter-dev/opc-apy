@@ -74,6 +74,8 @@ class TankWaiting(Model):
     conector =  IntegerField(null=True)
     horaEntrada =  TimeField(default=datetime.now, formats='%H:%M:%S')
     fechaEntrada =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     created_at =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
     def __str__(self):
@@ -82,6 +84,26 @@ class TankWaiting(Model):
     class Meta:
         database = database
         table_name = 'lista_espera'
+
+class TankEntry(Model):
+    posicion =  IntegerField(null=True)
+    atId =  IntegerField(null=True)
+    atTipo =  IntegerField(null=True)
+    atName = CharField(12, null=True)
+    capacidad =  IntegerField(null=True)
+    conector =  IntegerField(null=True)
+    horaEntrada =  TimeField(default=datetime.now, formats='%H:%M:%S')
+    fechaEntrada =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    created_at =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    def __str__(self):
+        return self.atId
+
+    class Meta:
+        database = database
+        table_name = 'lista_entrada'
 
 class TankInService(Model):
     productoNombre = CharField(45, null=True)
@@ -99,6 +121,8 @@ class TankInService(Model):
     llenadera = IntegerField(null=True)
     horaEntrada = TimeField(default=datetime.now, formats='%H:%M:%S')
     fechaEntrada = DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
     class Meta:
@@ -139,7 +163,8 @@ class TankInTrucks(Model):
     fechaInicio = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     fechaFin = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     fechaSalida = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
-    fechaJornada = DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     tipoCarga = IntegerField(null=True)
     created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
