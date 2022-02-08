@@ -92,7 +92,9 @@ async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
         capacidad = tankWaiting.capacidad,
         conector = tankWaiting.conector,
         horaEntrada = tankWaiting.horaEntrada,
-        fechaEntrada = tankWaiting.fechaEntrada
+        fechaEntrada = tankWaiting.fechaEntrada,
+        reporte24 = tankWaiting.reporte24,
+        reporte05 = tankWaiting.reporte05
     )
 
     return tankWaiting
@@ -139,6 +141,8 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutMo
     tank.conector = tank_request.conector
     tank.horaEntrada = tank_request.horaEntrada
     tank.fechaEntrada = tank_request.fechaEntrada
+    tank.reporte24 = tank_request.reporte24
+    tank.reporte05 = tank_request.reporte05
     tank.save()
 
     return tank
@@ -161,7 +165,9 @@ async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
         estatus = tankInService.estatus,
         llenadera = tankInService.llenadera,
         horaEntrada = tankInService.horaEntrada,
-        fechaEntrada = tankInService.fechaEntrada
+        fechaEntrada = tankInService.fechaEntrada,
+        reporte24 = tankInService.reporte24,
+        reporte05 = tankInService.reporte05
     )
 
     return tankInService
@@ -202,9 +208,10 @@ async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
         fechaEntrada = tankInTrucks.fechaEntrada,
         fechaInicio = tankInTrucks.fechaInicio,
         fechaFin = tankInTrucks.fechaFin,
-        fechaSalida = tankInTrucks.fechaSalida,
         fechaJornada = tankInTrucks.fechaJornada,
-        tipoCarga = tankInTrucks.tipoCarga,
+        reporte24 = tankInTrucks.reporte24,
+        reporte05 = tankInTrucks.reporte05,
+        tipoCarga = tankInTrucks.tipoCarga
     )
 
     return tankInTrucks
