@@ -181,7 +181,7 @@ async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
         atName = tankInService.atName,
         claveCarga = tankInService.claveCarga,
         conector = tankInService.conector,
-        Embarque = tankInService.Embarque,
+        embarque = tankInService.embarque,
         capacidad = tankInService.capacidad,
         estandar = tankInService.estandar,
         commSAP = tankInService.commSAP,
