@@ -2,22 +2,19 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 
-from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaiting
-from ..schemas import TankAssignRequestModel
-from ..schemas import TankAssignResponseModel
+from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaiting, TankEntry
 
-from ..schemas import TankInTrucksRequestModel
-from ..schemas import TankInTrucksResponseModel
+from ..schemas import TankEntryRequestModel, TankEntryResponseModel
 
-from ..schemas import TankInServiceResponseModel
-from ..schemas import TankInServiceRequestModel
+from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel
 
-from ..schemas import TankWaitingRequestModel
-from ..schemas import TankWaitingResponseModel
-from ..schemas import TankWaitingRequestPutModel
+from ..schemas import TankInServiceResponseModel, TankInServiceRequestModel
 
-from ..schemas import TankRequestModel
-from ..schemas import TankResponseModel
+from ..schemas import TankAssignRequestModel, TankAssignResponseModel
+
+from ..schemas import TankInTrucksRequestModel, TankInTrucksResponseModel
+
+from ..schemas import TankRequestModel, TankResponseModel
 
 from ..middlewares import VerifyTokenRoute
 
@@ -77,6 +74,30 @@ async def delete_tank(tank_id: int):
 
     return tank
     
+# ---------------- Lista de Entrada ---------------------
+@router.post('/entrada', response_model=TankEntryResponseModel)
+async def create_tanque_entrada(tankEntry: TankEntryRequestModel):
+    tank = TankEntry.create(
+        posicion = tankEntry.posicion,
+        atId = tankEntry.atId,
+        atTipo = tankEntry.atTipo,
+        atName = tankEntry.atName,
+        capacidad = tankEntry.capacidad,
+        conector = tankEntry.conector,
+        horaEntrada = tankEntry.horaEntrada,
+        fechaEntrada = tankEntry.fechaEntrada,
+        reporte24 = tankEntry.reporte24,
+        reporte05 = tankEntry.reporte05
+    )
+
+    return tank
+
+
+@router.get('/entrada', response_model=List[TankEntryResponseModel])
+async def get_tanksEntries():
+    tanks = TankEntry.select()
+    return [ tank for tank in tanks ]
+
 
 # ---------------- Lista de Espera ---------------------
 
@@ -148,6 +169,8 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutMo
     return tank
 
 
+# ---------------- Lista de Servicio ---------------------
+
 @router.post('/servicio', response_model=TankInServiceResponseModel)
 async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
     tankInService = TankInService.create(
@@ -172,8 +195,35 @@ async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
 
     return tankInService
 
+@router.get('/servicio', response_model=List[TankInServiceResponseModel])
+async def get_tanksInService():
+    tanks = TankInService.select()
+    return [ tankInService for tankInService in tanks ]
 
-@router.post('/despacho', response_model=TankInTrucksResponseModel)
+@router.get('/servicio/ultimo', response_model=List[TankAssignResponseModel])
+async def get_tanksAssign():
+    tanks = TankAssign.select()
+    return [ tankAssign for tankAssign in tanks ]
+
+@router.post('/servicio/ultimo', response_model=TankAssignResponseModel)
+async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
+    tankAssign = TankAssign.create(
+        atNum = tankAssign.atNum,
+        atTipo = tankAssign.atTipo,
+        atName = tankAssign.atName,
+        volProg = tankAssign.volProg,
+        conector = tankAssign.conector,
+        embarque = tankAssign.embarque,
+        password = tankAssign.password,
+        fecha = tankAssign.fecha,
+        llenadera = tankAssign.llenadera,
+        posicion = tankAssign.posicion,
+    )
+
+    return tankAssign
+
+# ---------------- Lista de Salida ---------------------
+@router.post('/salida', response_model=TankInTrucksResponseModel)
 async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
     tankInTrucks = TankInTrucks.create(
         productoNombre = tankInTrucks.productoNombre,
@@ -208,7 +258,7 @@ async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
         fechaEntrada = tankInTrucks.fechaEntrada,
         fechaInicio = tankInTrucks.fechaInicio,
         fechaFin = tankInTrucks.fechaFin,
-        fechaJornada = tankInTrucks.fechaJornada,
+        fechaSalida = tankInTrucks.fechaSalida,
         reporte24 = tankInTrucks.reporte24,
         reporte05 = tankInTrucks.reporte05,
         tipoCarga = tankInTrucks.tipoCarga
@@ -216,38 +266,7 @@ async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
 
     return tankInTrucks
 
-@router.post('/servicio/ultimo', response_model=TankAssignResponseModel)
-async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
-    tankAssign = TankAssign.create(
-        atNum = tankAssign.atNum,
-        atTipo = tankAssign.atTipo,
-        atName = tankAssign.atName,
-        volProg = tankAssign.volProg,
-        conector = tankAssign.conector,
-        embarque = tankAssign.embarque,
-        password = tankAssign.password,
-        fecha = tankAssign.fecha,
-        llenadera = tankAssign.llenadera,
-        posicion = tankAssign.posicion,
-    )
-
-    return tankAssign
-
-
-@router.get('/servicio', response_model=List[TankInServiceResponseModel])
-async def get_tanksInService():
-    tanks = TankInService.select()
-    return [ tankInService for tankInService in tanks ]
-
-
-@router.get('/despacho', response_model=List[TankInTrucksResponseModel])
+@router.get('/salida', response_model=List[TankInTrucksResponseModel])
 async def get_tanksInTrucks():
     tanks = TankInTrucks.select()
     return [ tankInTrucks for tankInTrucks in tanks ]
-
-
-@router.get('/servicio/ultimo', response_model=List[TankAssignResponseModel])
-async def get_tanksAssign():
-    tanks = TankAssign.select()
-    return [ tankAssign for tankAssign in tanks ]
-
