@@ -150,7 +150,7 @@ class TankInServiceRequestModel(BaseModel):
     atName: str
     claveCarga: int
     conector: int
-    Embarque: int
+    embarque: int
     capacidad: int
     estandar: int
     commSAP: int
@@ -171,7 +171,7 @@ class TankInServiceResponseModel(ResponseModel):
     atName: str
     claveCarga: int
     conector: int
-    Embarque: int
+    embarque: int
     capacidad: int
     estandar: int
     commSAP: int

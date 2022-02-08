@@ -113,7 +113,7 @@ class TankInService(Model):
     atName = CharField(12, null=True)
     claveCarga = IntegerField(null=True)
     conector = IntegerField(null=True)
-    Embarque = IntegerField(null=True)
+    embarque = IntegerField(null=True)
     capacidad = IntegerField(null=True)
     estandar = IntegerField(null=True)
     commSAP = IntegerField(null=True)
