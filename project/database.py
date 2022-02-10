@@ -162,7 +162,6 @@ class TankInTrucks(Model):
     fechaEntrada = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     fechaInicio = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     fechaFin = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
-    fechaSalida = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     tipoCarga = IntegerField(null=True)
