@@ -216,7 +216,6 @@ class TankInTrucksRequestModel(BaseModel):
     fechaEntrada: str
     fechaInicio: str
     fechaFin: str
-    fechaSalida: str
     reporte24: str
     reporte05: str
     tipoCarga: int
@@ -252,10 +251,9 @@ class TankInTrucksResponseModel(ResponseModel):
     temperatura: float
     presion: float
     modo: str
-    fechaEntrada: datetime
-    fechaInicio: datetime
-    fechaFin: datetime
-    fechaSalida: datetime = None
+    fechaEntrada: date
+    fechaInicio: date
+    fechaFin: date
     reporte24: date
     reporte05: date
     tipoCarga: int

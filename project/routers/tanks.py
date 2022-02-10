@@ -225,7 +225,7 @@ async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
 # ---------------- Lista de Salida ---------------------
 @router.post('/salida', response_model=TankInTrucksResponseModel)
 async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
-    tankInTrucks = TankInTrucks.create(
+    tank = TankInTrucks.create(
         productoNombre = tankInTrucks.productoNombre,
         productoDescripcion = tankInTrucks.productoDescripcion,
         atID = tankInTrucks.atID,
@@ -258,13 +258,12 @@ async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
         fechaEntrada = tankInTrucks.fechaEntrada,
         fechaInicio = tankInTrucks.fechaInicio,
         fechaFin = tankInTrucks.fechaFin,
-        fechaSalida = tankInTrucks.fechaSalida,
         reporte24 = tankInTrucks.reporte24,
         reporte05 = tankInTrucks.reporte05,
         tipoCarga = tankInTrucks.tipoCarga
     )
 
-    return tankInTrucks
+    return tank
 
 @router.get('/salida', response_model=List[TankInTrucksResponseModel])
 async def get_tanksInTrucks():
@@ -281,42 +280,55 @@ async def update_tankInTrucks(tank_id: int, tank_request: TankInTrucksRequestMod
             content={"message": "Registro de Tanque en lista de salida no encontrada"}
         )
     
-    tank.productoNombre = tank_request.productoNombre,
-    tank.productoDescripcion = tank_request.productoDescripcion,
-    tank.atID = tank_request.atID,
-    tank.atTipo = tank_request.atTipo,
-    tank.atName = tank_request.atName,
-    tank.conector = tank_request.conector,
-    tank.embarque = tank_request.embarque,
-    tank.capacidad = tank_request.capacidad,
-    tank.estandarCapacidad = tank_request.estandarCapacidad,
-    tank.commSAP = tank_request.commSAP,
-    tank.respuestaMsgA = tank_request.respuestaMsgA,
-    tank.respuestaMsgB = tank_request.respuestaMsgB,
-    tank.respuestaMsgI = tank_request.respuestaMsgI,
-    tank.atEstatus = tank_request.atEstatus,
-    tank.llenadera = tank_request.llenadera,
-    tank.folioPLC = tank_request.folioPLC,
-    tank.volNatLts = tank_request.volNatLts,
-    tank.volNatBls = tank_request.volNatBls,
-    tank.volCorLts = tank_request.volCorLts,
-    tank.volCorBls = tank_request.volCorBls,
-    tank.masa = tank_request.masa,
-    tank.masaTons = tank_request.masaTons,
-    tank.densidadNat = tank_request.densidadNat,
-    tank.densidadCor = tank_request.densidadCor,
-    tank.porcentaje = tank_request.porcentaje,
-    tank.temperaturaBase = tank_request.temperaturaBase,
-    tank.temperatura = tank_request.temperatura,
-    tank.presion = tank_request.presion,
-    tank.modo = tank_request.modo,
-    tank.fechaEntrada = tank_request.fechaEntrada,
-    tank.fechaInicio = tank_request.fechaInicio,
-    tank.fechaFin = tank_request.fechaFin,
-    tank.fechaSalida = tank_request.fechaSalida,
-    tank.reporte24 = tank_request.reporte24,
-    tank.reporte05 = tank_request.reporte05,
+    tank.productoNombre = tank_request.productoNombre
+    tank.productoDescripcion = tank_request.productoDescripcion
+    tank.atID = tank_request.atID
+    tank.atTipo = tank_request.atTipo
+    tank.atName = tank_request.atName
+    tank.conector = tank_request.conector
+    tank.embarque = tank_request.embarque
+    tank.capacidad = tank_request.capacidad
+    tank.estandarCapacidad = tank_request.estandarCapacidad
+    tank.commSAP = tank_request.commSAP
+    tank.respuestaMsgA = tank_request.respuestaMsgA
+    tank.respuestaMsgB = tank_request.respuestaMsgB
+    tank.respuestaMsgI = tank_request.respuestaMsgI
+    tank.atEstatus = tank_request.atEstatus
+    tank.llenadera = tank_request.llenadera
+    tank.folioPLC = tank_request.folioPLC
+    tank.volNatLts = tank_request.volNatLts
+    tank.volNatBls = tank_request.volNatBls
+    tank.volCorLts = tank_request.volCorLts
+    tank.volCorBls = tank_request.volCorBls
+    tank.masa = tank_request.masa
+    tank.masaTons = tank_request.masaTons
+    tank.densidadNat = tank_request.densidadNat
+    tank.densidadCor = tank_request.densidadCor
+    tank.porcentaje = tank_request.porcentaje
+    tank.temperaturaBase = tank_request.temperaturaBase
+    tank.temperatura = tank_request.temperatura
+    tank.presion = tank_request.presion
+    tank.modo = tank_request.modo
+    tank.fechaEntrada = tank_request.fechaEntrada
+    tank.fechaInicio = tank_request.fechaInicio
+    tank.fechaFin = tank_request.fechaFin
+    tank.reporte24 = tank_request.reporte24
+    tank.reporte05 = tank_request.reporte05
     tank.tipoCarga = tank_request.tipoCarga
     tank.save()
+
+    return tank
+
+@router.delete('/salida/{tank_id}', response_model=TankInTrucksResponseModel)
+async def delete_tankInTrucks(tank_id: int):
+    tank = TankInTrucks.select().where(TankInTrucks.id == tank_id).first()
+
+    if tank is None:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Salida de tanque no encontrada"}
+        )
+
+    tank.delete_instance()
 
     return tank
