@@ -170,7 +170,7 @@ class TankInTrucks(Model):
 
     class Meta:
         database = database
-        table_name = 'lista_cargas'
+        table_name = 'lista_salida'
 
 class TankAssign(Model):
     atNum = IntegerField(null=True)
