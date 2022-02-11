@@ -314,3 +314,21 @@ class LlenaderaResponseModel(ResponseModel):
     conector: int
     tipo: int
     
+
+# --------- Bitacora ---------
+class BitacoraRequestModel(BaseModel):
+    usuario: str
+    actividad: str
+    ubicacion: str
+    fecha: str
+    reporte24: str
+    reporte05:  str
+
+class BitacoraResponseModel(ResponseModel):
+    id: int
+    usuario: str
+    actividad: str
+    ubicacion: str
+    fecha: datetime
+    reporte24: datetime
+    reporte05:  datetime
