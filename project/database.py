@@ -196,3 +196,17 @@ class Llenadera(Model):
     class Meta:
         database = database
         table_name = 'llenaderas'
+
+
+# ----- Bitacora -----
+class Bitacora(Model):
+    usuario = CharField(50)
+    actividad = CharField()
+    ubicacion = CharField(50)
+    fecha = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+
+    class Meta:
+        database = database
+        table_name = 'bitacora'
