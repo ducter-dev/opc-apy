@@ -18,6 +18,8 @@ from ..schemas import TankRequestModel, TankResponseModel
 
 from ..middlewares import VerifyTokenRoute
 
+from ..opc import OpcServices
+
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 
 # ---------------- Tanques ---------------------
@@ -35,12 +37,10 @@ async def create_tanque(tank:TankRequestModel):
 
     return tank
 
-
 @router.get('', response_model=List[TankResponseModel])
 async def get_tanks():
     tanks = Tank.select()
     return [ tank for tank in tanks ]
-
 
 @router.put('/{tank_id}', response_model=TankResponseModel)
 async def edit_tank(tank_id: int, tank_request: TankRequestModel):
@@ -60,7 +60,6 @@ async def edit_tank(tank_id: int, tank_request: TankRequestModel):
     
     return tank
 
-
 @router.delete('/{tank_id}', response_model=TankResponseModel)
 async def delete_tank(tank_id: int):
     tank = Tank.select().where(Tank.id == tank_id).first()
@@ -74,7 +73,9 @@ async def delete_tank(tank_id: int):
 
     return tank
     
+
 # ---------------- Lista de Entrada ---------------------
+
 @router.post('/entrada', response_model=TankEntryResponseModel)
 async def create_tanque_entrada(tankEntry: TankEntryRequestModel):
     tank = TankEntry.create(
@@ -91,7 +92,6 @@ async def create_tanque_entrada(tankEntry: TankEntryRequestModel):
     )
 
     return tank
-
 
 @router.get('/entrada', response_model=List[TankEntryResponseModel])
 async def get_tanksEntries():
@@ -190,6 +190,19 @@ async def post_tankWaitingchangePosition(tank_id: int, tank_request: TankWaiting
 
     return tankSelect
 
+@router.post('/espera/llamar/{tank_id}')
+async def post_tankWaitingCall(tank_id: int):
+    # Obtener datos del tanque seleccionado
+    tankSelect = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+    
+    # Escribir en las variables del opc
+    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tankSelect.atId)
+    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tankSelect.atTipo)
+    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
+    return JSONResponse(
+        status_code=201,
+        content={ "message": f'Se ha mandado a llamar al autotanque {tankSelect.atName} que estaba en la posicion {tankSelect.posicion}' }
+    )
 
 # ---------------- Lista de Servicio ---------------------
 
@@ -243,6 +256,7 @@ async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
     )
 
     return tankAssign
+
 
 # ---------------- Lista de Salida ---------------------
 @router.post('/salida', response_model=TankInTrucksResponseModel)
