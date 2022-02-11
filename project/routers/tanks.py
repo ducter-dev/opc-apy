@@ -204,6 +204,19 @@ async def post_tankWaitingCall(tank_id: int):
         content={ "message": f'Se ha mandado a llamar al autotanque {tankSelect.atName} que estaba en la posicion {tankSelect.posicion}' }
     )
 
+@router.post('/espera/borrar')
+async def post_tankWaitingDelete():
+    # Obtener datos del tanque seleccionado
+    tanks = TankWaiting.select()
+    for tank in tanks:
+        tank.delete_instance()
+
+    return JSONResponse(
+        status_code=201,
+        content={ "message": 'Se ha Borrado la Lista de Espera' }
+    )
+
+
 # ---------------- Lista de Servicio ---------------------
 
 @router.post('/servicio', response_model=TankInServiceResponseModel)
