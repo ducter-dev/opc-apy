@@ -210,3 +210,17 @@ class Bitacora(Model):
     class Meta:
         database = database
         table_name = 'bitacora'
+
+
+# ----- Reloj -----
+class RelojPLC(Model):
+    year = IntegerField(null=True)
+    month = IntegerField(null=True)
+    day = IntegerField(null=True)
+    hours = IntegerField(null=True)
+    mins = IntegerField(null=True)
+    secs = IntegerField(null=True)
+
+    class Meta:
+        database = database
+        table_name = "relojPLC"
