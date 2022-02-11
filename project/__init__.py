@@ -12,6 +12,7 @@ from .database import TankAssign
 from .database import Tank
 from .database import Llenadera
 from .database import Bitacora
+from .database import RelojPLC
 from .database import database as connection
 
 from .opc import OpcServices
@@ -48,7 +49,7 @@ def startup():
     if connection.is_closed():
         connection.connect()
     
-    connection.create_tables([User, TankEntry, TankWaiting, TankInService, TankInTrucks, TankAssign, Tank, Llenadera, Bitacora])
+    connection.create_tables([User, TankEntry, TankWaiting, TankInService, TankInTrucks, TankAssign, Tank, Llenadera, Bitacora, RelojPLC])
     
     #if OpcServices.conectarOPC():
         #print('conectado')
