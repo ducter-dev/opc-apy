@@ -115,6 +115,9 @@ class TankWaitingRequestPutModel(BaseModel):
     reporte24: str
     reporte05: str
 
+class TankWaitingRequestPosicionPutModel(BaseModel):
+    posicion: int
+
 # --------- TanksEntry ---------
 class TankEntryRequestModel(BaseModel):
     posicion: int
@@ -331,3 +334,4 @@ class BitacoraResponseModel(ResponseModel):
     fecha: datetime
     reporte24: date
     reporte05: date
+    
