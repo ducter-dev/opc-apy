@@ -161,7 +161,6 @@ class TankInServiceRequestModel(BaseModel):
     reporte24: str
     reporte05: str
 
-
 class TankInServiceResponseModel(ResponseModel):
     id: int
     productoNombre: str
@@ -330,5 +329,5 @@ class BitacoraResponseModel(ResponseModel):
     actividad: str
     ubicacion: str
     fecha: datetime
-    reporte24: datetime
-    reporte05:  datetime
+    reporte24: date
+    reporte05: date
