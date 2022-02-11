@@ -6,7 +6,7 @@ from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaitin
 
 from ..schemas import TankEntryRequestModel, TankEntryResponseModel
 
-from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel
+from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel, TankWaitingRequestPosicionPutModel
 
 from ..schemas import TankInServiceResponseModel, TankInServiceRequestModel
 
@@ -102,30 +102,34 @@ async def get_tanksEntries():
 # ---------------- Lista de Espera ---------------------
 
 @router.post('/espera', response_model=TankWaitingResponseModel)
-async def create_tanque_espera(tankWaiting:TankWaitingRequestModel):
-    tankWaiting = TankWaiting.create(
-        posicion = tankWaiting.posicion,
-        atId = tankWaiting.atId,
-        atTipo = tankWaiting.atTipo,
-        atName = tankWaiting.atName,
-        password = tankWaiting.password,
-        embarque = tankWaiting.embarque,
-        capacidad = tankWaiting.capacidad,
-        conector = tankWaiting.conector,
-        horaEntrada = tankWaiting.horaEntrada,
-        fechaEntrada = tankWaiting.fechaEntrada,
-        reporte24 = tankWaiting.reporte24,
-        reporte05 = tankWaiting.reporte05
+async def create_tanque_espera(tankWaiting: TankWaitingRequestModel):
+    try:
+        tankWaiting = TankWaiting.create(
+            posicion = tankWaiting.posicion,
+            atId = tankWaiting.atId,
+            atTipo = tankWaiting.atTipo,
+            atName = tankWaiting.atName,
+            password = tankWaiting.password,
+            embarque = tankWaiting.embarque,
+            capacidad = tankWaiting.capacidad,
+            conector = tankWaiting.conector,
+            horaEntrada = tankWaiting.horaEntrada,
+            fechaEntrada = tankWaiting.fechaEntrada,
+            reporte24 = tankWaiting.reporte24,
+            reporte05 = tankWaiting.reporte05
+        )
+
+        return tankWaiting
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
     )
-
-    return tankWaiting
-
 
 @router.get('/espera', response_model=List[TankWaitingResponseModel])
 async def get_tanksWaiting():
-    tanks = TankWaiting.select()
+    tanks = TankWaiting.select().order_by(TankWaiting.posicion)
     return [ tankWaiting for tankWaiting in tanks ]
-
 
 @router.delete('/espera/{tank_id}', response_model=TankWaitingResponseModel)
 async def delete_tankWaiting(tank_id: int):
@@ -141,9 +145,8 @@ async def delete_tankWaiting(tank_id: int):
 
     return tank
 
-
 @router.put('/espera/{tank_id}', response_model=TankWaitingResponseModel)
-async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutModel):
+async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestModel):
     tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
 
     if tank is None:
@@ -167,6 +170,25 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestPutMo
     tank.save()
 
     return tank
+
+@router.post('/espera/cambio-posicion/{tank_id}', response_model=TankWaitingResponseModel)
+async def post_tankWaitingchangePosition(tank_id: int, tank_request: TankWaitingRequestPosicionPutModel):
+    # Obtener datos del tanque seleccionado
+    tankSelect = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+    
+    # Traer los tanques desde la posicion del tanque seleccionado hasta la nueva posicion
+    tanks = TankWaiting.select().where(TankWaiting.posicion < tankSelect.posicion, TankWaiting.posicion >= tank_request.posicion)
+    
+    # Recorrer los tanques y aumentar 1 en la posicion
+    for tank in tanks:
+        tank.posicion = tank.posicion + 1
+        tank.save()
+    
+    # Actualizar el tanque seleccionado a la nueva posicion 
+    tankSelect.posicion = tank_request.posicion
+    tankSelect.save()
+
+    return tankSelect
 
 
 # ---------------- Lista de Servicio ---------------------
