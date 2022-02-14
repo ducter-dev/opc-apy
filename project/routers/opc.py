@@ -21,13 +21,11 @@ async def read_antena_entrada():
                 'tipoAT': tipoPG
             }
         )
-    except:
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={
-                'message': 'Error, no se pueden leer los datos del OPC'
-            }
-        )
+        status_code=501,
+        content={"message": e}
+    )
 
 
 # --------------- Antena de Verificacion ---------------
@@ -45,13 +43,11 @@ async def read_antena_verificacion():
                 'tipoAT': tipoPG
             }
         )
-    except:
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={
-                'message': 'Error, no se pueden leer los datos del OPC'
-            }
-        )
+        status_code=501,
+        content={"message": e}
+    )
 
 
 # --------------- Antena de Salida ---------------
@@ -69,13 +65,11 @@ async def read_antena_salida():
                 'tipoAT': tipoPG
             }
         )
-    except:
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={
-                'message': 'Error, no se pueden leer los datos del OPC'
-            }
-        )
+        status_code=501,
+        content={"message": e}
+    )
 
 
 @router.post('/llenadera/folio/{value}')
