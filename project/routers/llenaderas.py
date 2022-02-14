@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import List
 
 from ..database import Llenadera
-from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel
+from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel
 
 from ..middlewares import VerifyTokenRoute
 
@@ -55,3 +55,37 @@ async def delete_llenadera(llenadera_id: int):
     llenadera.delete_instance()
 
     return llenadera
+
+# ------------ Estado Llenaderas ------------
+@router.post('/estado')
+async def post_changeBarreraSalida(request: EstadoLlenaderaRequesteModel):
+    # 1 = Detener lista de despacho
+    # 0 = Liberar lista de despacho
+    try:
+        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA', request.estado)
+        estado = "detenida" if request.estado == 1 else "liberada"
+        return JSONResponse(
+            status_code=201,
+            content={"message": f'La llenadera ha sido {estado}'}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": str(e)}
+    )
+
+@router.get('/estado')
+async def get_getBarreraSalida():
+    try:
+        #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
+        barrera = 1
+        estado = "detenida" if barrera == 1 else "liberada"
+        return JSONResponse(
+            status_code=201,
+            content={"message": f"La llenadera tiene estado: {estado}"}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
+    )

@@ -357,3 +357,8 @@ class RelojPLCResponseModel(ResponseModel):
 # --------- Barrera ---------
 class BarreraRequesteModel(BaseModel):
     estado: int
+
+
+# --------- Estado Llenadera ---------
+class EstadoLlenaderaRequesteModel(BaseModel):
+    estado: int

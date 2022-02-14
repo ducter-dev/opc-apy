@@ -108,4 +108,3 @@ async def get_getBarreraSalida():
         status_code=501,
         content={"message": e}
     )
-# 
