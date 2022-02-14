@@ -14,7 +14,7 @@ async def post_changeBarreraEntrada(request: BarreraRequesteModel):
     # 1 = Abrir barrera de entrada
     # 2 = Cerrar barrera de entrada
     try:
-        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT', barrera_request.value)
+        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT', request.estado)
         estado = "abierta" if request.estado == 1 else "cerrada"
         return JSONResponse(
             status_code=201,
@@ -47,7 +47,7 @@ async def post_changeBarreraVerificacion(request: BarreraRequesteModel):
     # 1 = Abrir barrera de Verificacion
     # 2 = Cerrar barrera de Verificacion
     try:
-        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER', barrera_request.value)
+        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER', request.estado)
         estado = "abierta" if request.estado == 1 else "cerrada"
         return JSONResponse(
             status_code=201,
@@ -75,5 +75,37 @@ async def get_getBarreraVerificacion():
         content={"message": e}
     )
 
+
+@router.post('/salida')
+async def post_changeBarreraSalida(request: BarreraRequesteModel):
+    # 1 = Abrir barrera de salida
+    # 2 = Cerrar barrera de salida
+    try:
+        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL', request.estado)
+        estado = "abierta" if request.estado == 1 else "cerrada"
+        return JSONResponse(
+            status_code=201,
+            content={"message": f'La barrera de salida ha sido {estado}'}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": str(e)}
+    )
+
+@router.get('/salida')
+async def get_getBarreraSalida():
+    try:
+        #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL')
+        barrera = 2
+        estado = "abierta" if barrera == 1 else "cerrada"
+        return JSONResponse(
+            status_code=201,
+            content={"message": f"La barrera de salida tiene estado: {estado}"}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
+    )
 # 
-# GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL
