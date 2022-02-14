@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routers import user_router, tank_router, opc_router, auth_router, llenadera_router, bitacora_router, reloj_router
+from .routers import user_router, tank_router, opc_router, auth_router, llenadera_router, bitacora_router, reloj_router, barreras_router
 
 from .database import User
 from .database import TankEntry
@@ -44,6 +44,7 @@ app.include_router(auth_router)
 app.include_router(llenadera_router)
 app.include_router(bitacora_router)
 app.include_router(reloj_router)
+app.include_router(barreras_router)
 
 @app.on_event('startup')
 def startup():

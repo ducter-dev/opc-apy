@@ -353,4 +353,7 @@ class RelojPLCResponseModel(ResponseModel):
     hours: int
     mins: int
     secs: int
-    
+
+# --------- Barrera ---------
+class BarreraRequesteModel(BaseModel):
+    estado: int

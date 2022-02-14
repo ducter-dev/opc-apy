@@ -19,7 +19,7 @@ class VerifyTokenRoute(APIRoute):
                 else:
                     return validation_response
             except Exception as ex:
-                return JSONResponse(content={"error": 'Unauthorized'}, status_code=401)
+                return JSONResponse(content={"error": f'Error: {ex}'}, status_code=401)
 
             
         return verify_token_middleware
