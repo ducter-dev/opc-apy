@@ -42,5 +42,38 @@ async def get_getBarreraEntrada():
         content={"message": e}
     )
 
-# GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER
+@router.post('/verificacion')
+async def post_changeBarreraVerificacion(request: BarreraRequesteModel):
+    # 1 = Abrir barrera de Verificacion
+    # 2 = Cerrar barrera de Verificacion
+    try:
+        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER', barrera_request.value)
+        estado = "abierta" if request.estado == 1 else "cerrada"
+        return JSONResponse(
+            status_code=201,
+            content={"message": f'La barrera de verificacion ha sido {estado}'}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": str(e)}
+    )
+
+@router.get('/verificacion')
+async def get_getBarreraVerificacion():
+    try:
+        #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
+        barrera = 1
+        estado = "abierta" if barrera == 1 else "cerrada"
+        return JSONResponse(
+            status_code=201,
+            content={"message": f"La barrera de verificacion tiene estado: {estado}"}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
+    )
+
+# 
 # GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL
