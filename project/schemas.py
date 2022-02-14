@@ -334,4 +334,23 @@ class BitacoraResponseModel(ResponseModel):
     fecha: datetime
     reporte24: date
     reporte05: date
+
+
+# --------- RelojPLC ---------
+class RelojPLCRequestModel(BaseModel):
+    year: int
+    month: int
+    day: int
+    hours: int
+    mins: int
+    secs: int
+
+class RelojPLCResponseModel(ResponseModel):
+    id: int
+    year: int
+    month: int
+    day: int
+    hours: int
+    mins: int
+    secs: int
     
