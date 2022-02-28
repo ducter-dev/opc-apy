@@ -362,3 +362,8 @@ class BarreraRequesteModel(BaseModel):
 # --------- Estado Llenadera ---------
 class EstadoLlenaderaRequesteModel(BaseModel):
     estado: int
+
+
+# --------- Numero Llenadera ---------
+class NumeroLlenaderaRequesteModel(BaseModel):
+    llenadera: int
