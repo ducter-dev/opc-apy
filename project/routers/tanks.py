@@ -2,6 +2,8 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 
+from pydantic import Json
+
 from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaiting, TankEntry
 
 from ..schemas import TankEntryRequestModel, TankEntryResponseModel
@@ -50,7 +52,7 @@ async def edit_tank(tank_id: int, tank_request: TankRequestModel):
             status_code=404,
             content={"message": "Tanque no encontrado"}
         )
-
+    tank.atId = tank_request.atId
     tank.atTipo = tank_request.atTipo
     tank.atName = tank_request.atName
     tank.conector = tank_request.conector
@@ -72,6 +74,31 @@ async def delete_tank(tank_id: int):
     tank.delete_instance()
 
     return tank
+
+
+@router.post('/llamar/{tank_id}')
+async def call_tank(tank_id: int):
+    try:
+        tank = Tank.select().where(Tank.id == tank_id).first()
+        if tank is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Tanque no encontrado"}
+            )
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tank.atId)
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tank.atTipo)
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
+        return JSONResponse(
+            status_code=201,
+            content={"message": f"El Tanque {tank.atName} ha sido mandado a llamar."}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
+    )
+
+
     
 
 # ---------------- Lista de Entrada ---------------------
