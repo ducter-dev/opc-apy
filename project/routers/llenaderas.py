@@ -144,6 +144,7 @@ async def post_reasignarAsignacion(request: NumeroLlenaderaRequesteModel):
                 content={"message": 'Llenadera no existente.'}
             )
         #OpcServices.writeOPC(result, 1)
+        #OpcServices.weiteOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.REASIGNA_LLENADERA',1)
         return JSONResponse(
             status_code=201,
             content={"message": f'Se ha reasignado la llenadera {llenadera}.'}
@@ -169,20 +170,55 @@ def reasignar(llenadera):
     }
     return tabla_llenaderas.get(llenadera, 0 )
 
-# -> siguiente asignacion
-@router.post('/asignacion/siguiente')
-async def post_siguienteAsignacion(request: EstadoLlenaderaRequesteModel):
-    # 1 = Siguiente asignacion RFVER_SIGLLENADERA
 
+# -> llenadera disponible en variable plc
+@router.get('/libres')
+async def get_llenadera_disponible():
     try:
-        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_SIGLLENADERA', request.estado)
-        
+        #llenadera_disponible = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
+        llenadera_plc = 5
+        #llenadera5 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN05')
+        #llenadera6 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN06')
+        #llenadera7 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN07')
+        #llenadera8 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN08')
+        #llenadera9 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN09')
+        #llenadera10 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN10')
+        #llenadera11 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN11')
+        #llenadera12 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN12')
+        #llenadera13 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN13')
+        #llenadera14 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN14')
+
+        llenadera5 = 1
+        llenadera6 = 0
+        llenadera7 = 1
+        llenadera8 = 0
+        llenadera9 = 1
+        llenadera10 = 1
+        llenadera11 = 1
+        llenadera12 = 1
+        llenadera13 = 0
+        llenadera14 = 0
+
+        tabla_llenaderas = {
+            "5": llenadera5, 
+            "6": llenadera6, 
+            "7": llenadera7, 
+            "8": llenadera8, 
+            "9": llenadera9, 
+            "10": llenadera10, 
+            "11": llenadera11, 
+            "12": llenadera12, 
+            "13": llenadera13, 
+            "14": llenadera14,
+            "plc": llenadera_plc
+        }
         return JSONResponse(
-            status_code=201,
-            content={"message": 'Ha seleccionado otra llenadera para asignar.'}
+            status_code=200,
+            content={"data": tabla_llenaderas}
         )
     except Exception as e:
         return JSONResponse(
             status_code=501,
             content={"message": str(e)}
         )
+
