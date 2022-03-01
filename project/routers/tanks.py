@@ -98,7 +98,19 @@ async def call_tank(tank_id: int):
         content={"message": e}
     )
 
-
+@router.post('/alarmar')
+async def alarm_tanks():
+    try:
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.HABILITA_ALARMA', 1)
+        return JSONResponse(
+            status_code=201,
+            content={"message": "Se ha habilitado la alarma sonora."}
+        )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
+    )
     
 
 # ---------------- Lista de Entrada ---------------------
