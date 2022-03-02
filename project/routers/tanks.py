@@ -2,8 +2,6 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 
-from pydantic import Json
-
 from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaiting, TankEntry
 
 from ..schemas import TankEntryRequestModel, TankEntryResponseModel

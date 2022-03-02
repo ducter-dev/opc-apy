@@ -224,3 +224,14 @@ class RelojPLC(Model):
     class Meta:
         database = database
         table_name = "relojPLC"
+
+
+# ----- Folios -----
+class Folio(Model):
+    llenadera = ForeignKeyField(Llenadera)
+    folio = IntegerField()
+    
+    class Meta:
+        database = database
+        table_name = "folios"
+
