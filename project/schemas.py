@@ -1,9 +1,10 @@
 from datetime import date, datetime, time
-from typing import Any
+from typing import Any, List
 from pydantic import validator
 from pydantic import BaseModel
 from pydantic.utils import GetterDict
 from peewee import ModelSelect
+
 
 class PeeweeGetterDict(GetterDict):
     def get(self, key: Any, default: Any = None):
@@ -368,3 +369,16 @@ class EstadoLlenaderaRequesteModel(BaseModel):
 # --------- Numero Llenadera ---------
 class NumeroLlenaderaRequesteModel(BaseModel):
     llenadera: int
+
+
+# --------- folios ---------
+class FoliosRequestModel(BaseModel):
+    llenadera_id: int
+    folio: int
+
+
+class FoliosResponseModel(ResponseModel):
+    id: int
+    folio: int
+    llenadera: LlenaderaResponseModel
+

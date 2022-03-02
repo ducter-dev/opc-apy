@@ -4,8 +4,9 @@ from typing import List
 
 from project.opc import OpcServices
 
-from ..database import Llenadera
+from ..database import Llenadera, Folio
 from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel
+from ..schemas import FoliosRequestModel, FoliosResponseModel
 
 from ..middlewares import VerifyTokenRoute
 
@@ -222,3 +223,39 @@ async def get_llenadera_disponible():
             content={"message": str(e)}
         )
 
+# ------------ Folios Llenaderas ------------
+@router.get('/folios', response_model=List[FoliosResponseModel])
+async def get_folios():
+    folios = Folio.select()
+    return [ folio for folio in folios ]
+
+
+@router.post('/folios', response_model=FoliosResponseModel)
+async def create_folio(request: FoliosRequestModel):
+    try:
+        folio = Folio.create(
+            llenadera_id=request.llenadera_id,
+            folio = request.folio
+        )
+        return folio
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": str(e)}
+        )
+
+@router.put('/folios/{folio_id}', response_model=FoliosResponseModel)
+async def update_folio(folio_id: int, request: FoliosRequestModel):
+    try:
+        folio = Folio.select().where(Folio.id == folio_id).first()
+        folio.llenadera_id = request.llenadera_id
+        folio.folio = request.folio
+        folio.save()
+        return folio
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": str(e)}
+        )
