@@ -259,3 +259,97 @@ async def update_folio(folio_id: int, request: FoliosRequestModel):
             status_code=501,
             content={"message": str(e)}
         )
+
+@router.post('/desasignar/{llenadera}')
+async def desasignar(llenadera: int):
+    # obtener si la llenadera esta libre
+    strLibre = getPLCLlenaderaLibre(llenadera)
+    if strLibre is False:
+        return JSONResponse(
+            status_code=401,
+            content={"message": "Debe proporcionar un numero correcto de llenadera."}
+        )
+    libre = OpcServices.readDataPLC(strLibre)
+    # obtener el turno de la llenadera
+    
+    strTurno = getPLCLlenaderaTurno(llenadera)
+    turno = OpcServices.readDataPLC(strTurno)
+
+    # si la llenadera esta libre y el turno es menor o igual a cero -> se debe modificar la llenadera
+    message = ''
+    if libre is True and turno <= 0:
+        try:
+            #strDesasignar = OpcServices.readDataPLC(llenadera)
+            #OpcServices.writeOPC(strDesasignar)
+            return JSONResponse(
+                status_code=201,
+                content={f"El estatus de la llenadera {llenadera} se ha actualizado."}
+            )
+
+        except Exception as e:
+            return JSONResponse(
+                status_code=501,
+                content={"message": str(e)}
+            )
+    # si la llenadera esta libre y el turno es mayor a cero -> enviar mensaje que ya esta deasignada
+    elif libre is True and turno > 0:
+        return JSONResponse(
+            status_code=201,
+            content={f"La llenadera {llenadera} ya se encuanetra disponible."}
+        )
+    # de lo contrario enviar que se realice de forma manual
+    else:
+        return JSONResponse(
+            status_code=201,
+            content={f"La llenadera {llenadera} no se encuentra liberada en el SCD, debe resetear la secuencia."}
+        )
+
+def getPLCLlenaderaLibre(llenadera):
+    llenaderas = {
+        5: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN05",
+        6: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN06",
+        7: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN07",
+        8: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN08",
+        9: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN09",
+        10: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN10",
+        11: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN11",
+        12: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN12",
+        13: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN13",
+        14: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN14"
+    }
+
+    return llenaderas.get(llenadera, False)
+
+
+def getPLCLlenaderaTurno(llenadera):
+    llenaderas = {
+        5: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN05",
+        6: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN06",
+        7: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN07",
+        8: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN08",
+        9: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN09",
+        10: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN10",
+        11: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN11",
+        12: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN12",
+        13: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN13",
+        14: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.TURNO_LLEN14"
+    }
+
+    return llenaderas.get(llenadera, False)
+
+
+def getPLCLlenaderaDesasignar(llenadera):
+    llenaderas = {
+        5: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN05",
+        6: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN06",
+        7: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN07",
+        8: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN08",
+        9: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN09",
+        10: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN10",
+        11: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN11",
+        12: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN12",
+        13: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN13",
+        14: "GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN14"
+    }
+
+    return llenaderas.get(llenadera, False)

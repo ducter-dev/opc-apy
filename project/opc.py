@@ -32,7 +32,5 @@ class OpcServices():
     
     @classmethod
     def writeOPC(self, tag, value):
-        print(tag)
-        print(value)
         self.opc.write((tag, value))
         return value
