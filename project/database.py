@@ -21,7 +21,7 @@ database = MySQLDatabase(DATABASE_DB,
                         host=HOST_DB,
                         port=int(PORT_DB))
 
-
+# ---------- usuarios ---------- #
 class User(Model):
     username = CharField(max_length=50, unique=True)
     password = CharField()
@@ -46,6 +46,7 @@ class User(Model):
         result = bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
         return result
 
+# ---------- tanques ---------- #
 class Tank(Model):
     atId =  IntegerField(null=True)
     atTipo =  IntegerField(null=True)
@@ -62,7 +63,7 @@ class Tank(Model):
         database = database
         table_name = 'autotanques'
 
-
+# ---------- tanques en lista de espera ---------- #
 class TankWaiting(Model):
     posicion =  IntegerField(null=True)
     atId =  IntegerField(null=True)
@@ -85,6 +86,9 @@ class TankWaiting(Model):
         database = database
         table_name = 'lista_espera'
 
+
+# ---------- tanques en entrada ---------- #
+
 class TanksEntry(Model):
     posicion =  IntegerField(null=True)
     atId =  IntegerField(null=True)
@@ -105,6 +109,9 @@ class TanksEntry(Model):
         database = database
         table_name = 'lista_entrada'
 
+
+# ---------- ultima Entrada ---------- #
+
 class TankEntry(Model):
     posicion =  IntegerField(null=True)
     atId =  IntegerField(null=True)
@@ -117,6 +124,9 @@ class TankEntry(Model):
     class Meta:
         database = database
         table_name = 'ultima_entrada'
+
+
+# ---------- tanques en servicio ---------- #
 
 class TanksInService(Model):
     productoNombre = CharField(45, null=True)
@@ -141,6 +151,9 @@ class TanksInService(Model):
     class Meta:
         database = database
         table_name = 'lista_servicio'
+
+
+# ---------- tanques en lista de salida ---------- #
 
 class TankInTrucks(Model):
     productoNombre = CharField(45, null=True)
@@ -184,6 +197,7 @@ class TankInTrucks(Model):
         database = database
         table_name = 'lista_salida'
 
+# ---------- tanque ultima asignacion ---------- #
 class TankAssign(Model):
     atNum = IntegerField(null=True)
     atTipo = IntegerField(null=True)
