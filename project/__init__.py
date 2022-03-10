@@ -15,6 +15,7 @@ from .database import Llenadera
 from .database import Bitacora
 from .database import RelojPLC
 from .database import Folio
+from .database import TankExit
 from .database import database as connection
 
 from .opc import OpcServices
@@ -66,6 +67,7 @@ def startup():
         RelojPLC,
         Folio,
         TankEntry,
+        TankExit,
     ])
     
     #if OpcServices.conectarOPC():

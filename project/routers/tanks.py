@@ -3,13 +3,13 @@ from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, date, timedelta
 
-from ..database import Tank, TankAssign, TanksInService, TankInTrucks, TankWaiting, TanksEntry, TankEntry
+from ..database import Tank, TankAssign, TankExit, TanksInService, TankInTrucks, TankWaiting, TanksEntry, TankEntry
 
 from ..schemas import TanksEntryRequestModel, TanksEntryResponseModel, TanksLastEntryResponseModel
 
 from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel, TankWaitingRequestPosicionPutModel
 
-from ..schemas import TanksInServiceResponseModel, TanksInServiceRequestModel, TanksLastAssignResponseModel
+from ..schemas import TanksInServiceResponseModel, TanksInServiceRequestModel, TanksLastAssignResponseModel, TanksLastExitResponseModel
 
 from ..schemas import TankAssignRequestModel, TankAssignResponseModel
 
@@ -522,4 +522,9 @@ async def delete_tankInTrucks(tank_id: int):
 
     tank.delete_instance()
 
+    return tank
+
+@router.get('/salida/ultima', response_model=TanksLastExitResponseModel)
+async def get_tanksLastAssign():
+    tank = TankExit.select().where(TankExit.id == 1).first()
     return tank
