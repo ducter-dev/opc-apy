@@ -1,14 +1,15 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
+from datetime import datetime, date, timedelta
 
-from ..database import Tank, TankAssign, TankInService, TankInTrucks, TankWaiting, TankEntry
+from ..database import Tank, TankAssign, TanksInService, TankInTrucks, TankWaiting, TanksEntry, TankEntry
 
-from ..schemas import TankEntryRequestModel, TankEntryResponseModel
+from ..schemas import TanksEntryRequestModel, TanksEntryResponseModel
 
 from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel, TankWaitingRequestPosicionPutModel
 
-from ..schemas import TankInServiceResponseModel, TankInServiceRequestModel
+from ..schemas import TanksInServiceResponseModel, TanksInServiceRequestModel
 
 from ..schemas import TankAssignRequestModel, TankAssignResponseModel
 
@@ -25,14 +26,14 @@ router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 # ---------------- Tanques ---------------------
 
 @router.post('', response_model=TankResponseModel)
-async def create_tanque(tank:TankRequestModel):
+async def create_tanque(tank_request:TankRequestModel):
     tank = Tank.create(
-        atId = tank.atId,
-        atTipo = tank.atTipo,
-        atName = tank.atName,
-        conector = tank.conector,
-        capacidad90 = tank.capacidad90,
-        transportadora = tank.transportadora,
+        atId = tank_request.atId,
+        atTipo = tank_request.atTipo,
+        atName = tank_request.atName,
+        conector = tank_request.conector,
+        capacidad90 = tank_request.capacidad90,
+        transportadora = tank_request.transportadora,
     )
 
     return tank
@@ -113,50 +114,149 @@ async def alarm_tanks():
 
 # ---------------- Lista de Entrada ---------------------
 
-@router.post('/entrada', response_model=TankEntryResponseModel)
-async def create_tanque_entrada(tankEntry: TankEntryRequestModel):
-    tank = TankEntry.create(
-        posicion = tankEntry.posicion,
-        atId = tankEntry.atId,
-        atTipo = tankEntry.atTipo,
-        atName = tankEntry.atName,
-        capacidad = tankEntry.capacidad,
-        conector = tankEntry.conector,
-        horaEntrada = tankEntry.horaEntrada,
-        fechaEntrada = tankEntry.fechaEntrada,
-        reporte24 = tankEntry.reporte24,
-        reporte05 = tankEntry.reporte05
+@router.post('/entrada', response_model=TanksEntryResponseModel)
+async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
+    
+    try:
+        # Escribiendo datos de Entrada Manulmente
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_WRITING', 1)
+
+        # Checar si existe el autotanque
+        tank = Tank.select().where(Tank.id == tank_request.atId, Tank.atTipo == tank_request.atTipo ).first()
+
+        if tank is None:
+            tank = Tank.create(
+                atId = tank_request.atId,
+                atTipo = tank_request.atTipo,
+                atName = tank_request.atName,
+                conector = tank_request.conector,
+                capacidad90 = tank_request.capacidad,
+                transportadora = 0
+            )
+        # Entrada Manual de Numero de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_NUMPG',tank.atName)
+
+        # Entrada Manual de Tipo de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPOAT',tank.atTipo)
+
+        # Entrada Manual de Tipo Conector de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPO_CON',tank.conector)
+
+        # Entrada Manual de Volumen Autorizado de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_CLAVE',tank.atId)
+
+        # Entrada Manual de Numero de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_VOLAUTOR',tank.capacidad)
+        
+        now = datetime.now()
+        fecha_base = f'${now.strftime("%Y:%m:%d")} 05:00:00'
+        print(fecha_base)
+        fecha05 = now if datetime.strptime(fecha_base) > now else now.timedelta(days=1)
+        print(fecha05)
+        
+        entry = TanksEntry.create(
+            posicion = tank_request.posicion,
+            atId = tank.atId,
+            atTipo = tank.atTipo,
+            atName = tank.atName,
+            capacidad = tank.capacidad,
+            conector = tank.conector,
+            horaEntrada = now.strftime("%H:%M:%S"),
+            fechaEntrada = now.strftime("%Y:%m:%d"),
+            reporte24 = now.strftime("%Y:%m:%d"),
+            reporte05 = fecha05
+        )
+        
+
+        return entry
+
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
     )
 
-    return tank
+    
 
-@router.get('/entrada', response_model=List[TankEntryResponseModel])
+@router.get('/entrada', response_model=List[TanksEntryResponseModel])
 async def get_tanksEntries():
-    tanks = TankEntry.select()
+    tanks = TanksEntry.select()
     return [ tank for tank in tanks ]
 
 
 # ---------------- Lista de Espera ---------------------
 
-@router.post('/espera', response_model=TankWaitingResponseModel)
-async def create_tanque_espera(tankWaiting: TankWaitingRequestModel):
+@router.post('/espera')
+async def create_tanque_espera(tank_request: TanksEntryRequestModel):
     try:
+        # Escribiendo datos de Entrada Manulmente
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_WRITING', 1)
+
+        # Checar si existe el autotanque
+        tank = Tank.select().where(Tank.atId == tank_request.atId, Tank.atTipo == tank_request.atTipo ).first()
+
+        if tank is None:
+            tank = Tank.create(
+                atId = tank_request.atId,
+                atTipo = tank_request.atTipo,
+                atName = tank_request.atName,
+                conector = tank_request.conector,
+                capacidad90 = tank_request.capacidad,
+                transportadora = 0
+            )
+        # Entrada Manual de Numero de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_NUMPG',tank.atName)
+
+        # Entrada Manual de Tipo de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPOAT',tank.atTipo)
+
+        # Entrada Manual de Tipo Conector de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPO_CON',tank.conector)
+
+        # Entrada Manual de Volumen Autorizado de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_CLAVE',tank.atId)
+
+        # Entrada Manual de Numero de PG
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_VOLAUTOR',tank.capacidad)
+        now = datetime.now()
+        fecha_base = datetime(now.year, now.month, now.day, 5, 30, 0)
+        fecha05 =  now.strftime("%Y-%m-%d") if now > fecha_base else (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        horaEntrada = now.strftime("%H:%M:%S")
+        fechaEntrada = now.strftime("%Y:%m:%d")
+
         tankWaiting = TankWaiting.create(
-            posicion = tankWaiting.posicion,
-            atId = tankWaiting.atId,
-            atTipo = tankWaiting.atTipo,
-            atName = tankWaiting.atName,
-            password = tankWaiting.password,
-            embarque = tankWaiting.embarque,
-            capacidad = tankWaiting.capacidad,
-            conector = tankWaiting.conector,
-            horaEntrada = tankWaiting.horaEntrada,
-            fechaEntrada = tankWaiting.fechaEntrada,
-            reporte24 = tankWaiting.reporte24,
-            reporte05 = tankWaiting.reporte05
+            posicion = tank_request.posicion,
+            atId = tank.atId,
+            atTipo = tank.atTipo,
+            atName = tank.atName,
+            password = tank.atId,
+            embarque = 0,
+            capacidad = tank.capacidad90,
+            conector = tank.conector,
+            horaEntrada = horaEntrada,
+            fechaEntrada = fechaEntrada,
+            reporte24 = fechaEntrada,
+            reporte05 = fecha05
         )
 
-        return tankWaiting
+        # Empezar a escribir manualmente
+        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_WRITING', 1)
+        response = {
+            "id": tankWaiting.id,
+            "posicion": tankWaiting.posicion,
+            "atId": tankWaiting.atId,
+            "atName": tankWaiting.atName,
+            "atTipo": tankWaiting.atTipo,
+            "embarque": tankWaiting.embarque,
+            "capacidad": tankWaiting.capacidad,
+            "conector": tankWaiting.conector,
+            "horaEntrada": tankWaiting.horaEntrada,
+            "fechaEntrada": tankWaiting.fechaEntrada,
+            "reporte24": tankWaiting.reporte24,
+            "reporte05": tankWaiting.reporte05,
+        }
+        return response
+
     except Exception as e:
         return JSONResponse(
         status_code=501,
@@ -256,34 +356,34 @@ async def post_tankWaitingDelete():
 
 # ---------------- Lista de Servicio ---------------------
 
-@router.post('/servicio', response_model=TankInServiceResponseModel)
-async def create_tanque_servicio(tankInService:TankInServiceRequestModel):
-    tankInService = TankInService.create(
-        productoNombre = tankInService.productoNombre,
-        productoDescripcion = tankInService.productoDescripcion,
-        atID = tankInService.atID,
-        atTipo = tankInService.atTipo,
-        atName = tankInService.atName,
-        claveCarga = tankInService.claveCarga,
-        conector = tankInService.conector,
-        embarque = tankInService.embarque,
-        capacidad = tankInService.capacidad,
-        estandar = tankInService.estandar,
-        commSAP = tankInService.commSAP,
-        estatus = tankInService.estatus,
-        llenadera = tankInService.llenadera,
-        horaEntrada = tankInService.horaEntrada,
-        fechaEntrada = tankInService.fechaEntrada,
-        reporte24 = tankInService.reporte24,
-        reporte05 = tankInService.reporte05
+@router.post('/servicio', response_model=TanksInServiceResponseModel)
+async def create_tanque_servicio(TanksInService:TanksInServiceRequestModel):
+    TanksInService = TanksInService.create(
+        productoNombre = TanksInService.productoNombre,
+        productoDescripcion = TanksInService.productoDescripcion,
+        atID = TanksInService.atID,
+        atTipo = TanksInService.atTipo,
+        atName = TanksInService.atName,
+        claveCarga = TanksInService.claveCarga,
+        conector = TanksInService.conector,
+        embarque = TanksInService.embarque,
+        capacidad = TanksInService.capacidad,
+        estandar = TanksInService.estandar,
+        commSAP = TanksInService.commSAP,
+        estatus = TanksInService.estatus,
+        llenadera = TanksInService.llenadera,
+        horaEntrada = TanksInService.horaEntrada,
+        fechaEntrada = TanksInService.fechaEntrada,
+        reporte24 = TanksInService.reporte24,
+        reporte05 = TanksInService.reporte05
     )
 
-    return tankInService
+    return TanksInService
 
-@router.get('/servicio', response_model=List[TankInServiceResponseModel])
+@router.get('/servicio', response_model=List[TanksInServiceResponseModel])
 async def get_tanksInService():
-    tanks = TankInService.select()
-    return [ tankInService for tankInService in tanks ]
+    tanks = TanksInService.select()
+    return [ TanksInService for TanksInService in tanks ]
 
 @router.get('/servicio/ultimo', response_model=List[TankAssignResponseModel])
 async def get_tanksAssign():

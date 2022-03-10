@@ -4,9 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import user_router, tank_router, opc_router, auth_router, llenadera_router, bitacora_router, reloj_router, barreras_router
 
 from .database import User
+from .database import TanksEntry
 from .database import TankEntry
 from .database import TankWaiting
-from .database import TankInService
+from .database import TanksInService
 from .database import TankInTrucks
 from .database import TankAssign
 from .database import Tank
@@ -52,7 +53,20 @@ def startup():
     if connection.is_closed():
         connection.connect()
     
-    connection.create_tables([User, TankEntry, TankWaiting, TankInService, TankInTrucks, TankAssign, Tank, Llenadera, Bitacora, RelojPLC, Folio])
+    connection.create_tables([
+        User,
+        TanksEntry,
+        TankWaiting,
+        TanksInService,
+        TankInTrucks,
+        TankAssign,
+        Tank,
+        Llenadera,
+        Bitacora,
+        RelojPLC,
+        Folio,
+        TankEntry,
+    ])
     
     #if OpcServices.conectarOPC():
         #print('conectado')
