@@ -158,18 +158,13 @@ class TanksInService(Model):
 class TankInTrucks(Model):
     productoNombre = CharField(45, null=True)
     productoDescripcion = CharField(100, null=True)
-    atID = IntegerField(null=True)
+    atId = IntegerField(null=True)
     atTipo = IntegerField(null=True)
     atName = CharField(12, null=True)
     conector = IntegerField(null=True)
     embarque = IntegerField(null=True)
     capacidad = IntegerField(null=True)
-    estandarCapacidad = IntegerField(null=True)
-    commSAP = IntegerField(null=True)
-    respuestaMsgA = CharField(10, null=True)
-    respuestaMsgB = CharField(10, null=True)
-    respuestaMsgI = CharField(10, null=True)
-    atEstatus = IntegerField(null=True)
+    capacidadStd = IntegerField(null=True)
     llenadera = IntegerField(null=True)
     folioPLC = IntegerField(null=True)
     volNatLts = IntegerField(null=True)
@@ -197,6 +192,26 @@ class TankInTrucks(Model):
         database = database
         table_name = 'lista_salida'
 
+
+# ---------- tanque ultima salida ---------- #
+class TankExit(Model):
+    productoNombre = CharField(45, null=True)
+    productoDescripcion = CharField(100, null=True)
+    atId = IntegerField(null=True)
+    atTipo = IntegerField(null=True)
+    atName = CharField(12, null=True)
+    conector = IntegerField(null=True)
+    embarque = IntegerField(null=True)
+    capacidad = IntegerField(null=True)
+    capacidadStd = IntegerField(null=True)
+    masa = IntegerField(null=True)
+    fechaSalida = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    class Meta:
+        database = database
+        table_name = 'ultima_salida'
+
+        
 # ---------- tanque ultima asignacion ---------- #
 class TankAssign(Model):
     atId = IntegerField(null=True)

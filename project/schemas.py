@@ -246,18 +246,13 @@ class TankInTrucksResponseModel(ResponseModel):
     id: int
     productoNombre: str
     productoDescripcion: str
-    atID: int
+    atId: int
     atTipo: int
     atName: str
     conector: int
     embarque: int
     capacidad: int
-    estandarCapacidad: int
-    commSAP: int
-    respuestaMsgA: str
-    respuestaMsgB: str
-    respuestaMsgI: str
-    atEstatus: int
+    capacidadStd: int
     llenadera: int
     folioPLC: int
     volNatLts: int
@@ -279,6 +274,16 @@ class TankInTrucksResponseModel(ResponseModel):
     reporte24: date
     reporte05: date
     tipoCarga: int
+
+class TanksLastExitResponseModel(ResponseModel):
+    id: int
+    atId: int
+    atTipo: int
+    atName: str
+    capacidad: int
+    capacidadStd: int
+    conector: int
+    fechaSalida: datetime
 
 # --------- TankAsignado ---------
 class TankAssignRequestModel(BaseModel):
