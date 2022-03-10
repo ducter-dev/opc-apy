@@ -199,7 +199,7 @@ class TankInTrucks(Model):
 
 # ---------- tanque ultima asignacion ---------- #
 class TankAssign(Model):
-    atNum = IntegerField(null=True)
+    atId = IntegerField(null=True)
     atTipo = IntegerField(null=True)
     atName = CharField(12, null=True)
     volProg = IntegerField(null=True)

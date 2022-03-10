@@ -191,6 +191,19 @@ class TanksInServiceResponseModel(ResponseModel):
     reporte24: date
     reporte05: date
 
+class TanksLastAssignResponseModel(ResponseModel):
+    id: int
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    volProg: int
+    conector: int
+    embarque: int
+    password: int
+    fecha: datetime
+    llenadera: int
+
 # --------- TanksCargados ---------
 class TankInTrucksRequestModel(BaseModel):
     productoNombre: str
