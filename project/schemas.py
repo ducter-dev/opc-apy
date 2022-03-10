@@ -11,7 +11,7 @@ class PeeweeGetterDict(GetterDict):
       
       res = getattr(self._obj, key, default)
       if isinstance(res, ModelSelect):
-        return list
+        return List
 
       return res
 
@@ -120,19 +120,15 @@ class TankWaitingRequestPosicionPutModel(BaseModel):
     posicion: int
 
 # --------- TanksEntry ---------
-class TankEntryRequestModel(BaseModel):
+class TanksEntryRequestModel(BaseModel):
     posicion: int
     atId: int
     atTipo: int
     atName: str
     capacidad: int
     conector: int
-    horaEntrada: str
-    fechaEntrada: str
-    reporte24: str
-    reporte05: str
 
-class TankEntryResponseModel(ResponseModel):
+class TanksEntryResponseModel(ResponseModel):
     id: int
     posicion: int
     atId: int
@@ -146,7 +142,7 @@ class TankEntryResponseModel(ResponseModel):
     reporte05: date
 
 # --------- TanksService ---------
-class TankInServiceRequestModel(BaseModel):
+class TanksInServiceRequestModel(BaseModel):
     productoNombre: str
     productoDescripcion: str
     atID: int
@@ -165,7 +161,7 @@ class TankInServiceRequestModel(BaseModel):
     reporte24: str
     reporte05: str
 
-class TankInServiceResponseModel(ResponseModel):
+class TanksInServiceResponseModel(ResponseModel):
     id: int
     productoNombre: str
     productoDescripcion: str

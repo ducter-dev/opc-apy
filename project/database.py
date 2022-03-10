@@ -85,7 +85,7 @@ class TankWaiting(Model):
         database = database
         table_name = 'lista_espera'
 
-class TankEntry(Model):
+class TanksEntry(Model):
     posicion =  IntegerField(null=True)
     atId =  IntegerField(null=True)
     atTipo =  IntegerField(null=True)
@@ -105,7 +105,20 @@ class TankEntry(Model):
         database = database
         table_name = 'lista_entrada'
 
-class TankInService(Model):
+class TankEntry(Model):
+    posicion =  IntegerField(null=True)
+    atId =  IntegerField(null=True)
+    atTipo =  IntegerField(null=True)
+    atName = CharField(12, null=True)
+    capacidad =  IntegerField(null=True)
+    conector =  IntegerField(null=True)
+    fechaEntrada = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    class Meta:
+        database = database
+        table_name = 'ultima_entrada'
+
+class TanksInService(Model):
     productoNombre = CharField(45, null=True)
     productoDescripcion = CharField(100, null=True)
     atID = IntegerField(null=True)
@@ -186,6 +199,7 @@ class TankAssign(Model):
     class Meta:
         database = database
         table_name = 'ultima_asignacion'
+
 
 # ----- Llenaderas -----
 class Llenadera(Model):
