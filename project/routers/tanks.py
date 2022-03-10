@@ -5,7 +5,7 @@ from datetime import datetime, date, timedelta
 
 from ..database import Tank, TankAssign, TanksInService, TankInTrucks, TankWaiting, TanksEntry, TankEntry
 
-from ..schemas import TanksEntryRequestModel, TanksEntryResponseModel
+from ..schemas import TanksEntryRequestModel, TanksEntryResponseModel, TanksLastEntryResponseModel
 
 from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel, TankWaitingRequestPosicionPutModel
 
@@ -177,11 +177,16 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
     )
 
     
-
 @router.get('/entrada', response_model=List[TanksEntryResponseModel])
 async def get_tanksEntries():
     tanks = TanksEntry.select()
     return [ tank for tank in tanks ]
+
+
+@router.get('/entrada/ultima', response_model=TanksLastEntryResponseModel)
+async def get_tanksEntries():
+    entry = TankEntry.select().where(TankEntry.id == 1).first()
+    return entry
 
 
 # ---------------- Lista de Espera ---------------------

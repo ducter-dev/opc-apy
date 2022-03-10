@@ -141,6 +141,16 @@ class TanksEntryResponseModel(ResponseModel):
     reporte24: date
     reporte05: date
 
+class TanksLastEntryResponseModel(ResponseModel):
+    id: int
+    posicion: int
+    atId: int
+    atTipo: int
+    atName: str
+    capacidad: int
+    conector: int
+    fechaEntrada: datetime
+
 # --------- TanksService ---------
 class TanksInServiceRequestModel(BaseModel):
     productoNombre: str
