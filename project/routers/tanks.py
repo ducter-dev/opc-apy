@@ -9,7 +9,7 @@ from ..schemas import TanksEntryRequestModel, TanksEntryResponseModel, TanksLast
 
 from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel, TankWaitingRequestPosicionPutModel
 
-from ..schemas import TanksInServiceResponseModel, TanksInServiceRequestModel
+from ..schemas import TanksInServiceResponseModel, TanksInServiceRequestModel, TanksLastAssignResponseModel
 
 from ..schemas import TankAssignRequestModel, TankAssignResponseModel
 
@@ -390,10 +390,10 @@ async def get_tanksInService():
     tanks = TanksInService.select()
     return [ TanksInService for TanksInService in tanks ]
 
-@router.get('/servicio/ultimo', response_model=List[TankAssignResponseModel])
-async def get_tanksAssign():
-    tanks = TankAssign.select()
-    return [ tankAssign for tankAssign in tanks ]
+@router.get('/servicio/ultimo', response_model=TanksLastAssignResponseModel)
+async def get_tanksLastAssign():
+    tank = TankAssign.select().where(TankAssign.id == 1).first()
+    return tank
 
 @router.post('/servicio/ultimo', response_model=TankAssignResponseModel)
 async def create_tanque_servicio_ultimo(tankAssign:TankAssignRequestModel):
