@@ -262,47 +262,55 @@ async def update_folio(folio_id: int, request: FoliosRequestModel):
 
 @router.post('/desasignar/{llenadera}')
 async def desasignar(llenadera: int):
-    # obtener si la llenadera esta libre
-    strLibre = getPLCLlenaderaLibre(llenadera)
-    if strLibre is False:
-        return JSONResponse(
-            status_code=401,
-            content={"message": "Debe proporcionar un numero correcto de llenadera."}
-        )
-    libre = OpcServices.readDataPLC(strLibre)
-    # obtener el turno de la llenadera
-    
-    strTurno = getPLCLlenaderaTurno(llenadera)
-    turno = OpcServices.readDataPLC(strTurno)
 
-    # si la llenadera esta libre y el turno es menor o igual a cero -> se debe modificar la llenadera
-    message = ''
-    if libre is True and turno <= 0:
-        try:
+    try: 
+
+        print(llenadera)
+        # obtener si la llenadera esta libre
+        strLibre = getPLCLlenaderaLibre(llenadera)
+        print(strLibre)
+        if strLibre is False:
+            return JSONResponse(
+                status_code=401,
+                content={"message": "Debe proporcionar un numero correcto de llenadera."}
+            )
+        #libre = OpcServices.readDataPLC(strLibre)
+        libre = True
+        # obtener el turno de la llenadera
+        
+        #strTurno = getPLCLlenaderaTurno(llenadera)
+        #turno = OpcServices.readDataPLC(strTurno)
+        turno = 0
+
+        # si la llenadera esta libre y el turno es menor o igual a cero -> se debe modificar la llenadera
+        if libre is True and turno <= 0:
+            print('Libre true y turno cero')
             #strDesasignar = OpcServices.readDataPLC(llenadera)
             #OpcServices.writeOPC(strDesasignar)
             return JSONResponse(
                 status_code=201,
-                content={f"El estatus de la llenadera {llenadera} se ha actualizado."}
+                content={"message": f"El estatus de la llenadera {llenadera} se ha actualizado."}
             )
 
-        except Exception as e:
+        
+        # si la llenadera esta libre y el turno es mayor a cero -> enviar mensaje que ya esta deasignada
+        elif libre is True and turno > 0:
             return JSONResponse(
-                status_code=501,
-                content={"message": str(e)}
+                status_code=201,
+                content={"message": f"La llenadera {llenadera} ya se encuanetra disponible."}
             )
-    # si la llenadera esta libre y el turno es mayor a cero -> enviar mensaje que ya esta deasignada
-    elif libre is True and turno > 0:
+        # de lo contrario enviar que se realice de forma manual
+        else:
+            return JSONResponse(
+                status_code=201,
+                content={"message": f"La llenadera {llenadera} no se encuentra liberada en el SCD, debe resetear la secuencia."}
+            )
+    except Exception as e:
         return JSONResponse(
-            status_code=201,
-            content={f"La llenadera {llenadera} ya se encuanetra disponible."}
+            status_code=501,
+            content={"message": str(e)}
         )
-    # de lo contrario enviar que se realice de forma manual
-    else:
-        return JSONResponse(
-            status_code=201,
-            content={f"La llenadera {llenadera} no se encuentra liberada en el SCD, debe resetear la secuencia."}
-        )
+    
 
 def getPLCLlenaderaLibre(llenadera):
     llenaderas = {
