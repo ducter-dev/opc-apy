@@ -15,10 +15,10 @@ async def post_changeBarreraEntrada(request: BarreraRequesteModel):
     # 2 = Cerrar barrera de entrada
     try:
         # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT', request.estado)
-        estado = "abierta" if request.estado == 1 else "cerrada"
+        estado = True if request.estado == 1 else False
         return JSONResponse(
             status_code=201,
-            content={"message": f'La barrera de entrada ha sido {estado}'}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
@@ -31,10 +31,10 @@ async def get_getBarreraEntrada():
     try:
         #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT')
         barrera = 1
-        estado = "abierta" if barrera == 1 else "cerrada"
+        estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=201,
-            content={"message": f"La barrera de entrada tiene estado: {estado}"}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
@@ -48,10 +48,10 @@ async def post_changeBarreraVerificacion(request: BarreraRequesteModel):
     # 2 = Cerrar barrera de Verificacion
     try:
         # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER', request.estado)
-        estado = "abierta" if request.estado == 1 else "cerrada"
+        estado = True if request.estado == 1 else False
         return JSONResponse(
             status_code=201,
-            content={"message": f'La barrera de verificacion ha sido {estado}'}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
@@ -64,10 +64,10 @@ async def get_getBarreraVerificacion():
     try:
         #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
         barrera = 1
-        estado = "abierta" if barrera == 1 else "cerrada"
+        estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=201,
-            content={"message": f"La barrera de verificacion tiene estado: {estado}"}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
@@ -82,10 +82,10 @@ async def post_changeBarreraSalida(request: BarreraRequesteModel):
     # 2 = Cerrar barrera de salida
     try:
         # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL', request.estado)
-        estado = "abierta" if request.estado == 1 else "cerrada"
+        estado = True if request.estado == 1 else False
         return JSONResponse(
             status_code=201,
-            content={"message": f'La barrera de salida ha sido {estado}'}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
@@ -98,10 +98,10 @@ async def get_getBarreraSalida():
     try:
         #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL')
         barrera = 2
-        estado = "abierta" if barrera == 1 else "cerrada"
+        estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=201,
-            content={"message": f"La barrera de salida tiene estado: {estado}"}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
