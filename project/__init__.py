@@ -30,6 +30,8 @@ origins = [
     'http://10.121.50.126:3000',
     'http://localhost',
     'http://localhost:3000',
+    'http://10.121.50.126',
+    'http://scada.test'
 ]
 
 app.add_middleware(

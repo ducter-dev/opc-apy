@@ -66,10 +66,10 @@ async def post_changeEstado(request: EstadoLlenaderaRequesteModel):
     # 0 = Liberar lista de despacho
     try:
         # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA', request.estado)
-        estado = "detenida" if request.estado == 1 else "liberada"
+        estado = request.estado
         return JSONResponse(
             status_code=201,
-            content={"message": f'La llenadera ha sido {estado}'}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
@@ -80,12 +80,11 @@ async def post_changeEstado(request: EstadoLlenaderaRequesteModel):
 @router.get('/estado')
 async def get_getEstado():
     try:
-        #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
-        barrera = 1
-        estado = "detenida" if barrera == 1 else "liberada"
+        #estado = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
+        estado = 1
         return JSONResponse(
             status_code=201,
-            content={"message": f"La llenadera tiene estado: {estado}"}
+            content={"estado": estado}
         )
     except Exception as e:
         return JSONResponse(
