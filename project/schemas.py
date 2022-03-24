@@ -351,7 +351,7 @@ class LlenaderaWithEstadoResponseModel(ResponseModel):
 
 class LlenaderaAsignarRequestModel(BaseModel):
     llenadera: int
-    idTanque: int
+    tanque: str
 
 
 # --------- Bitacora ---------

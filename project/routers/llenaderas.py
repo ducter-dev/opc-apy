@@ -108,7 +108,7 @@ async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
 
     try:
         # 1 Obtener tanque y llenadera
-        tanque = Tank.select().where(Tank.id == request.idTanque).first()
+        tanque = Tank.select().where(Tank.atName == request.tanque).first()
         if tanque is None:
             return JSONResponse(
                 status_code=404,
