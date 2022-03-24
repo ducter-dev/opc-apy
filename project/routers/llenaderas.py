@@ -1,11 +1,12 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
+from datetime import datetime, timedelta
 
 from project.opc import OpcServices
 
-from ..database import Llenadera, Folio
-from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel
+from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInService
+from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel
 from ..schemas import FoliosRequestModel, FoliosResponseModel
 
 from ..middlewares import VerifyTokenRoute
@@ -23,10 +24,18 @@ async def create_llenadera(llenadera:LlenaderaRequestModel):
     return tank
 
 
-@router.get('', response_model=List[LlenaderaResponseModel])
+@router.get('', response_model=List[LlenaderaWithEstadoResponseModel])
 async def get_llenaderas():
     llenaderas = Llenadera.select()
-    return [ llenadera for llenadera in llenaderas ]
+    llenMod = []
+    for llen in llenaderas:
+        if llen.numero < 10:
+            estado = 1 #OpcServices.readDataPLC(f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN0${llen.num}')
+        else:
+            estado = 0 #OpcServices.readDataPLC(f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN${llen.num}')
+        llen.estado = estado
+        llenMod.append(llen)
+    return [ llenadera for llenadera in llenMod ]
 
 
 @router.put('/{llenadera_id}', response_model=LlenaderaResponseModel)
@@ -95,16 +104,119 @@ async def get_getEstado():
 # ------------ Acciones de  Llenaderas ------------
 # -> aceptar asignacion
 @router.post('/asignacion/aceptar')
-async def post_aceptarAsignacion(request: EstadoLlenaderaRequesteModel):
-    # 1 = Aceptar asignacion cgRFVER_ACEPTAASIGNA
+async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
 
     try:
-        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', request.estado)
+        # 1 Obtener tanque y llenadera
+        tanque = Tank.select().where(Tank.id == request.idTanque).first()
+        if tanque is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Tanque no encontrado"}
+            )
+        llenadera = Llenadera.select().where(Llenadera.numero == request.llenadera).first()
+        if llenadera is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Llenadera no encontrado"}
+            )
+        # 2 Aceptar asignacion cgRFVER_ACEPTAASIGNA = 1
+        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 1)
+        # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP', request.llenadera)
+        # Leer variables
+        estadoLlenadera = 0 # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
+        llenaderaDisponible = request.llenadera # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
+        asignacionStatus = 0 # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATASIGNA')
+        verificacionStatus = 0 # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATVERIF')
         
-        return JSONResponse(
-            status_code=201,
-            content={"message": 'La llenadera ha aceptado la asignacion.'}
-        )
+
+        # 3 Escribit variables
+
+        if estadoLlenadera == 0 :   # Lista de despacho libre
+            if llenaderaDisponible > 0 :    # Hay llenadera disponible
+                if asignacionStatus == 0 and verificacionStatus == 0 : # Servidor puede asignar autotanques
+                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_NUMPG', tank.atName)
+                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_TIPOAT', tank.atTipo)
+                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_VOLPROG', tank.capacidad90)
+                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CONECTOR', tank.conector)
+                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CLAVE', tank.atId)
+                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LISTAPOS', 1)
+
+                    # 4 Actualizar tabla de ultima asignacion
+                    now = datetime.now()
+                    fecha_base = datetime(now.year, now.month, now.day, 5, 30, 0)
+                    fecha05 =  now.strftime("%Y-%m-%d") if now > fecha_base else (now - timedelta(days=1)).strftime("%Y-%m-%d")
+                    horaEntrada = now.strftime("%H:%M:%S")
+                    fechaEntrada = now.strftime("%Y:%m:%d")
+
+                    ultimaAsignacion = TankAssign.select().where(TankAssign.id == 1).first()
+                    if ultimaAsignacion is None:
+                        return JSONResponse(
+                            status_code=404,
+                            content={"message": "Tanque de ultima asignacion no encontrado."}
+                        )
+                    ultimaAsignacion.posicion = 1
+                    ultimaAsignacion.atId = tanque.id
+                    ultimaAsignacion.atTipo = tanque.atTipo
+                    ultimaAsignacion.atName = tanque.atName
+                    ultimaAsignacion.volProg = tanque.capacidad90
+                    ultimaAsignacion.conector = tanque.conector
+                    ultimaAsignacion.password = tanque.atId
+                    ultimaAsignacion.fecha = fechaEntrada
+                    ultimaAsignacion.llenadera = llenaderaDisponible
+                    ultimaAsignacion.save()
+
+                    # 5 Quitar tanque de la lista de espera
+                    tankWaiting = TankWaiting.select().where(TankWaiting.atName == tanque.atName).first()
+                    if tankWaiting is None:
+                        return JSONResponse(
+                            status_code=404,
+                            content={"message": "Tanque en lista de espera no encontrado."}
+                        )
+                    tankWaiting.delete_instance()
+                    
+                    # 6 Meter tanque a Lista de Servicio
+                    tanqueAtServicio = TanksInService.create(
+                        productoNombre = "L.P.G.",
+                        productoDescripcion = "Gas Licuado de Petroleo",
+                        atID = tanque.atId,
+                        atTipo =  tanque.atTipo,
+                        atName = tanque.atName,
+                        claveCarga = tanque.atId,
+                        conector = tanque.conector,
+                        embarque = 0,
+                        capacidad = tanque.capacidad90,
+                        estandar = tanque.capacidad90,
+                        commSAP = 1,
+                        estatus = 1,
+                        llenadera = llenaderaDisponible,
+                        horaEntrada = horaEntrada,
+                        fechaEntrada = fechaEntrada,
+                        reporte24 =  fechaEntrada,
+                        reporte05 =  fecha05
+                    )
+
+                    if tanqueAtServicio is None:
+                        return JSONResponse(
+                            status_code=404,
+                            content={"message": "Tanque en servicio no registrado"}
+                        )
+
+                    # 7 cgRFVER_ACEPTAASIGNA = 0
+                    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 0)
+
+                    # 8 Actualizar posiciones de los demas tanques en lista de espera
+                    tanksWaiting = TankWaiting.select()
+                    for tank in tanksWaiting:
+                        print(f'posicion previa ${tank.posicion}')
+                        tank.posicion = tank.posicion - 1
+                        print(f'posicion posterior ${tank.posicion}')
+                        tank.save()
+
+                    return JSONResponse(
+                        status_code=201,
+                        content={"message": f"Tanque {tanque.atName} asignado a llenadera {llenaderaDisponible}."}
+                    )
     except Exception as e:
         return JSONResponse(
         status_code=501,

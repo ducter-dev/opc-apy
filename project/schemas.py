@@ -341,7 +341,18 @@ class LlenaderaResponseModel(ResponseModel):
     numero: int
     conector: int
     tipo: int
-    
+
+class LlenaderaWithEstadoResponseModel(ResponseModel):
+    id: int
+    numero: int
+    conector: int
+    tipo: int
+    estado: int
+
+class LlenaderaAsignarRequestModel(BaseModel):
+    llenadera: int
+    idTanque: int
+
 
 # --------- Bitacora ---------
 class BitacoraRequestModel(BaseModel):
