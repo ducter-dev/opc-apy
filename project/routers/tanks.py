@@ -385,9 +385,9 @@ async def create_tanque_servicio(TanksInService:TanksInServiceRequestModel):
 
     return TanksInService
 
-@router.get('/servicio', response_model=List[TanksInServiceResponseModel])
-async def get_tanksInService():
-    tanks = TanksInService.select()
+@router.get('/servicio/fecha/{fecha}', response_model=List[TanksInServiceResponseModel])
+async def get_tanksInService(fecha: str):
+    tanks = TanksInService.select().where(TanksInService.reporte05 == fecha)
     return [ TanksInService for TanksInService in tanks ]
 
 @router.get('/servicio/ultimo', response_model=TanksLastAssignResponseModel)
