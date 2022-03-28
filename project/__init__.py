@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import time
 
 from .routers import user_router, tank_router, opc_router, auth_router, llenadera_router, bitacora_router, reloj_router, barreras_router
 
@@ -19,6 +20,7 @@ from .database import TankExit
 from .database import database as connection
 
 from .opc import OpcServices
+from .daemon import OpcDaemon
 
 app = FastAPI(
     title='SCADA-IRGE',
@@ -76,6 +78,10 @@ def startup():
         #print('conectado')
     #else:
         #print('No conectado')
+    daemon = OpcDaemon()
+    daemon.start()
+    time.sleep(10)
+    daemon.stop()
 
 @app.on_event('shutdown')
 def shutdown():
