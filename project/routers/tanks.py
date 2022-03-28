@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
-from datetime import datetime, date, timedelta
+from datetime import datetime, timedelta
 
 from ..database import Tank, TankAssign, TankExit, TanksInService, TankInTrucks, TankWaiting, TanksEntry, TankEntry
 
