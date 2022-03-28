@@ -80,7 +80,7 @@ def startup():
         #print('No conectado')
     daemon = OpcDaemon()
     daemon.start()
-    time.sleep(10)
+    time.sleep(1000)
     daemon.stop()
 
 @app.on_event('shutdown')

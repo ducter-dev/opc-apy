@@ -1,5 +1,7 @@
 import threading
 import time
+from .database import TanksInService, TankInTrucks, Folio
+from .opc import OpcServices
 
 class Daemon(threading.Thread):
 
@@ -18,7 +20,16 @@ class Daemon(threading.Thread):
 
 
 class OpcDaemon(Daemon):
-    interval = 3
+    interval = 10
 
     def buscarCargasNuevas(self):
-        print("Bucando cargas nuevas")
+        folios = Folio.select().order_by('llenadera')
+        for f in folios:
+            print(f"Llenadera {f.llenadera.numero} - folio: {f.folio}")
+            numLlen = f.llenadera.numero if f.llenadera.numero < 10 else f'0{f.llenadera.numero}'
+            folioPlc = OpcServices.readDataPLC(f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN{numLlen}')
+            print(folioPlc)
+            if (f.folio == folioPlc):
+                print('Mismo Folio')
+            else:
+                print('Diferente Folio')
