@@ -74,14 +74,12 @@ def startup():
         TankExit,
     ])
     
-    #if OpcServices.conectarOPC():
-        #print('conectado')
-    #else:
-        #print('No conectado')
-    daemon = OpcDaemon()
-    daemon.start()
-    time.sleep(1000)
-    daemon.stop()
+    if OpcServices.conectarOPC():
+        print('conectado')
+    else:
+        print('No conectado')
+
+
 
 @app.on_event('shutdown')
 def shutdown():
