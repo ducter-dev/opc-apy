@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
 
-from project.opc import OpcServices
+#from project.opc import OpcServices
 
 from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInService
 from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel

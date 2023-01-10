@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from fastapi import APIRouter
 from fastapi.params import Header
 from fastapi.security import HTTPBasicCredentials
+from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel
 
 from ..tokenServices import validate_token, write_token
 
@@ -29,6 +30,22 @@ async def login(credentials: HTTPBasicCredentials):
         "token": write_token(user_dict)
     }
     return data_dic
+
+@router.post('/register', response_model=UserResponseModel)
+async def create_user(user: UserRequestModel):
+
+    if User.select().where(User.username == user.username).exists():
+        raise HTTPException(409, 'El usuario ya se encuentra en uso.')
+
+    hash_password = User.create_password(user.password)
+    user = User.create(
+        username = user.username,
+        password = hash_password,
+        categoria = user.categoria,
+        departamento = user.departamento
+    )
+    return user
+
 
 @router.post('/verify/token')
 async def verify_token(Authorization: str = Header(None)):

@@ -19,7 +19,7 @@ from ..schemas import TankRequestModel, TankResponseModel
 
 from ..middlewares import VerifyTokenRoute
 
-from ..opc import OpcServices
+#from ..opc import OpcServices
 
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 
