@@ -16,13 +16,15 @@ class OpcServices():
     server = SERVER_OPC
     host = HOST_OPC
     opc = OpenOPC.client()
+    
     @classmethod
     def conectarOPC(self):
         try:
+            print(self.opc)
             self.opc.connect(self.server, self.host)
             return True
-        except OpenOPC.TimeoutError:
-            print('TimeoutError ocurred')
+        except Exception as e:
+            print(f'Error: {e}')
             return False
 
     @classmethod
