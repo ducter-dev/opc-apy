@@ -62,8 +62,8 @@ async def post_changeBarreraVerificacion(request: BarreraRequesteModel):
 @router.get('/verificacion')
 async def get_getBarreraVerificacion():
     try:
-        #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
-        barrera = 1
+        barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
+        #barrera = 1
         estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=201,

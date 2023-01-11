@@ -2,8 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import time
 
-from .routers import user_router, tank_router, auth_router, llenadera_router, bitacora_router, reloj_router
-#barreras_router, opc_router
+from .routers import user_router, tank_router, auth_router, llenadera_router, bitacora_router, reloj_router, opc_router, barreras_router
 
 from .database import User
 from .database import TanksEntry
@@ -20,7 +19,7 @@ from .database import Folio
 from .database import TankExit
 from .database import database as connection
 
-#from .opc import OpcServices
+from .opc import OpcServices
 #from .daemon import OpcDaemon
 
 app = FastAPI(
@@ -47,12 +46,12 @@ app.add_middleware(
 
 app.include_router(user_router)
 app.include_router(tank_router)
-#app.include_router(opc_router)
+app.include_router(opc_router)
 app.include_router(auth_router)
 app.include_router(llenadera_router)
 app.include_router(bitacora_router)
 app.include_router(reloj_router)
-#app.include_router(barreras_router)
+app.include_router(barreras_router)
 
 @app.on_event('startup')
 def startup():
@@ -74,7 +73,7 @@ def startup():
         TankEntry,
         TankExit,
     ])
-    return
+    
     if OpcServices.conectarOPC():
         print('conectado')
     else:
