@@ -186,6 +186,7 @@ async def get_tanksEntries():
 @router.get('/entrada/ultima', response_model=TanksLastEntryResponseModel)
 async def get_tanksEntries():
     entry = TankEntry.select().where(TankEntry.id == 1).first()
+
     return entry
 
 

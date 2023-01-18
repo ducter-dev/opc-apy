@@ -24,9 +24,9 @@ async def login(credentials: HTTPBasicCredentials):
         "categoria": user.categoria,
         "departamento": user.departamento
     }
-    print(user_dict)
+    
     data_dic = {
-        "ok": True,
+        "user": user_dict,
         "token": write_token(user_dict)
     }
     return data_dic
