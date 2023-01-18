@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
 
-#from project.opc import OpcServices
+from project.opc import OpcServices
 
 from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInService
 from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel
@@ -15,26 +15,31 @@ router = APIRouter(prefix='/api/v1/llenaderas', route_class=VerifyTokenRoute)
 
 @router.post('', response_model=LlenaderaResponseModel)
 async def create_llenadera(llenadera:LlenaderaRequestModel):
-    tank = Llenadera.create(
+    llenadera = Llenadera.create(
         numero = llenadera.numero,
         conector = llenadera.conector,
         tipo = llenadera.tipo,
     )
 
-    return tank
+    return llenadera
 
 
 @router.get('', response_model=List[LlenaderaWithEstadoResponseModel])
 async def get_llenaderas():
     llenaderas = Llenadera.select()
     llenMod = []
+    path = ''
     for llen in llenaderas:
         if llen.numero < 10:
-            estado = 1 #OpcServices.readDataPLC(f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN0${llen.num}')
+            path = f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN0{llen.numero}'
         else:
-            estado = 0 #OpcServices.readDataPLC(f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN${llen.num}')
+            path = f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN{llen.numero}'
+        print(path)
+        estado = OpcServices.readDataPLC(path)
+        print(estado)
         llen.estado = estado
         llenMod.append(llen)
+    
     return [ llenadera for llenadera in llenMod ]
 
 
@@ -121,13 +126,14 @@ async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
                 content={"message": "Llenadera no encontrado"}
             )
         # 2 Aceptar asignacion cgRFVER_ACEPTAASIGNA = 1
-        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 1)
-        # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP', request.llenadera)
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 1)
+        OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP', request.llenadera)
         # Leer variables
-        estadoLlenadera = 0 # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
-        llenaderaDisponible = request.llenadera # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
-        asignacionStatus = 0 # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATASIGNA')
-        verificacionStatus = 0 # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATVERIF')
+        estadoLlenadera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
+        #llenaderaDisponible = request.llenadera # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
+        llenaderaDisponible = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
+        asignacionStatus = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATASIGNA')
+        verificacionStatus = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATVERIF')
         
 
         # 3 Escribit variables
@@ -135,12 +141,12 @@ async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
         if estadoLlenadera == 0 :   # Lista de despacho libre
             if llenaderaDisponible > 0 :    # Hay llenadera disponible
                 if asignacionStatus == 0 and verificacionStatus == 0 : # Servidor puede asignar autotanques
-                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_NUMPG', tank.atName)
-                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_TIPOAT', tank.atTipo)
-                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_VOLPROG', tank.capacidad90)
-                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CONECTOR', tank.conector)
-                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CLAVE', tank.atId)
-                    #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LISTAPOS', 1)
+                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_NUMPG', tank.atName)
+                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_TIPOAT', tank.atTipo)
+                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_VOLPROG', tank.capacidad90)
+                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CONECTOR', tank.conector)
+                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CLAVE', tank.atId)
+                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LISTAPOS', 1)
 
                     # 4 Actualizar tabla de ultima asignacion
                     now = datetime.now()
@@ -203,7 +209,7 @@ async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
                         )
 
                     # 7 cgRFVER_ACEPTAASIGNA = 0
-                    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 0)
+                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 0)
 
                     # 8 Actualizar posiciones de los demas tanques en lista de espera
                     tanksWaiting = TankWaiting.select()
