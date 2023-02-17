@@ -13,6 +13,18 @@ from ..middlewares import VerifyTokenRoute
 
 router = APIRouter(prefix='/api/v1/llenaderas', route_class=VerifyTokenRoute)
 
+path_llenaderaDisponible = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP'
+path_aceptaAsignacion = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA'
+path_statusVerificado = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATVERIF'
+path_estadoListaDespacho = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA'
+path_statusAsignacion = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATASIGNA'
+path_ver_numPG = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_NUMPG'
+path_ver_tipoAT = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_TIPOAT'
+path_ver_clave = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CLAVE'
+path_ver_volProg = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_VOLPROG'
+path_ver_conector = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CONECTOR'
+path_ver_listaPos = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LISTAPOS'
+
 @router.post('', response_model=LlenaderaResponseModel)
 async def create_llenadera(llenadera:LlenaderaRequestModel):
     llenadera = Llenadera.create(
@@ -34,12 +46,17 @@ async def get_llenaderas():
             path = f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN0{llen.numero}'
         else:
             path = f'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN{llen.numero}'
-        print(path)
         estado = OpcServices.readDataPLC(path)
-        print(estado)
-        llen.estado = estado
-        llenMod.append(llen)
-    
+        llenEst = (
+            {
+                "id": llen.id,
+                "numero": llen.numero,
+                "conector": llen.conector,
+                "tipo": llen.tipo,
+                "estado": estado
+            }
+        )
+        llenMod.append(llenEst)
     return [ llenadera for llenadera in llenMod ]
 
 
@@ -72,6 +89,7 @@ async def delete_llenadera(llenadera_id: int):
     llenadera.delete_instance()
 
     return llenadera
+    
 
 # ------------ Estado Llenaderas ------------
 @router.post('/estado')
@@ -79,7 +97,7 @@ async def post_changeEstado(request: EstadoLlenaderaRequesteModel):
     # 1 = Detener lista de despacho
     # 0 = Liberar lista de despacho
     try:
-        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA', request.estado)
+        OpcServices.writeOPC(path_estadoListaDespacho, request.estado)
         estado = request.estado
         return JSONResponse(
             status_code=201,
@@ -94,8 +112,7 @@ async def post_changeEstado(request: EstadoLlenaderaRequesteModel):
 @router.get('/estado')
 async def get_getEstado():
     try:
-        #estado = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
-        estado = 1
+        estado = OpcServices.readDataPLC(path_estadoListaDespacho)
         return JSONResponse(
             status_code=201,
             content={"estado": estado}
@@ -106,10 +123,24 @@ async def get_getEstado():
         content={"message": e}
     )
 
+
 # ------------ Acciones de  Llenaderas ------------
-# -> aceptar asignacion
+# -> aceptar asignaciones
 @router.post('/asignacion/aceptar')
-async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
+async def post_aceptarAsignaciones():
+    OpcServices.writeOPC(path_aceptaAsignacion, 1)
+
+
+
+@router.post('/asignacion/verificar')
+async def post_aceptarAsignaciones():
+    OpcServices.writeOPC(path_statusVerificado, 0)
+
+
+
+# -> asignar
+@router.post('/asignacion/preasignar')
+async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
 
     try:
         # 1 Obtener tanque y llenadera
@@ -119,25 +150,87 @@ async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
                 status_code=404,
                 content={"message": "Tanque no encontrado"}
             )
-        llenadera = Llenadera.select().where(Llenadera.numero == request.llenadera).first()
+
+        inicialTanque = '' if tanque.atTipo == 0 else tanque.atTipo
+        tipoAT = int(f'{inicialTanque}{tanque.atId}')
+
+        # Variables que se usan en asignacion
+        llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+
+        llenadera = Llenadera.select().where(Llenadera.numero == llenaderaDisponible).first()
         if llenadera is None:
             return JSONResponse(
                 status_code=404,
                 content={"message": "Llenadera no encontrado"}
             )
-        # 2 Aceptar asignacion cgRFVER_ACEPTAASIGNA = 1
-        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 1)
-        OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP', request.llenadera)
+        
         # Leer variables
-        estadoLlenadera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_EDOLISTA')
-        #llenaderaDisponible = request.llenadera # OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
-        llenaderaDisponible = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
-        asignacionStatus = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATASIGNA')
-        verificacionStatus = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_STATVERIF')
+        estadoLlenadera = OpcServices.readDataPLC(path_estadoListaDespacho)
+        asignacionStatus = OpcServices.readDataPLC(path_statusAsignacion)
+        verificacionStatus = OpcServices.readDataPLC(path_statusVerificado)
+        listaDespacho = OpcServices.readDataPLC(path_estadoListaDespacho)
+        
+        
+        if listaDespacho == 0:
+            print('Lista de Despacho Libre')
+            if llenaderaDisponible > 0:
+                print('Llenadera Disponible')
+                if asignacionStatus == 0 & verificacionStatus == 0:
+                    print('Servidor puede asignar tanques')
+                    # Escribir variables en los registros de la plc
+                    OpcServices.writeOPC(path_ver_numPG, tanque.atId)
+                    OpcServices.writeOPC(path_ver_tipoAT, tipoAT)
+                    OpcServices.writeOPC(path_ver_clave, tanque.atId)
+                    OpcServices.writeOPC(path_ver_volProg, tanque.capacidad90)
+                    OpcServices.writeOPC(path_ver_conector, tanque.conector)
+                    OpcServices.writeOPC(path_ver_listaPos, 1)
+                    OpcServices.writeOPC(path_statusAsignacion, 1)
+                    OpcServices.writeOPC(path_ver_listaPos, 1)
+                    OpcServices.writeOPC(path_statusVerificado, 1)
+                    return JSONResponse(
+                        status_code=404,
+                        content={
+                            "message": 'AutotanquePreasignado',
+                        }
+                    )
+
+        if asignacionStatus == 0:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "message": "Tanque NO ha sido asignado"
+                }
+            )
+
+        if verificacionStatus == 0:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "message": "Tanque NO ha sido verificado por el sistema"
+                }
+            )
+        
+        if (asignacionStatus == 1 & verificacionStatus == 1):
+            # Removiendo tanque de monitor de asignacion
+            # Se mete tanque a servicio
+            OpcServices.writeOPC(path_llenaderaDisponible, 0)
+            OpcServices.writeOPC()
+            OpcServices.writeOPC(path_statusAsignacion, 0)
+
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "message": 'Preasignado',
+                }
+            )
+        #OpcServices.writeOPC(pathLlenaderaLibre, 0)
+        #OpcServices.writeOPC(pathLlenaderaTipo, tipoAT)
         
 
-        # 3 Escribit variables
+        # Verificion
 
+        # 3 Escribit variables
+        return False
         if estadoLlenadera == 0 :   # Lista de despacho libre
             if llenaderaDisponible > 0 :    # Hay llenadera disponible
                 if asignacionStatus == 0 and verificacionStatus == 0 : # Servidor puede asignar autotanques
@@ -229,6 +322,37 @@ async def post_aceptarAsignacion(request: LlenaderaAsignarRequestModel):
         content={"message": str(e)}
     )
 
+
+@router.post('/asignacion/asignar')
+async def post_asignarLlenadera():
+    # Poner llenadera ocupada y con tipo de pg
+    llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+
+    pathLlenaderaLibre =  getPLCLlenaderaLibre(llenaderaDisponible)
+    pathLlenaderaTipo = getPLCLlenaderaTipo(llenaderaDisponible)
+    pathAsigLlenadera = getPathAsignarLlenadera(llenaderaDisponible)
+    pathNipLlenadera = getPLCNipLlenadera(llenaderaDisponible)
+    pathPGLlenadra = getPLCPGLlenadera(llenaderaDisponible)
+
+    idAT = OpcServices.readDataPLC(path_ver_clave)
+    tipoAT = OpcServices.readDataPLC(path_ver_tipoAT)
+
+    OpcServices.writeOPC(pathAsigLlenadera, 1)
+    OpcServices.writeOPC(pathNipLlenadera, idAT)
+    OpcServices.writeOPC(pathPGLlenadra, idAT)
+    OpcServices.writeOPC(pathLlenaderaTipo, tipoAT)
+    OpcServices.writeOPC(pathLlenaderaLibre, 0)
+
+    return JSONResponse(
+        status_code=404,
+        content={
+            "message": 'Asignado',
+        }
+    )
+    
+
+
+
 # -> cancelar asignacion
 @router.post('/asignacion/cancelar')
 async def post_cancelarAsignacion(request: EstadoLlenaderaRequesteModel):
@@ -255,7 +379,7 @@ async def post_reasignarAsignacion(request: NumeroLlenaderaRequesteModel):
     # 2 Escribir el valor en la llenadera que se elija
 
     try:
-        result = reasignar(llenadera)
+        result = getPathAsignarLlenadera(llenadera)
         if result == 0 :
             return JSONResponse(
                 status_code=402,
@@ -273,7 +397,7 @@ async def post_reasignarAsignacion(request: NumeroLlenaderaRequesteModel):
             content={"message": str(e)}
         )
 
-def reasignar(llenadera):
+def getPathAsignarLlenadera(llenadera):
     tabla_llenaderas = {
         5: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.ASIGN_LLEN5',
         6: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.ASIGN_LLEN6',
@@ -289,22 +413,24 @@ def reasignar(llenadera):
     return tabla_llenaderas.get(llenadera, 0 )
 
 
+
+
+
 # -> llenadera disponible en variable plc
 @router.get('/libres')
 async def get_llenadera_disponible():
     try:
-        #llenadera_disponible = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LLENDISP')
-        llenadera_plc = 5
-        #llenadera5 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN05')
-        #llenadera6 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN06')
-        #llenadera7 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN07')
-        #llenadera8 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN08')
-        #llenadera9 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN09')
-        #llenadera10 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN10')
-        #llenadera11 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN11')
-        #llenadera12 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN12')
-        #llenadera13 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN13')
-        #llenadera14 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN14')
+
+        llenadera5 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN05')
+        llenadera6 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN06')
+        llenadera7 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN07')
+        llenadera8 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN08')
+        llenadera9 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN09')
+        llenadera10 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN10')
+        llenadera11 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN11')
+        llenadera12 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN12')
+        llenadera13 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN13')
+        llenadera14 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN14')
 
         llenadera5 = 1
         llenadera6 = 0
@@ -328,7 +454,6 @@ async def get_llenadera_disponible():
             "12": llenadera12, 
             "13": llenadera13, 
             "14": llenadera14,
-            "plc": llenadera_plc
         }
         return JSONResponse(
             status_code=200,
@@ -339,12 +464,14 @@ async def get_llenadera_disponible():
             status_code=501,
             content={"message": str(e)}
         )
+    
 
 # ------------ Folios Llenaderas ------------
 @router.get('/folios', response_model=List[FoliosResponseModel])
 async def get_folios():
     folios = Folio.select()
     return [ folio for folio in folios ]
+
 
 
 @router.post('/folios', response_model=FoliosResponseModel)
@@ -362,6 +489,7 @@ async def create_folio(request: FoliosRequestModel):
             content={"message": str(e)}
         )
 
+
 @router.put('/folios/{folio_id}', response_model=FoliosResponseModel)
 async def update_folio(folio_id: int, request: FoliosRequestModel):
     try:
@@ -376,6 +504,7 @@ async def update_folio(folio_id: int, request: FoliosRequestModel):
             status_code=501,
             content={"message": str(e)}
         )
+
 
 @router.post('/desasignar/{llenadera}')
 async def desasignar(llenadera: int):
@@ -478,3 +607,69 @@ def getPLCLlenaderaDesasignar(llenadera):
     }
 
     return llenaderas.get(llenadera, False)
+
+
+def getPLCLlenaderaTipo(llenadera):
+    llenaderas = {
+        5: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN05",
+        6: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN06",
+        7: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN07",
+        8: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN08",
+        9: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN09",
+        10: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN10",
+        11: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN11",
+        12: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN12",
+        13: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN13",
+        14: "GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TIPO_AT_LLEN14"
+    }
+
+    return llenaderas.get(llenadera, False)
+
+
+
+def getPLCVolumenLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN5',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN6',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN7',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN8',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN9',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN14'
+    }
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getPLCNipLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN5',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN6',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN7',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN8',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN9',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.NIP_LLEN14'
+    }
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getPLCPGLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN5',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN6',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN7',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN8',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN9',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN14'
+    }
+    return tabla_llenaderas.get(llenadera, 0 )
