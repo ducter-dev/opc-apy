@@ -350,7 +350,6 @@ class LlenaderaWithEstadoResponseModel(ResponseModel):
     estado: int
 
 class LlenaderaAsignarRequestModel(BaseModel):
-    llenadera: int
     tanque: str
 
 
