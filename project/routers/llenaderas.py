@@ -558,7 +558,7 @@ def getPathAsignarLlenadera(llenadera):
 
 # -> llenadera disponible en variable plc
 @router.get('/libres')
-async def get_llenadera_disponible():
+async def get_llenadera_libre():
     try:
         tabla_llenaderas = {
             "5": getPLCLlenaderaLibre(5), 
@@ -580,6 +580,34 @@ async def get_llenadera_disponible():
         return JSONResponse(
             status_code=501,
             content={"message": str(e)}
+        )
+    
+
+@router.get('/disponible')
+async def get_llenadera_disponible():
+    try:
+        llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+        if llenaderaDisponible is None:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "message": "OPC servidor no disponible."
+                }
+            )
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": f"Llenadera disponible consultada correctamente."
+                "llenaderaDisponible": llenaderaDisponible
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={
+                "sucess": False,
+                "message": str(e)}
         )
     
     
