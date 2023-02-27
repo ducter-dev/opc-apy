@@ -363,28 +363,36 @@ async def post_tankWaitingDelete():
 # ---------------- Lista de Servicio ---------------------
 
 @router.post('/servicio', response_model=TanksInServiceResponseModel)
-async def create_tanque_servicio(TanksInService:TanksInServiceRequestModel):
-    TanksInService = TanksInService.create(
-        productoNombre = TanksInService.productoNombre,
-        productoDescripcion = TanksInService.productoDescripcion,
-        atID = TanksInService.atID,
-        atTipo = TanksInService.atTipo,
-        atName = TanksInService.atName,
-        claveCarga = TanksInService.claveCarga,
-        conector = TanksInService.conector,
-        embarque = TanksInService.embarque,
-        capacidad = TanksInService.capacidad,
-        estandar = TanksInService.estandar,
-        commSAP = TanksInService.commSAP,
-        estatus = TanksInService.estatus,
-        llenadera = TanksInService.llenadera,
-        horaEntrada = TanksInService.horaEntrada,
-        fechaEntrada = TanksInService.fechaEntrada,
-        reporte24 = TanksInService.reporte24,
-        reporte05 = TanksInService.reporte05
-    )
+async def create_tanque_servicio(Tank:TanksInServiceRequestModel):
+    try:
+        TankCreated = TanksInService.create(
+            productoNombre = Tank.productoNombre,
+            productoDescripcion = Tank.productoDescripcion,
+            atID = Tank.atID,
+            atTipo = Tank.atTipo,
+            atName = Tank.atName,
+            claveCarga = Tank.claveCarga,
+            conector = Tank.conector,
+            embarque = Tank.embarque,
+            capacidad = Tank.capacidad,
+            estandar = Tank.estandar,
+            commSAP = Tank.commSAP,
+            estatus = Tank.estatus,
+            llenadera = Tank.llenadera,
+            horaEntrada = Tank.horaEntrada,
+            fechaEntrada = Tank.fechaEntrada,
+            reporte24 = Tank.reporte24,
+            reporte05 = Tank.reporte05
+        )
 
-    return TanksInService
+        return TankCreated
+    
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": str(e)}
+    )
+    
 
 @router.get('/servicio/fecha/{fecha}', response_model=List[TanksInServiceResponseModel])
 async def get_tanksInService(fecha: str):
