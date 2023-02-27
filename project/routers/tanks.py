@@ -428,7 +428,7 @@ async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
     tank = TankInTrucks.create(
         productoNombre = tankInTrucks.productoNombre,
         productoDescripcion = tankInTrucks.productoDescripcion,
-        atID = tankInTrucks.atID,
+        atId = tankInTrucks.atId,
         atTipo = tankInTrucks.atTipo,
         atName = tankInTrucks.atName,
         conector = tankInTrucks.conector,
@@ -465,10 +465,18 @@ async def create_tanque_despacho(tankInTrucks:TankInTrucksRequestModel):
 
     return tank
 
+
 @router.get('/salida', response_model=List[TankInTrucksResponseModel])
 async def get_tanksInTrucks():
     tanks = TankInTrucks.select()
     return [ tankInTrucks for tankInTrucks in tanks ]
+
+
+@router.get('/salida/fecha/{fecha}', response_model=List[TankInTrucksResponseModel])
+async def get_tanksInTrucks(fecha: str):
+    tanks = TankInTrucks.select().where(TankInTrucks.reporte05 == fecha)
+    return [ tankInTrucks for tankInTrucks in tanks ]
+
 
 @router.put('/salida/{tank_id}', response_model=TankInTrucksResponseModel)
 async def update_tankInTrucks(tank_id: int, tank_request: TankInTrucksRequestModel):
@@ -482,7 +490,7 @@ async def update_tankInTrucks(tank_id: int, tank_request: TankInTrucksRequestMod
     
     tank.productoNombre = tank_request.productoNombre
     tank.productoDescripcion = tank_request.productoDescripcion
-    tank.atID = tank_request.atID
+    tank.atId = tank_request.atId
     tank.atTipo = tank_request.atTipo
     tank.atName = tank_request.atName
     tank.conector = tank_request.conector
@@ -519,6 +527,7 @@ async def update_tankInTrucks(tank_id: int, tank_request: TankInTrucksRequestMod
 
     return tank
 
+
 @router.delete('/salida/{tank_id}', response_model=TankInTrucksResponseModel)
 async def delete_tankInTrucks(tank_id: int):
     tank = TankInTrucks.select().where(TankInTrucks.id == tank_id).first()
@@ -532,6 +541,7 @@ async def delete_tankInTrucks(tank_id: int):
     tank.delete_instance()
 
     return tank
+
 
 @router.get('/salida/ultima', response_model=TanksLastExitResponseModel)
 async def get_tanksLastAssign():

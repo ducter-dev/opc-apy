@@ -208,7 +208,7 @@ class TanksLastAssignResponseModel(ResponseModel):
 class TankInTrucksRequestModel(BaseModel):
     productoNombre: str
     productoDescripcion: str
-    atID: int
+    atId: int
     atTipo: int
     atName: str
     conector: int
