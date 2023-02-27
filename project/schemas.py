@@ -136,10 +136,10 @@ class TanksEntryResponseModel(ResponseModel):
     atName: str
     capacidad: int
     conector: int
-    horaEntrada: str
-    fechaEntrada: str
-    reporte24: str
-    reporte05: str
+    horaEntrada: time
+    fechaEntrada: date
+    reporte24: date
+    reporte05: date
 
 class TanksLastEntryResponseModel(ResponseModel):
     id: int
