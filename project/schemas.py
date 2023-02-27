@@ -127,7 +127,7 @@ class TanksEntryRequestModel(BaseModel):
     atName: str
     capacidad: int
     conector: int
-
+    
 class TanksEntryResponseModel(ResponseModel):
     id: int
     posicion: int

@@ -598,7 +598,7 @@ async def get_llenadera_disponible():
         return JSONResponse(
             status_code=200,
             content={
-                "message": f"Llenadera disponible consultada correctamente."
+                "message": f"Llenadera disponible consultada correctamente.",
                 "llenaderaDisponible": llenaderaDisponible
             }
         )

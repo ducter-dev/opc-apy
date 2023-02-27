@@ -149,21 +149,21 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_VOLAUTOR',tank.capacidad)
         
         now = datetime.now()
-        fecha_base = f'{now.strftime("%Y:%m:%d")} 05:00:00'
-        print(fecha_base)
-        fecha05 = now if datetime.strptime(fecha_base) > now else now.timedelta(days=1)
-        print(fecha05)
+        fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
+        fecha05 = now.strftime("%Y-%m-%d") if fecha_base > now else (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        fechaEntrada = now.strftime("%Y:%m-%d")
+        horaEntrada = now.strftime("%H:%M-%S")
         
         entry = TanksEntry.create(
             posicion = tank_request.posicion,
             atId = tank.atId,
             atTipo = tank.atTipo,
             atName = tank.atName,
-            capacidad = tank.capacidad,
+            capacidad = tank.capacidad90,
             conector = tank.conector,
-            horaEntrada = now.strftime("%H:%M:%S"),
-            fechaEntrada = now.strftime("%Y:%m:%d"),
-            reporte24 = now.strftime("%Y:%m:%d"),
+            horaEntrada = horaEntrada,
+            fechaEntrada = fechaEntrada,
+            reporte24 = fechaEntrada,
             reporte05 = fecha05
         )
         
