@@ -177,9 +177,9 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
     )
 
     
-@router.get('/entrada', response_model=List[TanksEntryResponseModel])
-async def get_tanksEntries():
-    tanks = TanksEntry.select()
+@router.get('/entrada/fecha/{fecha}', response_model=List[TanksEntryResponseModel])
+async def get_tanksEntries(fecha: str):
+    tanks = TanksEntry.select().where(TanksEntry.reporte05 == fecha)
     return [ tank for tank in tanks ]
 
 
