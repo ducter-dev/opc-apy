@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from project.opc import OpcServices
 
-from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInService
+from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInService, TankInTrucks
 from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel
 from ..schemas import FoliosRequestModel, FoliosResponseModel
 
@@ -24,6 +24,8 @@ path_ver_clave = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExi
 path_ver_volProg = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_VOLPROG'
 path_ver_conector = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CONECTOR'
 path_ver_listaPos = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LISTAPOS'
+path_siguienteAsinacion = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_SIGLLENADERA'
+path_cancelarAsignacion = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ELIMINAASIGNA'
 
 @router.post('', response_model=LlenaderaResponseModel)
 async def create_llenadera(llenadera:LlenaderaRequestModel):
@@ -128,7 +130,38 @@ async def get_getEstado():
 # -> aceptar asignaciones
 @router.post('/asignacion/aceptar')
 async def post_aceptarAsignaciones():
-    OpcServices.writeOPC(path_aceptaAsignacion, 1)
+    try:
+        OpcServices.writeOPC(path_aceptaAsignacion, 1)
+        return JSONResponse(
+            status_code=201,
+            content={"estado": True}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={
+                "estado": False,
+                "message": str(e)
+            }
+        )
+    
+
+@router.post('/asignacion/siguiente')
+async def post_aceptarAsignaciones():
+    try:
+        OpcServices.writeOPC(path_siguienteAsinacion, 1)
+        return JSONResponse(
+            status_code=201,
+            content={"estado": True}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={
+                "estado": False,
+                "message": str(e)
+            }
+        )
 
 
 
@@ -355,15 +388,18 @@ async def post_asignarLlenadera():
 
 # -> cancelar asignacion
 @router.post('/asignacion/cancelar')
-async def post_cancelarAsignacion(request: EstadoLlenaderaRequesteModel):
+async def post_cancelarAsignacion():
     # 1 = Cancelar asignacion RFVER_ELIMINAASIGNA
 
     try:
-        # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ELIMINAASIGNA', request.estado)
+        OpcServices.writeOPC(path_cancelarAsignacion, 1)
         
         return JSONResponse(
             status_code=201,
-            content={"message": 'Se ha cancelado la asignacion de la llenadera.'}
+            content={
+                "estado": True,
+                "message": 'Se ha cancelado la asignacion de la llenadera.'
+            }
         )
     except Exception as e:
         return JSONResponse(
@@ -373,29 +409,136 @@ async def post_cancelarAsignacion(request: EstadoLlenaderaRequesteModel):
 
 # -> reasignar asignacion
 @router.post('/asignacion/reasignar')
-async def post_reasignarAsignacion(request: NumeroLlenaderaRequesteModel):
-    # 1 = Obtener La llenadera disponible del request
-    llenadera = request.llenadera
-    # 2 Escribir el valor en la llenadera que se elija
-
+async def post_reasignarAsignacion():
     try:
-        result = getPathAsignarLlenadera(llenadera)
-        if result == 0 :
+        # 1 = Obtener La llenadera disponible
+        #llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+        llenaderaDisponible = 6
+        if llenaderaDisponible is None:
             return JSONResponse(
-                status_code=402,
-                content={"message": 'Llenadera no existente.'}
+                status_code=404,
+                content={
+                  "estado": False,
+                    "message": "OPC servidor no disponible."
+                }
             )
-        #OpcServices.writeOPC(result, 1)
-        #OpcServices.weiteOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.REASIGNA_LLENADERA',1)
+        # 2 Escribir el valor en la llenadera que se elija
+        pathReasignar = getPathAsignarLlenadera(llenaderaDisponible)
+        OpcServices.writeOPC(pathReasignar, 1)
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.REASIGNA_LLENADERA',1)
+        
         return JSONResponse(
             status_code=201,
-            content={"message": f'Se ha reasignado la llenadera {llenadera}.'}
+            content={
+                "estado": True,
+                "message": f'Se ha reasignado la llenadera {llenaderaDisponible}.'
+            }
         )
     except Exception as e:
         return JSONResponse(
             status_code=501,
             content={"message": str(e)}
         )
+    
+# -> salidas Llenaderas
+@router.post('/asignacion/salida')
+async def postGetSenalesSalidas():
+    try:
+        # Revisar Folio Llenadera
+        numLlenaderas = [5,6,7,8,9,10,11,12,13,14]
+
+        for llen in numLlenaderas:
+            llenadera = Llenadera.select().where(Llenadera.numero == llen).first()
+            folioDB = Folio.select().where(Folio.llenadera == llenadera.id).first()
+
+            folioLlenadera = getFolioLllenadera(llenadera.numero)
+
+            # Si folioPCL es diferente al folioDB Se registra - else se omite el registro
+            if (folioLlenadera != folioDB.folio):
+                # Obtener el tanque de la lista de Servicio
+                lastTankAsig = TankAssign.select().where(id == 1).first()
+                tanqueToExit = TanksInService.select().where(TanksInService.atName == lastTankAsig.atName).first()
+
+                volEntregado = getVolumenLlenadera(llenadera.numero)
+                volumen = getVolumenLlenadera(llenadera.numero)
+                volumenBls = volumen / 158.9873
+                volumen20 = getVolumenCorrLlenadera(llenadera.numero)
+                volumen20Bls = volumen20 / 158.9873
+                masa = getMasaCorrLlenadera(llenadera.numero)
+                masaTons = masa / 1000
+                densidad = getDensidadLlenadera(llenadera.numero) / 10000
+                densidad20 = getDensidadCorrLlenadera(llenadera.numero) / 10000
+                porcentaje = getPorcentajeLlenadera(llenadera.numero) / 100
+                temperatura = getTemperaturaLlenadera(llenadera.numero) / 100
+                presion = getPresionLlenadera(llenadera.numero) / 100
+                modo = getModoLlenadera(llenadera.numero)
+                anioInicio = getAnioInicioLlenadera(llenadera.numero)
+                mesInicio = getMesInicioLlenadera(llenadera.numero)
+                diaInicio = getDiaInicioLlenadera(llenadera.numero)
+                horaInicio = getHoraInicioLlenadera(llenadera.numero)
+                minutoInicio = getMinutoInicioLlenadera(llenadera.numero)
+                horaFin = getHoraFinLlenadera(llenadera.numero)
+                minutoFin = getMinutoFinLlenadera(llenadera.numero)
+                fechaEntrada = f"{tanqueToExit.fechaEntrada} {tanqueToExit.horaEntrada}"
+                fechaInicio = f"{anioInicio}-{mesInicio}-{diaInicio} {horaInicio}:{minutoInicio}:00"
+                now = datetime.now()
+                fecha =  now.strftime("%Y-%m-%d")
+                fechaFin = f"{fecha} {horaFin}:{minutoFin}:00"
+                tipoCarga = 1 if masa > 0 else 0
+
+                # Llenar datos de llenadera
+                salida = TankInTrucks.create(
+                    productoNombre = tanqueToExit.productoNombre,
+                    productoDescripcion = tanqueToExit.productoDescripcion,
+                    atId = tanqueToExit.atID,
+                    atTipo = tanqueToExit.atTipo,
+                    atName = tanqueToExit.atName,
+                    conector = tanqueToExit.conector,
+                    embarque = tanqueToExit.embarque,
+                    capacidad = tanqueToExit.capacidad,
+                    capacidadStd = tanqueToExit.capacidad - volEntregado,
+                    llenadera = llen.numero,
+                    folioPLC = folioLlenadera,
+                    volNatLts = volumen,
+                    volNatBls = volumenBls,
+                    volCorLts = volumen20,
+                    volCorBls = volumen20Bls,
+                    masa = masa,
+                    masaTons = masaTons,
+                    densidadNat = densidad,
+                    densidadCor = densidad20,
+                    porcentaje = porcentaje,
+                    temperaturaBase = 20,
+                    temperatura = temperatura,
+                    presion = presion,
+                    modo = modo,
+                    fechaEntrada = fechaEntrada,
+                    fechaInicio = fechaInicio,
+                    fechaFin = fechaFin,
+                    reporte24 =  tanqueToExit.reporte24,
+                    reporte05 =  tanqueToExit.reporte05,
+                    tipoCarga = tipoCarga
+                )
+                tanqueToExit.delete_instance()
+                # Liberar llenadera
+                OpcServices.writeOPC(getFolioGuardadoLlenadera(llen), folioLlenadera)
+                
+                # Guardar registro en ultimas salidas
+                tanqueLastExit = Tank
+                
+                return JSONResponse(
+                    status_code=201,
+                    content={"message": "Revisados Folios de asignación"}
+                )
+            
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": str(e)}
+        )
+
 
 def getPathAsignarLlenadera(llenadera):
     tabla_llenaderas = {
@@ -413,47 +556,21 @@ def getPathAsignarLlenadera(llenadera):
     return tabla_llenaderas.get(llenadera, 0 )
 
 
-
-
-
 # -> llenadera disponible en variable plc
 @router.get('/libres')
 async def get_llenadera_disponible():
     try:
-
-        llenadera5 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN05')
-        llenadera6 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN06')
-        llenadera7 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN07')
-        llenadera8 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN08')
-        llenadera9 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN09')
-        llenadera10 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN10')
-        llenadera11 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN11')
-        llenadera12 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN12')
-        llenadera13 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN13')
-        llenadera14 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.LIBRE_LLEN14')
-
-        llenadera5 = 1
-        llenadera6 = 0
-        llenadera7 = 1
-        llenadera8 = 0
-        llenadera9 = 1
-        llenadera10 = 1
-        llenadera11 = 1
-        llenadera12 = 1
-        llenadera13 = 0
-        llenadera14 = 0
-
         tabla_llenaderas = {
-            "5": llenadera5, 
-            "6": llenadera6, 
-            "7": llenadera7, 
-            "8": llenadera8, 
-            "9": llenadera9, 
-            "10": llenadera10, 
-            "11": llenadera11, 
-            "12": llenadera12, 
-            "13": llenadera13, 
-            "14": llenadera14,
+            "5": getPLCLlenaderaLibre(5), 
+            "6": getPLCLlenaderaLibre(6), 
+            "7": getPLCLlenaderaLibre(7), 
+            "8": getPLCLlenaderaLibre(8), 
+            "9": getPLCLlenaderaLibre(9), 
+            "10": getPLCLlenaderaLibre(10), 
+            "11": getPLCLlenaderaLibre(11), 
+            "12": getPLCLlenaderaLibre(12), 
+            "13": getPLCLlenaderaLibre(13), 
+            "14": getPLCLlenaderaLibre(14),
         }
         return JSONResponse(
             status_code=200,
@@ -465,13 +582,14 @@ async def get_llenadera_disponible():
             content={"message": str(e)}
         )
     
+    
+    
 
 # ------------ Folios Llenaderas ------------
 @router.get('/folios', response_model=List[FoliosResponseModel])
 async def get_folios():
     folios = Folio.select()
     return [ folio for folio in folios ]
-
 
 
 @router.post('/folios', response_model=FoliosResponseModel)
@@ -626,7 +744,6 @@ def getPLCLlenaderaTipo(llenadera):
     return llenaderas.get(llenadera, False)
 
 
-
 def getPLCVolumenLlenadera(llenadera):
     tabla_llenaderas = {
         5: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.VOL_LLEN5',
@@ -673,3 +790,323 @@ def getPLCPGLlenadera(llenadera):
         14: 'GE_ETHERNET.PLC_SCA_TULA.Asignacion.PG-LLEN14'
     }
     return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getFolioLllenadera(llenadera):
+    """ tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN5',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN6',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN7',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN8',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN9',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN14'
+    } """
+    tabla_llenaderas = {
+        5: 1491,
+        6: 1450,
+        7: 1556,
+        8: 1527,
+        9: 1572,
+        10: 1548,
+        11: 1464,
+        12: 1328,
+        13: 1149,
+        14: 1488
+    }
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getFolioGuardadoLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.DATOSGUARDADOS_LLEN14'
+    }
+
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getVolumenLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_NAT_LLEN14'
+    }
+
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getVolumenCorrLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.VOL_CARGA_COR_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getMasaCorrLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.WI_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getDensidadLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_NAT_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getDensidadCorrLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DENS_COR_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getPorcentajeLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PORC_LLEN_FIN_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getTemperaturaLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.TI_PROM_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getPresionLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.PI_PROM_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+def getModoLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MODO_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getAnioInicioLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.ANO_INI_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getMesInicioLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MES_INI_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getDiaInicioLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.DIA_INI_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getHoraInicioLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_INI_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getMinutoInicioLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_INI_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getHoraFinLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.HORA_FIN_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+def getMinutoFinLlenadera(llenadera):
+    tabla_llenaderas = {
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN09',
+        10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN10',
+        11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN11',
+        12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN12',
+        13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN13',
+        14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.MIN_FIN_LLEN14'
+    }
+    
+    return tabla_llenaderas.get(llenadera, 0 )
+
+
+
+
