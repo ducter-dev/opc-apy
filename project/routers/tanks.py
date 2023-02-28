@@ -314,21 +314,21 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestModel
 
     return tank
 
-@router.post('/espera/cambio-posicion/{tank_id}', response_model=TankWaitingResponseModel)
-async def post_tankWaitingchangePosition(tank_id: int, tank_request: TankWaitingRequestPosicionPutModel):
+@router.post('/espera/mover-inicio/', response_model=TankWaitingResponseModel)
+async def post_tankWaitingchangePosition(tank_request: TankWaitingRequestPosicionPutModel):
     # Obtener datos del tanque seleccionado
-    tankSelect = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+    tankSelect = TankWaiting.select().where(TankWaiting.atName == tank_request.tanque).first()
     
     # Traer los tanques desde la posicion del tanque seleccionado hasta la nueva posicion
-    tanks = TankWaiting.select().where(TankWaiting.posicion < tankSelect.posicion, TankWaiting.posicion >= tank_request.posicion)
+    tanks = TankWaiting.select().where(TankWaiting.id != tankSelect.id)
     
     # Recorrer los tanques y aumentar 1 en la posicion
-    for tank in tanks:
-        tank.posicion = tank.posicion + 1
-        tank.save()
+    for i in range(len(tanks)):
+        tanks[i].posicion = i + 2
+        tanks[i].save()
     
     # Actualizar el tanque seleccionado a la nueva posicion 
-    tankSelect.posicion = tank_request.posicion
+    tankSelect.posicion = 1
     tankSelect.save()
 
     return tankSelect

@@ -117,7 +117,7 @@ class TankWaitingRequestPutModel(BaseModel):
     reporte05: str
 
 class TankWaitingRequestPosicionPutModel(BaseModel):
-    posicion: int
+    tanque: str
 
 # --------- TanksEntry ---------
 class TanksEntryRequestModel(BaseModel):
