@@ -13,11 +13,11 @@ router = APIRouter(prefix='/api/v1/auth')
 async def login(credentials: HTTPBasicCredentials):
     user = User.select().where(User.username == credentials.username).first()
     if user is None:
-        raise HTTPException(404, 'El usuario no existe.')
+        raise HTTPException(404, 'Las credenciales no coinciden con nuestros registros.')
     
     user_valid = User.validate_password(credentials.password, user.password)
     if user_valid is False:
-        raise HTTPException(404, 'Error, debe revisar sus credenciales.')
+        raise HTTPException(404, 'Las credenciales no coinciden con nuestros registros.')
     user_dict = {
         "id": user.id,
         "username": user.username,
