@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from project.opc import OpcServices
 
 from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInService, TankInTrucks
-from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel
+from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel, TanksInServiceResponseModel
 from ..schemas import FoliosRequestModel, FoliosResponseModel
 
 from ..middlewares import VerifyTokenRoute
@@ -256,99 +256,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
                     "message": 'Preasignado',
                 }
             )
-        #OpcServices.writeOPC(pathLlenaderaLibre, 0)
-        #OpcServices.writeOPC(pathLlenaderaTipo, tipoAT)
-        
 
-        # Verificion
-
-        # 3 Escribit variables
-        return False
-        if estadoLlenadera == 0 :   # Lista de despacho libre
-            if llenaderaDisponible > 0 :    # Hay llenadera disponible
-                if asignacionStatus == 0 and verificacionStatus == 0 : # Servidor puede asignar autotanques
-                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_NUMPG', tank.atName)
-                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_TIPOAT', tank.atTipo)
-                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_VOLPROG', tank.capacidad90)
-                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CONECTOR', tank.conector)
-                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_CLAVE', tank.atId)
-                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LISTAPOS', 1)
-
-                    # 4 Actualizar tabla de ultima asignacion
-                    now = datetime.now()
-                    fecha_base = datetime(now.year, now.month, now.day, 5, 30, 0)
-                    fecha05 =  now.strftime("%Y-%m-%d") if now > fecha_base else (now - timedelta(days=1)).strftime("%Y-%m-%d")
-                    horaEntrada = now.strftime("%H:%M:%S")
-                    fechaEntrada = now.strftime("%Y:%m:%d")
-
-                    ultimaAsignacion = TankAssign.select().where(TankAssign.id == 1).first()
-                    if ultimaAsignacion is None:
-                        return JSONResponse(
-                            status_code=404,
-                            content={"message": "Tanque de ultima asignacion no encontrado."}
-                        )
-                    ultimaAsignacion.posicion = 1
-                    ultimaAsignacion.atId = tanque.id
-                    ultimaAsignacion.atTipo = tanque.atTipo
-                    ultimaAsignacion.atName = tanque.atName
-                    ultimaAsignacion.volProg = tanque.capacidad90
-                    ultimaAsignacion.conector = tanque.conector
-                    ultimaAsignacion.password = tanque.atId
-                    ultimaAsignacion.fecha = fechaEntrada
-                    ultimaAsignacion.llenadera = llenaderaDisponible
-                    ultimaAsignacion.save()
-
-                    # 5 Quitar tanque de la lista de espera
-                    tankWaiting = TankWaiting.select().where(TankWaiting.atName == tanque.atName).first()
-                    if tankWaiting is None:
-                        return JSONResponse(
-                            status_code=404,
-                            content={"message": "Tanque en lista de espera no encontrado."}
-                        )
-                    tankWaiting.delete_instance()
-                    
-                    # 6 Meter tanque a Lista de Servicio
-                    tanqueAtServicio = TanksInService.create(
-                        productoNombre = "L.P.G.",
-                        productoDescripcion = "Gas Licuado de Petroleo",
-                        atID = tanque.atId,
-                        atTipo =  tanque.atTipo,
-                        atName = tanque.atName,
-                        claveCarga = tanque.atId,
-                        conector = tanque.conector,
-                        embarque = 0,
-                        capacidad = tanque.capacidad90,
-                        estandar = tanque.capacidad90,
-                        commSAP = 1,
-                        estatus = 1,
-                        llenadera = llenaderaDisponible,
-                        horaEntrada = horaEntrada,
-                        fechaEntrada = fechaEntrada,
-                        reporte24 =  fechaEntrada,
-                        reporte05 =  fecha05
-                    )
-
-                    if tanqueAtServicio is None:
-                        return JSONResponse(
-                            status_code=404,
-                            content={"message": "Tanque en servicio no registrado"}
-                        )
-
-                    # 7 cgRFVER_ACEPTAASIGNA = 0
-                    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ACEPTAASIGNA', 0)
-
-                    # 8 Actualizar posiciones de los demas tanques en lista de espera
-                    tanksWaiting = TankWaiting.select()
-                    for tank in tanksWaiting:
-                        print(f'posicion previa ${tank.posicion}')
-                        tank.posicion = tank.posicion - 1
-                        print(f'posicion posterior ${tank.posicion}')
-                        tank.save()
-
-                    return JSONResponse(
-                        status_code=201,
-                        content={"message": f"Tanque {tanque.atName} asignado a llenadera {llenaderaDisponible}."}
-                    )
     except Exception as e:
         return JSONResponse(
         status_code=501,
@@ -356,33 +264,117 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
     )
 
 
-@router.post('/asignacion/asignar')
+@router.post('/asignacion/asignar', response_model=TanksInServiceResponseModel)
 async def post_asignarLlenadera():
-    # Poner llenadera ocupada y con tipo de pg
-    llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
-
-    pathLlenaderaLibre =  getPLCLlenaderaLibre(llenaderaDisponible)
-    pathLlenaderaTipo = getPLCLlenaderaTipo(llenaderaDisponible)
-    pathAsigLlenadera = getPathAsignarLlenadera(llenaderaDisponible)
-    pathNipLlenadera = getPLCNipLlenadera(llenaderaDisponible)
-    pathPGLlenadra = getPLCPGLlenadera(llenaderaDisponible)
-
-    idAT = OpcServices.readDataPLC(path_ver_clave)
-    tipoAT = OpcServices.readDataPLC(path_ver_tipoAT)
-
-    OpcServices.writeOPC(pathAsigLlenadera, 1)
-    OpcServices.writeOPC(pathNipLlenadera, idAT)
-    OpcServices.writeOPC(pathPGLlenadra, idAT)
-    OpcServices.writeOPC(pathLlenaderaTipo, tipoAT)
-    OpcServices.writeOPC(pathLlenaderaLibre, 0)
-
-    return JSONResponse(
-        status_code=404,
-        content={
-            "message": 'Asignado',
-        }
-    )
     
+    try: 
+        # Poner llenadera ocupada y con tipo de pg
+        llenaderaDisponible = 14
+        """
+        llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+        pathLlenaderaLibre =  getPLCLlenaderaLibre(llenaderaDisponible)
+        pathLlenaderaTipo = getPLCLlenaderaTipo(llenaderaDisponible)
+        pathAsigLlenadera = getPathAsignarLlenadera(llenaderaDisponible)
+        pathNipLlenadera = getPLCNipLlenadera(llenaderaDisponible)
+        pathPGLlenadra = getPLCPGLlenadera(llenaderaDisponible)
+
+        idAT = OpcServices.readDataPLC(path_ver_clave)
+        tipoAT = OpcServices.readDataPLC(path_ver_tipoAT)
+        numPG = OpcServices.readDataPLC(path_ver_numPG)
+        volProg = OpcServices.readDataPLC(path_ver_volProg)
+        conector = OpcServices.readDataPLC(path_ver_conector)
+        tipo = OpcServices.readDataPLC(path_ver_tipoAT)
+        sufijo = getSufijoTanque(tipo)
+
+        OpcServices.writeOPC(pathAsigLlenadera, 1)
+        OpcServices.writeOPC(pathNipLlenadera, idAT)
+        OpcServices.writeOPC(pathPGLlenadra, idAT)
+        OpcServices.writeOPC(pathLlenaderaTipo, tipoAT)
+        OpcServices.writeOPC(pathLlenaderaLibre, 0) """
+
+        idAT = 1201
+        tipoAT = 3
+        numPG = "PG-1201B"
+        volProg = 19300
+        conector = 3
+
+        # Agregar la tanque a última asignación 
+        now = datetime.now()
+        fecha_base = datetime(now.year, now.month, now.day, 5, 30, 0)
+        fecha05 =  now.strftime("%Y-%m-%d") if now > fecha_base else (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        horaEntrada = now.strftime("%H:%M:%S")
+        fechaEntrada = now.strftime("%Y:%m:%d")
+
+        ultimaAsignacion = TankAssign.select().where(TankAssign.id == 1).first()
+        if ultimaAsignacion is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Tanque de ultima asignacion no encontrado."}
+            )
+        
+
+        ultimaAsignacion.posicion = 1
+        
+        ultimaAsignacion.atId = idAT
+        ultimaAsignacion.atTipo = tipoAT
+        ultimaAsignacion.atName = numPG
+        ultimaAsignacion.volProg = volProg
+        ultimaAsignacion.conector = conector
+        ultimaAsignacion.password = idAT
+        ultimaAsignacion.fecha = fechaEntrada
+        ultimaAsignacion.llenadera = llenaderaDisponible
+        ultimaAsignacion.save()
+        
+
+        # Pasar tanque a lista de servicio
+
+        tanque_insertado_servicio = TanksInService(
+            productoNombre = "L.P.G.",
+            productoDescripcion = "Gas Licuado de Petroleo",
+            atID = idAT,
+            atTipo =  tipoAT,
+            atName = numPG,
+            claveCarga = idAT,
+            conector = conector,
+            embarque = 0,
+            capacidad = volProg,
+            estandar = volProg,
+            commSAP = 1,
+            estatus = 1,
+            llenadera = llenaderaDisponible,
+            horaEntrada = horaEntrada,
+            fechaEntrada = fechaEntrada,
+            reporte24 =  fechaEntrada,
+            reporte05 =  fecha05
+        )
+        tanque_insertado_servicio.save()
+        
+        tanque_insertado_servicio = TanksInService.select().order_by(TanksInService.id.desc()).first()
+        print(f"tanque_insertado_servicio: {tanque_insertado_servicio.atName}")
+        #   Eliminar de la lista de espera
+        print(f"ultimaAsignacion.atName: {ultimaAsignacion.atName}")
+        tank_delete = TankWaiting.select().where(TankWaiting.atName == ultimaAsignacion.atName).first()
+        if tank_delete is None:
+            return tanque_insertado_servicio
+            
+        print(tank_delete.atName)
+        tank_delete.delete_instance()
+        
+        # Cambiar el orden de posicion de los tanques
+        tanques_le = TankWaiting.select().order_by(TankWaiting.id.asc())
+        if len(tanques_le > 0):
+            print(tanques_le)
+            for i in range(len(tanques_le)):
+                tanques_le[i].posicion = i + 1
+                tanques_le[i].save()
+
+        return tanque_insertado_servicio
+    
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": str(e)}
+        )
 
 
 
@@ -1135,6 +1127,15 @@ def getMinutoFinLlenadera(llenadera):
     
     return tabla_llenaderas.get(llenadera, 0 )
 
+
+def getSufijoTanque(atTipo):
+    tabla_tipos = {
+        1: '',
+        2: 'A',
+        3: 'B',
+    }
+    
+    return tabla_tipos.get(atTipo, 0 )
 
 
 
