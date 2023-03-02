@@ -14,7 +14,8 @@ async def post_changeBarreraEntrada(request: BarreraRequesteModel):
     # 1 = Abrir barrera de entrada
     # 2 = Cerrar barrera de entrada
     try:
-        estado = OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT', request.estado)
+        #estado = OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT', request.estado)
+        estado = 1
         estadoVal = True if estado == 1 else False
         return JSONResponse(
             status_code=201,
@@ -29,11 +30,11 @@ async def post_changeBarreraEntrada(request: BarreraRequesteModel):
 @router.get('/entrada')
 async def get_getBarreraEntrada():
     try:
-        barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT')
-        #barrera = 1
+        #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT')
+        barrera = 1
         estado = True if barrera == 1 else False
         return JSONResponse(
-            status_code=201,
+            status_code=200,
             content={"estado": estado}
         )
     except Exception as e:
@@ -62,11 +63,11 @@ async def post_changeBarreraVerificacion(request: BarreraRequesteModel):
 @router.get('/verificacion')
 async def get_getBarreraVerificacion():
     try:
-        barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
-        #barrera = 1
+        #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
+        barrera = 1
         estado = True if barrera == 1 else False
         return JSONResponse(
-            status_code=201,
+            status_code=200,
             content={"estado": estado}
         )
     except Exception as e:
@@ -97,10 +98,10 @@ async def post_changeBarreraSalida(request: BarreraRequesteModel):
 async def get_getBarreraSalida():
     try:
         #barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL')
-        barrera = 2
+        barrera = 1
         estado = True if barrera == 1 else False
         return JSONResponse(
-            status_code=201,
+            status_code=200,
             content={"estado": estado}
         )
     except Exception as e:

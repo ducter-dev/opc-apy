@@ -186,7 +186,11 @@ async def get_tanksEntries(fecha: str):
 @router.get('/entrada/ultima', response_model=TanksLastEntryResponseModel)
 async def get_tanksEntries():
     entry = TankEntry.select().where(TankEntry.id == 1).first()
-
+    if entry is None:
+        return JSONResponse(
+        status_code=200,
+        content={"data": entry}
+        )
     return entry
 
 
