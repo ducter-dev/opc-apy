@@ -516,7 +516,19 @@ async def postGetSenalesSalidas():
                 OpcServices.writeOPC(getFolioGuardadoLlenadera(llen), folioLlenadera)
                 
                 # Guardar registro en ultimas salidas
-                tanqueLastExit = Tank
+                tanqueLastExit = TanksInService.select().where(TanksInService.id == 1).first()
+                tanqueLastExit.productoNombre = salida.productoNombre,
+                tanqueLastExit.productoDescripcion = salida.productoNombre,
+                tanqueLastExit.atId = salida.atId,
+                tanqueLastExit.atTipo = salida.atTipo,
+                tanqueLastExit.atName = salida.atName,
+                tanqueLastExit.conector = salida.conector,
+                tanqueLastExit.embarque = salida.embarque,
+                tanqueLastExit.capacidad = salida.capacidad,
+                tanqueLastExit.capacidadStd = salida.capacidadStd,
+                tanqueLastExit.masa = salida.masa,
+                tanqueLastExit.fechaSalida = salida.fechaFin
+                tanqueLastExit.save()
                 
                 return JSONResponse(
                     status_code=201,
@@ -601,7 +613,6 @@ async def get_llenadera_disponible():
                 "sucess": False,
                 "message": str(e)}
         )
-    
     
     
 
