@@ -603,7 +603,6 @@ async def get_llenadera_disponible():
         )
     
     
-    
 
 # ------------ Folios Llenaderas ------------
 @router.get('/folios', response_model=List[FoliosResponseModel])

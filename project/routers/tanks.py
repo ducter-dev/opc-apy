@@ -115,6 +115,7 @@ async def alarm_tanks():
 # ---------------- Lista de Entrada ---------------------
 
 @router.post('/entrada', response_model=TanksEntryResponseModel)
+#@router.post('/entrada')
 async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
     
     try:
@@ -122,7 +123,7 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_WRITING', 1)
 
         # Checar si existe el autotanque
-        tank = Tank.select().where(Tank.id == tank_request.atId, Tank.atTipo == tank_request.atTipo ).first()
+        tank = Tank.select().where(Tank.atId == tank_request.atId, Tank.atTipo == tank_request.atTipo ).first()
 
         if tank is None:
             tank = Tank.create(
@@ -166,9 +167,20 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
             reporte24 = fechaEntrada,
             reporte05 = fecha05
         )
-        
+        entryInserted = TanksEntry.select().order_by(TanksEntry.id.desc()).first()
 
-        return entry
+        lastEntry = TankEntry.select().where(TankEntry.id == 1).first()
+        fechaE = f"{entryInserted.fechaEntrada} {entryInserted.horaEntrada}:00"
+        
+        lastEntry.atId = entryInserted.atId
+        lastEntry.atTipo = entryInserted.atTipo
+        lastEntry.atName = entryInserted.atName
+        lastEntry.capacidad = entryInserted.capacidad
+        lastEntry.conector = entryInserted.conector
+        lastEntry.fechaEntrada = fechaE
+        lastEntry.save()
+
+        return entryInserted
 
     except Exception as e:
         return JSONResponse(
@@ -192,6 +204,33 @@ async def get_tanksEntries():
         content={"data": entry}
         )
     return entry
+
+
+@router.post('/entrada/ultima', response_model=TanksLastEntryResponseModel)
+async def post_tanksEntries(tank: TanksEntryRequestModel):
+    try:
+        entry = TankEntry.select().where(TankEntry.id == 1).first()
+
+        entry.atId = tank.atId
+        entry.atTipo = tank.atTipo
+        entry.atName = tank.atName
+        entry.capacidad = tank.capacidad
+        entry.conector = tank.conector
+        entry.fechaEntrada = tank.fechaEntrada
+        entry.save()
+
+        if entry is None:
+            return JSONResponse(
+            status_code=200,
+            content={"data": entry}
+            )
+        return entry
+    
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": str(e)}
+    )
 
 
 # ---------------- Lista de Espera ---------------------
