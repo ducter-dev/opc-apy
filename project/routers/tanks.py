@@ -296,6 +296,7 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
 
         # Empezar a escribir manualmente
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_WRITING', 1)
+        LogsServices.write(f'tankWaiting: {tankWaiting.id}: {tankWaiting.atId} | {tankWaiting.atName} | {tankWaiting.atTipo} | {tankWaiting.conector} | {tankWaiting.capacidad} | {tankWaiting.fechaEntrada} {tankWaiting.horaEntrada}')
         response = {
             "id": tankWaiting.id,
             "posicion": tankWaiting.posicion,

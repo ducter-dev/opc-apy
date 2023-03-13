@@ -9,6 +9,8 @@ from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInS
 from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel, TanksInServiceResponseModel
 from ..schemas import FoliosRequestModel, FoliosResponseModel
 
+from ..logs import LogsServices
+
 from ..middlewares import VerifyTokenRoute
 
 router = APIRouter(prefix='/api/v1/llenaderas', route_class=VerifyTokenRoute)
@@ -220,6 +222,8 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
                     OpcServices.writeOPC(path_statusAsignacion, 1)
                     OpcServices.writeOPC(path_ver_listaPos, 1)
                     OpcServices.writeOPC(path_statusVerificado, 1)
+
+                    LogsServices.write(f'Tanque asignado: {tanque.atId} | {tipoAT} | {tanque.conector} | {tanque.capacidad90}')
                     return JSONResponse(
                         status_code=404,
                         content={
@@ -228,14 +232,17 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
                     )
 
         if asignacionStatus == 0:
+            LogsServices.write(f'asignacionStatus: Tanque NO ha sido asignado')
             return JSONResponse(
                 status_code=404,
                 content={
                     "message": "Tanque NO ha sido asignado"
+                    
                 }
             )
 
         if verificacionStatus == 0:
+            LogsServices.write(f'verificacionStatus: Tanque NO ha sido verificado por el sistema')
             return JSONResponse(
                 status_code=404,
                 content={
@@ -249,7 +256,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
             OpcServices.writeOPC(path_llenaderaDisponible, 0)
             OpcServices.writeOPC()
             OpcServices.writeOPC(path_statusAsignacion, 0)
-
+            LogsServices.write(f'-------Tanque preasignado-------')
             return JSONResponse(
                 status_code=404,
                 content={
@@ -258,6 +265,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
             )
 
     except Exception as e:
+        LogsServices.write(f'Error: {e}')
         return JSONResponse(
         status_code=501,
         content={"message": str(e)}
@@ -307,6 +315,7 @@ async def post_asignarLlenadera():
 
         ultimaAsignacion = TankAssign.select().where(TankAssign.id == 1).first()
         if ultimaAsignacion is None:
+            LogsServices.write('Error: Tanque de ultima asignacion no encontrado.')
             return JSONResponse(
                 status_code=404,
                 content={"message": "Tanque de ultima asignacion no encontrado."}
@@ -324,6 +333,7 @@ async def post_asignarLlenadera():
         ultimaAsignacion.fecha = fechaEntrada
         ultimaAsignacion.llenadera = llenaderaDisponible
         ultimaAsignacion.save()
+        LogsServices.write('Actualizada última asignación.')
         
 
         # Pasar tanque a lista de servicio
@@ -350,14 +360,14 @@ async def post_asignarLlenadera():
         tanque_insertado_servicio.save()
         
         tanque_insertado_servicio = TanksInService.select().order_by(TanksInService.id.desc()).first()
-        print(f"tanque_insertado_servicio: {tanque_insertado_servicio.atName}")
+        LogsServices.write(f"tanque_insertado_servicio: {tanque_insertado_servicio.atName}")
         #   Eliminar de la lista de espera
-        print(f"ultimaAsignacion.atName: {ultimaAsignacion.atName}")
+        LogsServices.write(f"ultimaAsignacion.atName: {ultimaAsignacion.atName}")
         tank_delete = TankWaiting.select().where(TankWaiting.atName == ultimaAsignacion.atName).first()
         if tank_delete is None:
             return tanque_insertado_servicio
             
-        print(tank_delete.atName)
+        LogsServices.write(f'Tanque eliminado de lista de servicio: {tank_delete.atName}')
         tank_delete.delete_instance()
         
         # Cambiar el orden de posicion de los tanques
