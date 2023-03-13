@@ -524,6 +524,7 @@ async def postGetSenalesSalidas():
                 tanqueToExit.delete_instance()
                 # Liberar llenadera
                 OpcServices.writeOPC(getFolioGuardadoLlenadera(llen), folioLlenadera)
+                LogsServices.write(f'salida: {salida.atName} | {salida.atId} | {salida.atTipo} | {salida.conector} | {salida.capacidad} | {volumen} | {volumen20} | Folio: {salida.folioPLC} | llenadera: {salida.llenadera}')
                 
                 # Guardar registro en ultimas salidas
                 tanqueLastExit = TanksInService.select().where(TanksInService.id == 1).first()
@@ -539,13 +540,13 @@ async def postGetSenalesSalidas():
                 tanqueLastExit.masa = salida.masa,
                 tanqueLastExit.fechaSalida = salida.fechaFin
                 tanqueLastExit.save()
+                LogsServices.write(f'tanqueLastExit: {tanqueLastExit.atName} | {tanqueLastExit.atId} | {tanqueLastExit.atTipo} | {tanqueLastExit.conector} | {tanqueLastExit.capacidad} | {tanqueLastExit.fechaSalida}')
                 
                 return JSONResponse(
                     status_code=201,
                     content={"message": "Revisados Folios de asignación"}
                 )
             
-
         
     except Exception as e:
         return JSONResponse(
