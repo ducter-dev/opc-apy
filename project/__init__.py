@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import time
+from .logs import LogsServices
 
 from .routers import user_router, tank_router, auth_router, llenadera_router, bitacora_router, reloj_router, opc_router, barreras_router
 
@@ -73,11 +74,15 @@ def startup():
         TankEntry,
         TankExit,
     ])
-    
+    LogsServices.setNameFile()
+    LogsServices.write('Iniciando api')
+
     if OpcServices.conectarOPC():
         print('conectado')
+        LogsServices.write('Conectando a OPC Server.')
     else:
         print('No conectado')
+        LogsServices.write('No se pudo conectara OPC Server.')
 
 
 
