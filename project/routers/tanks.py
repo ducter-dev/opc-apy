@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
+from ..logs import LogsServices
 
 from ..database import Tank, TankAssign, TankExit, TanksInService, TankInTrucks, TankWaiting, TanksEntry, TankEntry
 
@@ -155,7 +156,7 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         fechaEntrada = now.strftime("%Y:%m-%d")
         horaEntrada = now.strftime("%H:%M-%S")
         
-        entry = TanksEntry.create(
+        TanksEntry.create(
             posicion = tank_request.posicion,
             atId = tank.atId,
             atTipo = tank.atTipo,
@@ -168,6 +169,9 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
             reporte05 = fecha05
         )
         entryInserted = TanksEntry.select().order_by(TanksEntry.id.desc()).first()
+        LogsServices.write(f'entryInserted: {entryInserted.id}: {entryInserted.atId} | {entryInserted.atName} | {entryInserted.conector} | {entryInserted.capacidad} | {entryInserted.fechaEntrada} {entryInserted.horaEntrada}')
+        
+
 
         lastEntry = TankEntry.select().where(TankEntry.id == 1).first()
         fechaE = f"{entryInserted.fechaEntrada} {entryInserted.horaEntrada}:00"
@@ -179,10 +183,12 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         lastEntry.conector = entryInserted.conector
         lastEntry.fechaEntrada = fechaE
         lastEntry.save()
+        LogsServices.write(f'lastEntry: {lastEntry.id}: {lastEntry.atId} | {lastEntry.atName} | {lastEntry.atTipo} | {lastEntry.conector} | {lastEntry.capacidad} | {lastEntry.fechaEntrada}')
 
         return entryInserted
 
     except Exception as e:
+        LogsServices.write(f'Error: {e}')
         return JSONResponse(
         status_code=501,
         content={"message": e}
@@ -357,13 +363,19 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestModel
 
     return tank
 
-@router.post('/espera/mover-inicio/', response_model=TankWaitingResponseModel)
+@router.post('/espera/mover-inicio', response_model=TankWaitingResponseModel)
 async def post_tankWaitingchangePosition(tank_request: TankWaitingRequestPosicionPutModel):
     # Obtener datos del tanque seleccionado
     tankSelect = TankWaiting.select().where(TankWaiting.atName == tank_request.tanque).first()
     
     # Traer los tanques desde la posicion del tanque seleccionado hasta la nueva posicion
     tanks = TankWaiting.select().where(TankWaiting.id != tankSelect.id)
+
+    if len(tanks) == 0:
+        return JSONResponse(
+           status_code=200,
+            content={ "message": 'Sólo existe un tanque en la lista.' }
+        )
     
     # Recorrer los tanques y aumentar 1 en la posicion
     for i in range(len(tanks)):
