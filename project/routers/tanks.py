@@ -44,6 +44,7 @@ async def get_tanks():
     tanks = Tank.select()
     return [ tank for tank in tanks ]
 
+
 @router.put('/{tank_id}', response_model=TankResponseModel)
 async def edit_tank(tank_id: int, tank_request: TankRequestModel):
     tank = Tank.select().where(Tank.id == tank_id).first()
@@ -120,10 +121,9 @@ async def alarm_tanks():
 async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
     
     try:
-        # Escribiendo datos de Entrada Manulmente
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_WRITING', 1)
+        #   Escribiendo datos de Entrada Manulmente
 
-        # Checar si existe el autotanque
+        #   Checar si existe el autotanque si no se crea uno nuevo
         tank = Tank.select().where(Tank.atId == tank_request.atId, Tank.atTipo == tank_request.atTipo ).first()
 
         if tank is None:
@@ -135,24 +135,11 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
                 capacidad90 = tank_request.capacidad,
                 transportadora = 0
             )
-        # Entrada Manual de Numero de PG
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_NUMPG',tank.atName)
-
-        # Entrada Manual de Tipo de PG
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPOAT',tank.atTipo)
-
-        # Entrada Manual de Tipo Conector de PG
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPO_CON',tank.conector)
-
-        # Entrada Manual de Volumen Autorizado de PG
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_CLAVE',tank.atId)
-
-        # Entrada Manual de Numero de PG
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_VOLAUTOR',tank.capacidad)
         
         now = datetime.now()
         fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
-        fecha05 = now.strftime("%Y-%m-%d") if fecha_base > now else (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
+        fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
         fechaEntrada = now.strftime("%Y:%m-%d")
         horaEntrada = now.strftime("%H:%M-%S")
         
@@ -171,8 +158,7 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         entryInserted = TanksEntry.select().order_by(TanksEntry.id.desc()).first()
         LogsServices.write(f'entryInserted: {entryInserted.id}: {entryInserted.atId} | {entryInserted.atName} | {entryInserted.conector} | {entryInserted.capacidad} | {entryInserted.fechaEntrada} {entryInserted.horaEntrada}')
         
-
-
+        #   Se actualiza el registro de ultima entrada.
         lastEntry = TankEntry.select().where(TankEntry.id == 1).first()
         fechaE = f"{entryInserted.fechaEntrada} {entryInserted.horaEntrada}:00"
         
