@@ -21,6 +21,7 @@ database = MySQLDatabase(DATABASE_DB,
                         host=HOST_DB,
                         port=int(PORT_DB))
 
+
 # ---------- usuarios ---------- #
 class User(Model):
     username = CharField(max_length=50, unique=True)
@@ -45,6 +46,22 @@ class User(Model):
     def validate_password(cls, password, hashed):
         result = bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
         return result
+
+
+# ---------- bloqueados ---------- #
+class Bloqueado(Model):
+    user = ForeignKeyField(User, backref='usuarios')
+    fechaBloqueo = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    fechaDesbloqueo = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    created_at =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    def __str__(self):
+        return self.user
+
+    class Meta:
+        database = database
+        table_name = 'bloqueados'
+
 
 # ---------- tanques ---------- #
 class Tank(Model):
