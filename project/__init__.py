@@ -18,6 +18,7 @@ from .database import Bitacora
 from .database import RelojPLC
 from .database import Folio
 from .database import TankExit
+from .database import Bloqueado
 from .database import database as connection
 
 from .opc import OpcServices
@@ -73,6 +74,7 @@ def startup():
         Folio,
         TankEntry,
         TankExit,
+        Bloqueado,
     ])
     LogsServices.setNameFile()
     LogsServices.write('Iniciando api')
