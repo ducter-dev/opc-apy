@@ -245,23 +245,17 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
                 capacidad90 = tank_request.capacidad,
                 transportadora = 0
             )
-        # Entrada Manual de Numero de PG
+        # Entrada Manual de Autotanque
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_NUMPG',tank.atName)
-
-        # Entrada Manual de Tipo de PG
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPOAT',tank.atTipo)
-
-        # Entrada Manual de Tipo Conector de PG
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_TIPO_CON',tank.conector)
-
-        # Entrada Manual de Volumen Autorizado de PG
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_CLAVE',tank.atId)
-
-        # Entrada Manual de Numero de PG
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_VOLAUTOR',tank.capacidad)
+
         now = datetime.now()
-        fecha_base = datetime(now.year, now.month, now.day, 5, 30, 0)
-        fecha05 =  now.strftime("%Y-%m-%d") if now > fecha_base else (now - timedelta(days=1)).strftime("%Y-%m-%d")
+        fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
+        #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
+        fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y:%m:%d")
 
@@ -300,10 +294,11 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
         return response
 
     except Exception as e:
+        LogsServices.write(f'Error: {e}')
         return JSONResponse(
-        status_code=501,
-        content={"message": e}
-    )
+            status_code=501,
+            content={"message": e}
+        )
 
 @router.get('/espera', response_model=List[TankWaitingResponseModel])
 async def get_tanksWaiting():
