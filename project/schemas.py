@@ -429,3 +429,5 @@ class BloqueadosResponseModel(ResponseModel):
     fechaBloqueo: datetime
     fechaDesbloqueo: datetime
 
+class BloqueadosUserRequestModel(BaseModel):
+    usuario: str

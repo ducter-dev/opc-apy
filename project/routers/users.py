@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from ..database import User, Bloqueado
-from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, BloqueadosRequestModel, BloqueadosResponseModel
+from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, BloqueadosRequestModel, BloqueadosResponseModel, BloqueadosUserRequestModel
 from typing import List
 from ..middlewares import VerifyTokenRoute
 from datetime import datetime, timedelta
@@ -45,23 +45,43 @@ async def insert_bloqueados(request: BloqueadosRequestModel):
     return bloqueado
 
 
-@router.get('/bloqueados/user/{user_id}')
-async def insert_bloqueados(user_id: int):
+@router.post('/bloqueados/user')
+async def insert_bloqueados(request: BloqueadosUserRequestModel):
     try:
+        """ Se recibe el usuario en el request, primero se revisa si existe en la BD, si existe contninuamos, 
+        si no retornamos que no existe con un status code 400.
+        """
+
         now = datetime.now()
-        bloqueado = Bloqueado.select().where(Bloqueado.user == user_id).order_by(Bloqueado.id.desc()).first()
-        print(f'now: {now}')
-        print(f'bloqueado.fechaDesbloqueo: {bloqueado.fechaDesbloqueo}')
-        if now > bloqueado.fechaDesbloqueo:
+        user_bd = User.select().where(User.username == request.usuario).first()
+        print(user_bd)
+        if user_bd is None:
             return JSONResponse(
-                status_code=200,
-                content={"bloqueado": False}
+                status_code=400,
+                content={"message": "El usuario no existe en nuestros registros."}
             )
+        """ Revisamos que el usuario se encuentre en la tabla de bloqueos, si no existe retornamos bloqueado false, 
+            y si existe comprobamos que la fecha de desbloqueo ya haya pasado.
+        """
+        bloqueado = Bloqueado.select().where(Bloqueado.user == user_bd.id).order_by(Bloqueado.id.desc()).first()
+
+        if bloqueado is None:
+            return JSONResponse(
+                    status_code=200,
+                    content={"bloqueado": False}
+                )
         else:
-            return JSONResponse(
-                status_code=200,
-                content={"bloqueado": True}
-            )
+            # ahora > fecha de desbloqueo
+            if now > bloqueado.fechaDesbloqueo:
+                return JSONResponse(
+                    status_code=200,
+                    content={"bloqueado": False}
+                )
+            else:
+                return JSONResponse(
+                    status_code=200,
+                    content={"bloqueado": True}
+                )
     except Exception as e:
         return JSONResponse(
         status_code=501,
