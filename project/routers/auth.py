@@ -133,9 +133,16 @@ async def verify_token(Authorization: str = Header(None)):
 
 @router.post('/bloqueados', response_model=BloqueadosResponseModel)
 async def insert_bloqueados(request: BloqueadosRequestModel):
+    userBlock = User.select().where(User.username == request.user).first()
+    if userBlock is None:
+        return JSONResponse(
+            status_code=200,
+            content={"message": 'Usuario no encontrado.'}
+        )
+
     fechaDesbloqueo = datetime.strptime(request.fechaBloqueo, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=15)
     bloqueado = Bloqueado.create(
-        user = request.user,
+        user = userBlock.id,
         fechaBloqueo = request.fechaBloqueo,
         fechaDesbloqueo = fechaDesbloqueo,
     )

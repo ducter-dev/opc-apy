@@ -423,7 +423,7 @@ class FoliosResponseModel(ResponseModel):
     llenadera: LlenaderaResponseModel
 
 class BloqueadosRequestModel(BaseModel):
-    user: int
+    user: str
     fechaBloqueo: str
 
 class BloqueadosResponseModel(ResponseModel):
