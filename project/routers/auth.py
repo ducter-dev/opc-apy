@@ -3,11 +3,12 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.params import Header
 from fastapi.security import HTTPBasicCredentials
-from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel
+from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, UserChangePasswordRequestModel, BloqueadosResponseModel, BloqueadosUserRequestModel, BloqueadosRequestModel
 
 from ..tokenServices import validate_token, write_token
 
-from ..database import User
+from ..database import User, Caducidad, Bloqueado
+from datetime import datetime, timedelta
 router = APIRouter(prefix='/api/v1/auth')
 
 @router.post('/login')
@@ -52,10 +53,135 @@ async def create_user(user: UserRequestModel):
         categoria = user.categoria,
         departamento = user.departamento
     )
+
+    Caducidad.create(
+        password = user.password,
+        caducidad = user.created_at,
+        ultimoAcceso = user.created_at,
+        estado = 1,
+        user = user.id
+    )
     return user
+
+
+@router.post('/update-password', response_model=UserResponseModel)
+async def change_password(request_user: UserChangePasswordRequestModel):
+    try: 
+        user_id_req = request_user.user_id
+        pass_req = request_user.password
+        
+        contrasenas = Caducidad.select().where(Caducidad.user == user_id_req)
+        if len(contrasenas) > 0:
+            existPassword = False
+            for i in range(len(contrasenas)):
+                #   Revisa que la password no exista ya
+                
+                user_exist = User.validate_password(pass_req, contrasenas[i].password)
+                #   Si existe retornamos error y mensaje ·
+                
+                if user_exist:
+                    existPassword = True
+            
+            if existPassword:
+                return JSONResponse(
+                    status_code=422,
+                    content={"message": "La contraseña ya fue registrada antes, intente con otra."}
+                )
+            else:
+                #   Actualizar password de usuario
+                hash_password = User.create_password(pass_req)
+                userBD = User.select().where(User.id == user_id_req).first()
+                userBD.password = hash_password
+                userBD.save()
+
+
+                for i in range(len(contrasenas)):
+                    contrasenas[i].estado = 2
+                    contrasenas[i].save()
+
+                #   Actualizar estados de password en caducidad
+                now = datetime.now()
+                ahora = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
+                fechaCaducidad = now + timedelta(days=60)
+                fechaCaducidadStr = fechaCaducidad.strftime('%Y-%m-%d %H:%M:%S')
+                #   Insertar registro en caducidad
+                Caducidad.create(
+                    password = hash_password,
+                    caducidad = fechaCaducidadStr,
+                    ultimoAcceso = ahora,
+                    estado = 1,
+                    user = userBD.id
+                )
+
+        return JSONResponse(
+            status_code=201,
+            content={"message": True}
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
 
 
 @router.post('/verify/token')
 async def verify_token(Authorization: str = Header(None)):
     token = Authorization.split(' ')[1]
     return validate_token(token, output=True)
+
+
+
+@router.post('/bloqueados', response_model=BloqueadosResponseModel)
+async def insert_bloqueados(request: BloqueadosRequestModel):
+    fechaDesbloqueo = datetime.strptime(request.fechaBloqueo, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=15)
+    bloqueado = Bloqueado.create(
+        user = request.user,
+        fechaBloqueo = request.fechaBloqueo,
+        fechaDesbloqueo = fechaDesbloqueo,
+    )
+    return bloqueado
+
+
+@router.post('/bloqueados/user')
+async def status_bloqueados(request: BloqueadosUserRequestModel):
+    try:
+        """ Se recibe el usuario en el request, primero se revisa si existe en la BD, si existe continuamos, 
+        si no retornamos que no existe con un status code 400.
+        """
+
+        now = datetime.now()
+        user_bd = User.select().where(User.username == request.usuario).first()
+
+        if user_bd is None:
+            return JSONResponse(
+                status_code=400,
+                content={"message": "Error revise sus credenciales ó contacte al administrador del sistema."}
+            )
+        """ Revisamos que el usuario se encuentre en la tabla de bloqueos, si no existe retornamos bloqueado false, 
+            y si existe comprobamos que la fecha de desbloqueo ya haya pasado.
+        """
+        bloqueado = Bloqueado.select().where(Bloqueado.user == user_bd.id).order_by(Bloqueado.id.desc()).first()
+
+        if bloqueado is None:
+            return JSONResponse(
+                    status_code=200,
+                    content={"bloqueado": False}
+                )
+        else:
+            # ahora > fecha de desbloqueo
+            if now > bloqueado.fechaDesbloqueo:
+                return JSONResponse(
+                    status_code=200,
+                    content={"bloqueado": False}
+                )
+            else:
+                return JSONResponse(
+                    status_code=200,
+                    content={"bloqueado": True}
+                )
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": e}
+    )
+    

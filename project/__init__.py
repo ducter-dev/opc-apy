@@ -19,6 +19,7 @@ from .database import RelojPLC
 from .database import Folio
 from .database import TankExit
 from .database import Bloqueado
+from .database import Caducidad
 from .database import database as connection
 
 from .opc import OpcServices
@@ -75,6 +76,7 @@ def startup():
         TankEntry,
         TankExit,
         Bloqueado,
+        Caducidad,
     ])
     LogsServices.setNameFile()
     LogsServices.write('Iniciando api')

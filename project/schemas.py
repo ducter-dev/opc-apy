@@ -73,6 +73,11 @@ class UserRequestPutModel(BaseModel, UserValidator):
     categoria: int
     departamento: str
 
+class UserChangePasswordRequestModel(BaseModel, UserValidator):
+    user_id: int
+    password: str
+
+
 # --------- TanksWaiting ---------
 class TankWaitingRequestModel(BaseModel):
     posicion: int
@@ -420,8 +425,6 @@ class FoliosResponseModel(ResponseModel):
 class BloqueadosRequestModel(BaseModel):
     user: int
     fechaBloqueo: str
-    fechaDesbloqueo: str
-
 
 class BloqueadosResponseModel(ResponseModel):
     id: int
