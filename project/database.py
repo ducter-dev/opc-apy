@@ -56,11 +56,28 @@ class Bloqueado(Model):
     created_at =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
     def __str__(self):
-        return self.user
+        return self.id
 
     class Meta:
         database = database
         table_name = 'bloqueados'
+
+
+# ---------- contraseñas caducidad ---------- #
+class Caducidad(Model):
+    password = CharField()
+    caducidad = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    ultimoAcceso = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    estado = IntegerField(default=1)
+    user = ForeignKeyField(User, backref='usuarios')
+    created_at =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    def __str__(self):
+        return self.id
+
+    class Meta:
+        database = database
+        table_name = 'caducidades'
 
 
 # ---------- tanques ---------- #
