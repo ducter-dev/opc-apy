@@ -61,6 +61,7 @@ class UserRequestModel(BaseModel, UserValidator):
     password: str
     categoria: int
     departamento: int
+    registra: int
 
 class UserResponseModel(ResponseModel):
     id: int

@@ -275,11 +275,20 @@ class Llenadera(Model):
         table_name = 'llenaderas'
 
 
+# ----- Eventos -----
+class Evento(Model):
+    descripcion = CharField()
+
+    class Meta:
+        database = database
+        table_name = 'eventos'
+
+
 # ----- Bitacora -----
 class Bitacora(Model):
-    usuario = CharField(50)
     actividad = CharField()
-    ubicacion = CharField(50)
+    user = ForeignKeyField(User, backref='usuarios')
+    evento = ForeignKeyField(Evento, backref='eventos')
     fecha = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
@@ -287,6 +296,8 @@ class Bitacora(Model):
     class Meta:
         database = database
         table_name = 'bitacora'
+
+
 
 
 # ----- Reloj -----

@@ -7,8 +7,9 @@ from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, 
 
 from ..tokenServices import validate_token, write_token
 
-from ..database import User, Caducidad, Bloqueado
+from ..database import User, Caducidad, Bloqueado, Bitacora
 from datetime import datetime, timedelta
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte
 router = APIRouter(prefix='/api/v1/auth')
 
 @router.post('/login')
@@ -33,6 +34,18 @@ async def login(credentials: HTTPBasicCredentials):
         "categoria": user.categoria,
         "departamento": user.departamento
     }
+
+    fecha05 = obtenerFecha05Reporte()
+    fecha24 = obtenerFecha24Reporte()
+
+    Bitacora.create(
+        user = user.id,
+        evento = 1,
+        actividad = f"El usuario {user.username} ha iniciado sesión.",
+        fecha = user.created_at,
+        reporte24 = fecha24,
+        reporte05 = fecha05
+    )
     
     data_dic = {
         "user": user_dict,
@@ -41,25 +54,36 @@ async def login(credentials: HTTPBasicCredentials):
     return data_dic
 
 @router.post('/register', response_model=UserResponseModel)
-async def create_user(user: UserRequestModel):
+async def create_user(user_req: UserRequestModel):
 
-    if User.select().where(User.username == user.username).exists():
+    if User.select().where(User.username == user_req.username).exists():
         raise HTTPException(409, 'El usuario ya se encuentra en uso.')
 
-    hash_password = User.create_password(user.password)
+    hash_password = User.create_password(user_req.password)
     user = User.create(
-        username = user.username,
+        username = user_req.username,
         password = hash_password,
-        categoria = user.categoria,
-        departamento = user.departamento
+        categoria = user_req.categoria,
+        departamento = user_req.departamento
     )
-
+    usuarioRegistra = User.select().where(User.id == user_req.registra).first()
     Caducidad.create(
         password = user.password,
         caducidad = user.created_at,
         ultimoAcceso = user.created_at,
         estado = 1,
         user = user.id
+    )
+    fecha05 = obtenerFecha05Reporte()
+    fecha24 = obtenerFecha24Reporte()
+
+    Bitacora.create(
+        user = usuarioRegistra.id,
+        evento = 3,
+        actividad = f"El usuario {usuarioRegistra.username} ha registrado a {user.username}",
+        fecha = user.created_at,
+        reporte24 = fecha24,
+        reporte05 = fecha05
     )
     return user
 

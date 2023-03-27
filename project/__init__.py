@@ -14,6 +14,7 @@ from .database import TankInTrucks
 from .database import TankAssign
 from .database import Tank
 from .database import Llenadera
+from .database import Evento
 from .database import Bitacora
 from .database import RelojPLC
 from .database import Folio
@@ -70,6 +71,7 @@ def startup():
         TankAssign,
         Tank,
         Llenadera,
+        Evento,
         Bitacora,
         RelojPLC,
         Folio,
