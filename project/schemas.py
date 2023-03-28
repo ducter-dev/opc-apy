@@ -435,3 +435,7 @@ class BloqueadosResponseModel(ResponseModel):
 
 class BloqueadosUserRequestModel(BaseModel):
     usuario: str
+
+
+class FechaReportesRequestModel(BaseModel):
+    fecha: str
