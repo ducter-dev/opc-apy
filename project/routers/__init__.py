@@ -6,3 +6,4 @@ from .reloj import router as reloj_router
 from .barreras import router as barreras_router
 from .opc import router as opc_router
 from .auth import router as auth_router
+from .reportes import router as report_router
