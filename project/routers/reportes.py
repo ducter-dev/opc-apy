@@ -1,6 +1,6 @@
 import requests
-from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Response
+from fastapi.responses import JSONResponse, FileResponse
 from typing import List
 from datetime import datetime, timedelta
 from ..schemas import FechaReportesRequestModel
@@ -19,36 +19,29 @@ JASPER_SERVER = os.environ.get('JASPER_SERVER')
 
 s = requests.session()
 
-def login():
-    try:
-        s.cookies.clear()
-        url = f"{JASPER_SERVER}/login"
-        payload = "j_username=jasperadmin&j_password=jasperadmin"
-        headers = {"Content-Type": "application/x-www-form-urlencoded"}
-        r = s.request("POST", url, data=payload, headers=headers)
-        heads = r.headers['Set-Cookie'].split('; ')
-        cookieSession = heads[0].split(', ')
-        cookieJSession = cookieSession[0].split("=")
-        JSESSIONID = cookieJSession[1]
-        return JSESSIONID
-    except Exception as e:
-        return JSONResponse(
-            status_code=501,
-            content={"message": e}
-        )
-
-
 @router.post('/cargas-diarias')
 async def get_cargas_diarias_report(carga: FechaReportesRequestModel):
     try:
-        cookie = login()
-        url_cargas = f"{JASPER_SERVER}/reports/reportes/cargas/cargasDiarias.pdf?fecha={carga.fecha}"
-        querystring = {"fecha":"2023-03-14"}
-        payload= ""
-        headers = {"cookie": f"userLocale=es_MX; JSESSIONID={cookie}"}
-        response = requests.request("GET", url_cargas, data=payload, headers=headers, params=querystring)
-        print(response)
-        return 
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        url_cargas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/cargasDiarias.pdf"
+        params = {"fecha": carga.fecha}
+        
+        res = s.get(url=url_cargas, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"cargas_diarias_{carga.fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
     except Exception as e:
         return JSONResponse(
             status_code=501,
