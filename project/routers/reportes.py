@@ -13,14 +13,14 @@ dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
 
 from ..middlewares import VerifyTokenRoute
-router = APIRouter(prefix='/api/v1/reportes', route_class=VerifyTokenRoute)
+router = APIRouter(prefix='/api/v1/reportes')
 
 JASPER_SERVER = os.environ.get('JASPER_SERVER')
 
 s = requests.session()
 
-@router.post('/cargas-diarias')
-async def get_cargas_diarias_report(carga: FechaReportesRequestModel):
+@router.get('/cargas-diarias/{fecha}')
+async def get_cargas_diarias_report(fecha: str):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -29,11 +29,11 @@ async def get_cargas_diarias_report(carga: FechaReportesRequestModel):
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
         url_cargas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/cargasDiarias.pdf"
-        params = {"fecha": carga.fecha}
+        params = {"fecha": fecha}
         
         res = s.get(url=url_cargas, params=params, stream=True)
         res.raise_for_status()
-        filename = f"cargas_diarias_{carga.fecha}.pdf"
+        filename = f"cargas_diarias_{fecha}.pdf"
         path = f'./downloads/{filename}'
 
         with open(path, 'wb') as f:
