@@ -369,14 +369,21 @@ class BitacoraRequestModel(BaseModel):
     reporte24: str
     reporte05:  str
 
+# --------- Eventos ---------
+class EventoResponseModel(ResponseModel):
+    id: int
+    descripcion: str
+
+
+# --------- Bitácora ---------
 class BitacoraResponseModel(ResponseModel):
     id: int
-    usuario: str
+    user: UserResponseModel
     actividad: str
-    ubicacion: str
+    evento: EventoResponseModel
     fecha: datetime
-    reporte24: date
     reporte05: date
+    reporte24: date
 
 
 # --------- RelojPLC ---------
