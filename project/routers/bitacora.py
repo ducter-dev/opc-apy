@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 
-from ..database import Bitacora
+from ..database import Bitacora, User, Evento
 from ..schemas import BitacoraRequestModel, BitacoraResponseModel
 
 from ..middlewares import VerifyTokenRoute
@@ -31,7 +31,7 @@ async def create_bitacora(bitacora: BitacoraRequestModel):
 
 @router.get('', response_model=List[BitacoraResponseModel])
 async def get_bitacora():
-    bitacoras = Bitacora.select()
+    bitacoras = Bitacora.select().join(User, on=(User.id == Bitacora.user_id)).join(Evento, on=(Evento.id == Bitacora.evento_id)).order_by(Bitacora.id.asc())
     return [ bitacora for bitacora in bitacoras ]
 
 
