@@ -323,3 +323,28 @@ class Folio(Model):
         database = database
         table_name = "folios"
 
+
+
+# ----- Esfera -----
+class Esfera(Model):
+    presion = DoubleField(null=True)
+    temperatura = DoubleField(null=True)
+    densidad = DoubleField(null=True)
+    densidadCor = DoubleField(null=True)
+    volumenBlsNat = DoubleField(null=True)
+    volumenBlsCor = DoubleField(null=True)
+    volumenTon = DoubleField(null=True)
+    porcentaje = DoubleField(null=True)
+    nivel = FloatField(null=True)
+    volumenNatDisp = DoubleField(null=True)
+    volumenCorDisp = DoubleField(null=True)
+    volumenTonDisp = DoubleField(null=True)
+    esfera = IntegerField(null=True)
+    fecha =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    
+    class Meta:
+        database = database
+        table_name = 'esferas'
