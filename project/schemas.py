@@ -446,3 +446,42 @@ class BloqueadosUserRequestModel(BaseModel):
 
 class FechaReportesRequestModel(BaseModel):
     fecha: str
+
+
+# --------- esferas ---------
+class EsferaRequestModel(BaseModel):
+    presion = float
+    temperatura = float
+    densidad = float
+    densidadCor = float
+    volumenBlsNat = int
+    volumenBlsCor = int
+    volumenTon = int
+    porcentaje = float
+    nivel = int
+    volumenNatDisp = int
+    volumenCorDisp = int
+    volumenTonDisp = int
+    esfera = int
+    fecha =  str
+    reporte24 =  str
+    reporte05 =  str
+
+class EsferaResponseModel(BaseModel):
+    id = int
+    presion = float
+    temperatura = float
+    densidad = float
+    densidadCor = float
+    volumenBlsNat = int
+    volumenBlsCor = int
+    volumenTon = int
+    porcentaje = float
+    nivel = int
+    volumenNatDisp = int
+    volumenCorDisp = int
+    volumenTonDisp = int
+    esfera = int
+    fecha =  datetime
+    reporte24 =  date
+    reporte05 =  date
