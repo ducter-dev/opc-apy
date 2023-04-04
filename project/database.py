@@ -376,3 +376,32 @@ class Patin(Model):
     class Meta:
         database = database
         table_name = 'patines'
+
+
+class Cromatografo(Model):
+    cromatrografo = CharField()
+    corriente: IntegerField(null=True)
+    c6 = DoubleField(null=True)
+    propano = DoubleField(null=True)
+    propileno = DoubleField(null=True)
+    iButano = DoubleField(null=True)
+    nButano = DoubleField(null=True)
+    c4 = DoubleField(null=True)
+    iPentano = DoubleField(null=True)
+    nPentano = DoubleField(null=True)
+    metano = DoubleField(null=True)
+    etileno = DoubleField(null=True)
+    etano = DoubleField(null=True)
+    olefinas = DoubleField(null=True)
+    densidad = DoubleField(null=True)
+    pentano = DoubleField(null=True)
+    fecha =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno05 = IntegerField(null=True)
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno24 = IntegerField(null=True)
+    created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    class Meta:
+        database = database
+        table_name = 'cromatografo'
