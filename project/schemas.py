@@ -535,3 +535,25 @@ class PatinResponseModel(BaseModel):
     turno05 =  int
     reporte24 =  date
     turno24 =  int
+
+class CromatografoResponseModel(BaseModel):
+    id = int
+    cromatrografo = str
+    corriente: int
+    c6 = float
+    propano = float
+    propileno = float
+    iButano = float
+    nButano = float
+    c4 = float
+    iPentano = float
+    nPentano = float
+    metano = float
+    etileno = float
+    etano = float
+    olefinas = float
+    fecha =  datetime
+    reporte05 =  date
+    turno05 = int
+    reporte24 =  date
+    turno24 = int
