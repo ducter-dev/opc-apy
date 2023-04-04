@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime, timedelta
 from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
 
-from ..database import Patin
+from ..database import Patin, Bitacora
 from ..schemas import PatinRequestModel, PatinResponseModel
 
 from ..opc import OpcServices
@@ -241,6 +241,15 @@ async def register_patin():
             turno05 = turno05,
             reporte24 = fecha24,
             turno24 = turno24
+        )
+
+        bitacora = Bitacora.create(
+            user = 1,
+            evento = 9,
+            actividad = 'Patines registrados correctamente.',
+            fecha = ahora,
+            reporte24 = fecha24,
+            reporte05 = fecha05
         )
         
         return JSONResponse(

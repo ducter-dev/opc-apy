@@ -13,9 +13,9 @@ router = APIRouter(prefix='/api/v1/bitacora', route_class=VerifyTokenRoute)
 async def create_bitacora(bitacora: BitacoraRequestModel):
     try:
         bitacora = Bitacora.create(
-            usuario = bitacora.usuario,
             actividad = bitacora.actividad,
-            ubicacion = bitacora.ubicacion,
+            user_id = bitacora.usuario,
+            evento_id = bitacora.evento,
             fecha = bitacora.fecha,
             reporte24 = bitacora.reporte24,
             reporte05 = bitacora.reporte05

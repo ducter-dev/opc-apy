@@ -362,9 +362,9 @@ class LlenaderaAsignarRequestModel(BaseModel):
 
 # --------- Bitacora ---------
 class BitacoraRequestModel(BaseModel):
-    usuario: str
+    user: int
     actividad: str
-    ubicacion: str
+    evento: int
     fecha: str
     reporte24: str
     reporte05:  str
