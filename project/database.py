@@ -341,10 +341,38 @@ class Esfera(Model):
     volumenTonDisp = DoubleField(null=True)
     esfera = IntegerField(null=True)
     fecha =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
-    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno05 = IntegerField(null=True)
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno24 = IntegerField(null=True)
     created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     
     class Meta:
         database = database
         table_name = 'esferas'
+
+
+class Patin(Model):
+    presion = DoubleField(null=True)
+    flujoVolumen = DoubleField(null=True)
+    flujoMasico = DoubleField(null=True)
+    temperatura = DoubleField(null=True)
+    densidadNat = DoubleField(null=True)
+    densidadCor = DoubleField(null=True)
+    volUnc = DoubleField(null=True)
+    blsNat = DoubleField(null=True)
+    blsCor = DoubleField(null=True)
+    ton = DoubleField(null=True)
+    patin = DoubleField(null=True)
+    totalizadorBlsNat = DoubleField(null=True)
+    totalizadorBlsCor = DoubleField(null=True)
+    totalizadorMassTon = DoubleField(null=True)
+    fecha =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno05 = IntegerField(null=True)
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno24 = IntegerField(null=True)
+    created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    class Meta:
+        database = database
+        table_name = 'patines'

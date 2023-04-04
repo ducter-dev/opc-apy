@@ -10,3 +10,26 @@ def obtenerFecha05Reporte():
 def obtenerFecha24Reporte():
     now = datetime.now()
     return now.strftime("%Y-%m-%d")
+
+def obtenerTurno05(hora):
+    turno = 0
+    if hora >= 6 and hora <= 13: 
+        turno = 1
+    elif hora >= 14 and hora <= 21:
+        turno = 2
+    elif hora >= 21 and hora <= 5:
+        turno = 3
+    
+    return turno
+
+
+def obtenerTurno24(hora):
+    turno = 0
+    if hora >= 1 and hora <= 8: 
+        turno = 1
+    elif hora >= 9 and hora <= 16:
+        turno = 2
+    elif hora >= 17 and hora == 0:
+        turno = 3
+    
+    return turno

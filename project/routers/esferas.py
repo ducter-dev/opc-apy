@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
-from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
 
 from ..database import Esfera
 from ..schemas import EsferaRequestModel, EsferaResponseModel
@@ -12,7 +12,7 @@ from ..opc import OpcServices
 from ..middlewares import VerifyTokenRoute
 router = APIRouter(prefix='/api/v1/esferas', route_class=VerifyTokenRoute)
 
-@router.post('', response_model=List[EsferaResponseModel])
+@router.post('')
 async def register_esfera():
     try:
     #   Primero obtenemos los valores de las variables
@@ -89,6 +89,9 @@ async def register_esfera():
         fecha24 = obtenerFecha24Reporte()
         now = datetime.now()
         ahora = now.strftime("%Y:%m-%d %H:%M:%S")
+        hora = now.strftime("%H")
+        turno05 = obtenerTurno05(int(hora))
+        turno24 = obtenerTurno24(int(hora))
     
         esferaRegister1 = Esfera.create(
             presion = PRES_PI_301A / 100,
@@ -105,8 +108,10 @@ async def register_esfera():
             volumenTonDisp = MASA_DISP_301A_ENT + (MASA_DISP_301A_DEC / 10000),
             esfera = 1,
             fecha = ahora,
+            reporte05 = fecha05,
+            turno05 = turno05,
             reporte24 = fecha24,
-            reporte05 = fecha05
+            turno24 = turno24
         )
 
         esferaRegister2 = Esfera.create(
@@ -124,8 +129,10 @@ async def register_esfera():
             volumenTonDisp = MASA_DISP_301B_ENT + (MASA_DISP_301B_DEC / 10000),
             esfera = 2,
             fecha = ahora,
+            reporte05 = fecha05,
+            turno05 = turno05,
             reporte24 = fecha24,
-            reporte05 = fecha05
+            turno24 = turno24
         )
 
         

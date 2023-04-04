@@ -464,8 +464,10 @@ class EsferaRequestModel(BaseModel):
     volumenTonDisp = int
     esfera = int
     fecha =  str
-    reporte24 =  str
     reporte05 =  str
+    turno05 =  int
+    reporte24 =  str
+    turno24 =  int
 
 class EsferaResponseModel(BaseModel):
     id = int
@@ -483,5 +485,53 @@ class EsferaResponseModel(BaseModel):
     volumenTonDisp = int
     esfera = int
     fecha =  datetime
-    reporte24 =  date
     reporte05 =  date
+    turno05 =  int
+    reporte24 =  date
+    turno24 =  int
+
+
+
+# --------- patines ---------
+class PatinRequestModel(BaseModel):
+    presion = float
+    flujoVolumen = float
+    flujoMasico = float
+    temperatura = float
+    densidadNat = float
+    densidadCor = float
+    volUnc = float
+    blsNat = float
+    blsCor = float
+    ton = float
+    patin = float
+    totalizadorBlsNat = float
+    totalizadorBlsCor = float
+    totalizadorMassTon = float
+    fecha =  str
+    reporte05 =  str
+    turno05 =  int
+    reporte24 =  str
+    turno24 =  int
+
+class PatinResponseModel(BaseModel):
+    id = int
+    presion = float
+    flujoVolumen = float
+    flujoMasico = float
+    temperatura = float
+    densidadNat = float
+    densidadCor = float
+    volUnc = float
+    blsNat = float
+    blsCor = float
+    ton = float
+    patin = float
+    totalizadorBlsNat = float
+    totalizadorBlsCor = float
+    totalizadorMassTon = float
+    fecha =  datetime
+    reporte05 =  date
+    turno05 =  int
+    reporte24 =  date
+    turno24 =  int
