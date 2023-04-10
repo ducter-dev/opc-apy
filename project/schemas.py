@@ -558,3 +558,29 @@ class CromatografoResponseModel(ResponseModel):
     turno05: int
     reporte24: date
     turno24: int
+
+class BombaResponseModel(ResponseModel):
+    id: int
+    hora: str
+    bomba: str
+    estatus: str
+    totalHorasOper: int
+    totalMinsOper: int
+    totalTiempoOper: time
+    horasOper: int
+    minsOper: int
+    enOper: time
+    horasMantto: int
+    minsMantto: int
+    enMantto: time
+    horasDisp: int
+    minsDisp: int
+    enDisp: time
+    horasNoDisp: int
+    minsNoDisp: int
+    enNoDisp: time
+    fecha: datetime
+    reporte05: date
+    turno05: int
+    reporte24: date
+    turno24: int

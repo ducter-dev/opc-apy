@@ -4,7 +4,7 @@ import time
 from .logs import LogsServices
 
 from .routers import user_router, tank_router, auth_router, llenadera_router, bitacora_router, reloj_router, opc_router, barreras_router
-from .routers import report_router, esfera_router, patin_router, croma_router
+from .routers import report_router, esfera_router, patin_router, croma_router, bomba_router
 
 from .database import User
 from .database import TanksEntry
@@ -25,6 +25,7 @@ from .database import Caducidad
 from .database import Esfera
 from .database import Patin
 from .database import Cromatografo
+from .database import Bomba
 from .database import database as connection
 
 from .opc import OpcServices
@@ -64,6 +65,7 @@ app.include_router(report_router)
 app.include_router(esfera_router)
 app.include_router(patin_router)
 app.include_router(croma_router)
+app.include_router(bomba_router)
 
 @app.on_event('startup')
 def startup():
@@ -90,6 +92,7 @@ def startup():
         Esfera,
         Patin,
         Cromatografo,
+        Bomba,
     ])
     LogsServices.setNameFile()
     LogsServices.write('Iniciando api')
