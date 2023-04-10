@@ -395,6 +395,7 @@ class Cromatografo(Model):
     olefinas = DoubleField(null=True)
     densidad = DoubleField(null=True)
     pentano = DoubleField(null=True)
+    corriente = IntegerField(null=True)
     fecha =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     turno05 = IntegerField(null=True)

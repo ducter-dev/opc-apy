@@ -264,6 +264,6 @@ async def register_patin():
 
 
 @router.get('', response_model=List[PatinResponseModel])
-async def get_bitacora():
+async def get_patines():
     patines = Patin.select()
     return [ patin for patin in patines ]
