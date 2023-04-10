@@ -406,3 +406,34 @@ class Cromatografo(Model):
     class Meta:
         database = database
         table_name = 'cromatografo'
+
+
+class Bomba(Model):
+    hora = CharField()
+    bomba = CharField()
+    estatus = CharField()
+    totalHorasOper = IntegerField(null=True)
+    totalMinsOper = IntegerField(null=True)
+    totalTiempoOper = CharField()
+    horasOper = IntegerField(null=True)
+    minsOper = IntegerField(null=True)
+    enOper = IntegerField(null=True)
+    horasMantto = IntegerField(null=True)
+    minsMantto = IntegerField(null=True)
+    enMantto = CharField()
+    horasDisp = IntegerField(null=True)
+    minsDisp = IntegerField(null=True)
+    enDisp = CharField()
+    horasNoDisp = IntegerField(null=True)
+    minsNoDisp = IntegerField(null=True)
+    enNoDisp = CharField()
+    fecha =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno05 = IntegerField(null=True)
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno24 = IntegerField(null=True)
+    created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    class Meta:
+        database = database
+        table_name = 'bombas'

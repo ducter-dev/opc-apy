@@ -15,8 +15,7 @@ router = APIRouter(prefix='/api/v1/patines', route_class=VerifyTokenRoute)
 @router.post('')
 async def register_patin():
     try:
-    #   Primero obtenemos los valores de las variables
-        print('register Patin')
+        #   Primero obtenemos los valores de las variables
         now = datetime.now()
         ahora = now.strftime("%Y:%m-%d %H:%M:%S")
         hora = now.strftime("%H")
@@ -24,10 +23,6 @@ async def register_patin():
         fecha24 = obtenerFecha24Reporte()
         turno05 = obtenerTurno05(int(hora))
         turno24 = obtenerTurno24(int(hora))
-        print(f'ahora: {ahora}')
-        print(f'hora: {hora}')
-        print(f'fecha05: {fecha05}')
-        print(f'fecha24: {fecha24}')
 
         DI_401A_NAT_PROM = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.DI-401A_NAT_PROM')
         DI_401A_COR_PROM = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.DI-401A_COR_PROM')
