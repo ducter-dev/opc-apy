@@ -74,7 +74,6 @@ async def register_cromatografo():
         ETILENO_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETILENO_EB4_STR1')
         ETANO_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETANO_EB4_STR1')
         OLEFINAS_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR1')
-        DENSIDAD_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.DENSIDAD_EB4_STR1')
 
         cromatrografo2 = Cromatografo.create(
             cromatrografo = 'EB04',
@@ -110,7 +109,6 @@ async def register_cromatografo():
         ETILENO_EB4_STR2 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETILENO_EB4_STR2')
         ETANO_EB4_STR2 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETANO_EB4_STR2')
         OLEFINAS_EB4_STR2 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR2')
-        DENSIDAD_EB4_STR2 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.DENSIDAD_EB4_STR2')
 
         cromatrografo3 = Cromatografo.create(
             cromatrografo = 'EB04',
@@ -132,42 +130,42 @@ async def register_cromatografo():
             turno05 = turno05,
             reporte24 = fecha24,
             turno24 = turno24
-        
-        C6_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.C6_EB4_STR2')
-        PROPANO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.PROPANO_EB4_STR2')
-        PROPILENO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.PROPILENO_EB4_STR2')
-        IBUTANO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.IBUTANO_EB4_STR2')
-        NBUTANO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.NBUTANO_EB4_STR2')
-        C4_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.C4_EB4_STR2')
-        IPENTANO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.IPENTANO_EB4_STR2')
-        NPENTANO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.NPENTANO_EB4_STR2')
-        METANO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.METANO_EB4_STR2')
-        ETILENO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETILENO_EB4_STR2')
-        ETANO_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETANO_EB4_STR2')
-        OLEFINAS_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR2')
-        DENSIDAD_EB4_STR2 = OpcServices('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.DENSIDAD_EB4_STR2')
+        )
+
+        C6_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.C6_EB4_STR3')
+        PROPANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.PROPANO_EB4_STR3')
+        PROPILENO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.PROPILENO_EB4_STR3')
+        IBUTANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.IBUTANO_EB4_STR3')
+        NBUTANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.NBUTANO_EB4_STR3')
+        C4_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.C4_EB4_STR3')
+        IPENTANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.IPENTANO_EB4_STR3')
+        NPENTANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.NPENTANO_EB4_STR3')
+        METANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.METANO_EB4_STR3')
+        ETILENO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETILENO_EB4_STR3')
+        ETANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETANO_EB4_STR3')
+        OLEFINAS_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR3')
 
         cromatrografo4 = Cromatografo.create(
             cromatrografo = 'EB04',
             corriente = 3,
-            c6 = C6_EB4_STR2 / 100,
-            propano = PROPANO_EB4_STR2 / 100,
-            propileno = PROPILENO_EB4_STR2 / 100,
-            iButano = IBUTANO_EB4_STR2 / 100,
-            nButano = NBUTANO_EB4_STR2 / 100,
-            c4 = C4_EB4_STR2 / 100,
-            iPentano = IPENTANO_EB4_STR2 / 100,
-            nPentano = NPENTANO_EB4_STR2 / 100,
-            metano = METANO_EB4_STR2 / 100,
-            etileno = ETILENO_EB4_STR2 / 100,
-            etano = ETANO_EB4_STR2 / 100,
-            olefinas = OLEFINAS_EB4_STR2 / 100,
+            c6 = C6_EB4_STR3 / 100,
+            propano = PROPANO_EB4_STR3 / 100,
+            propileno = PROPILENO_EB4_STR3 / 100,
+            iButano = IBUTANO_EB4_STR3 / 100,
+            nButano = NBUTANO_EB4_STR3 / 100,
+            c4 = C4_EB4_STR3 / 100,
+            iPentano = IPENTANO_EB4_STR3 / 100,
+            nPentano = NPENTANO_EB4_STR3 / 100,
+            metano = METANO_EB4_STR3 / 100,
+            etileno = ETILENO_EB4_STR3 / 100,
+            etano = ETANO_EB4_STR3 / 100,
+            olefinas = OLEFINAS_EB4_STR3 / 100,
             fecha = ahora,
             reporte05 = fecha05,
             turno05 = turno05,
             reporte24 = fecha24,
             turno24 = turno24
-        ))
+        )
 
         bitacora = Bitacora.create(
             user = 1,

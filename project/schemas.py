@@ -450,110 +450,111 @@ class FechaReportesRequestModel(BaseModel):
 
 # --------- esferas ---------
 class EsferaRequestModel(BaseModel):
-    presion = float
-    temperatura = float
-    densidad = float
-    densidadCor = float
-    volumenBlsNat = int
-    volumenBlsCor = int
-    volumenTon = int
-    porcentaje = float
-    nivel = int
-    volumenNatDisp = int
-    volumenCorDisp = int
-    volumenTonDisp = int
-    esfera = int
-    fecha =  str
-    reporte05 =  str
-    turno05 =  int
-    reporte24 =  str
-    turno24 =  int
+    presion: float
+    temperatura: float
+    densidad: float
+    densidadCor: float
+    volumenBlsNat: float
+    volumenBlsCor: float
+    volumenTon: float
+    porcentaje: float
+    nivel: float
+    volumenNatDisp: float
+    volumenCorDisp: float
+    volumenTonDisp: float
+    esfera: int
+    fecha: str
+    reporte05: str
+    turno05: int
+    reporte24: str
+    turno24: int
 
-class EsferaResponseModel(BaseModel):
-    id = int
-    presion = float
-    temperatura = float
-    densidad = float
-    densidadCor = float
-    volumenBlsNat = int
-    volumenBlsCor = int
-    volumenTon = int
-    porcentaje = float
-    nivel = int
-    volumenNatDisp = int
-    volumenCorDisp = int
-    volumenTonDisp = int
-    esfera = int
-    fecha =  datetime
-    reporte05 =  date
-    turno05 =  int
-    reporte24 =  date
-    turno24 =  int
+class EsferaResponseModel(ResponseModel):
+    id: int
+    presion: float
+    temperatura: float
+    densidad: float
+    densidadCor: float
+    volumenBlsNat: float
+    volumenBlsCor: float
+    volumenTon: float
+    porcentaje: float
+    nivel: float
+    volumenNatDisp: float
+    volumenCorDisp: float
+    volumenTonDisp: float
+    esfera: int
+    fecha: datetime
+    reporte05: date
+    turno05: int
+    reporte24: date
+    turno24: int
 
 
 
 # --------- patines ---------
 class PatinRequestModel(BaseModel):
-    presion = float
-    flujoVolumen = float
-    flujoMasico = float
-    temperatura = float
-    densidadNat = float
-    densidadCor = float
-    volUnc = float
-    blsNat = float
-    blsCor = float
-    ton = float
-    patin = float
-    totalizadorBlsNat = float
-    totalizadorBlsCor = float
-    totalizadorMassTon = float
-    fecha =  str
-    reporte05 =  str
-    turno05 =  int
-    reporte24 =  str
-    turno24 =  int
+    presion: float
+    flujoVolumen: float
+    flujoMasico: float
+    temperatura: float
+    densidadNat: float
+    densidadCor: float
+    volUnc: float
+    blsNat: float
+    blsCor: float
+    ton: float
+    patin: int
+    totalizadorBlsNat: float
+    totalizadorBlsCor: float
+    totalizadorMassTon: float
+    fecha: str
+    reporte05: str
+    turno05: int
+    reporte24: str
+    turno24: int
 
-class PatinResponseModel(BaseModel):
-    id = int
-    presion = float
-    flujoVolumen = float
-    flujoMasico = float
-    temperatura = float
-    densidadNat = float
-    densidadCor = float
-    volUnc = float
-    blsNat = float
-    blsCor = float
-    ton = float
-    patin = float
-    totalizadorBlsNat = float
-    totalizadorBlsCor = float
-    totalizadorMassTon = float
-    fecha =  datetime
-    reporte05 =  date
-    turno05 =  int
-    reporte24 =  date
-    turno24 =  int
+class PatinResponseModel(ResponseModel):
+    id: int
+    presion: float
+    flujoVolumen: float
+    flujoMasico: float
+    temperatura: float
+    densidadNat: float
+    densidadCor: float
+    volUnc: float
+    blsNat: float
+    blsCor: float
+    ton: float
+    patin: int
+    totalizadorBlsNat: float
+    totalizadorBlsCor: float
+    totalizadorMassTon: float
+    fecha: datetime
+    reporte05: date
+    turno05: int
+    reporte24: date
+    turno24: int
 
-class CromatografoResponseModel(BaseModel):
-    id = int
-    cromatrografo = str
+class CromatografoResponseModel(ResponseModel):
+    id: int
+    cromatrografo: str
     corriente: int
-    c6 = float
-    propano = float
-    propileno = float
-    iButano = float
-    nButano = float
-    c4 = float
-    iPentano = float
-    nPentano = float
-    metano = float
-    etileno = float
-    etano = float
-    olefinas = float
-    fecha =  datetime
-    reporte05 =  date
-    turno05 = int
-    reporte24 =  date
-    turno24 = int
+    c6: float
+    propano: float
+    propileno: float
+    iButano: float
+    nButano: float
+    c4: float
+    iPentano: float
+    nPentano: float
+    metano: float
+    etileno: float
+    etano: float
+    olefinas: float
+    corriente: int
+    fecha: datetime
+    reporte05: date
+    turno05: int
+    reporte24: date
+    turno24: int

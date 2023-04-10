@@ -148,6 +148,6 @@ async def register_esfera():
 
 
 @router.get('', response_model=List[EsferaResponseModel])
-async def get_bitacora():
+async def get_esferas():
     esferas = Esfera.select()
     return [ esfera for esfera in esferas ]

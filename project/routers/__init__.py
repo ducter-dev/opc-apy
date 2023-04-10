@@ -9,3 +9,4 @@ from .auth import router as auth_router
 from .reportes import router as report_router
 from .esferas import router as esfera_router
 from .patines import router as patin_router
+from .cromatografo import router as croma_router
