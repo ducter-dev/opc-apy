@@ -566,19 +566,19 @@ class BombaResponseModel(ResponseModel):
     estatus: str
     totalHorasOper: int
     totalMinsOper: int
-    totalTiempoOper: time
+    totalTiempoOper: str
     horasOper: int
     minsOper: int
-    enOper: time
+    enOper: str
     horasMantto: int
     minsMantto: int
-    enMantto: time
+    enMantto: str
     horasDisp: int
     minsDisp: int
-    enDisp: time
+    enDisp: str
     horasNoDisp: int
     minsNoDisp: int
-    enNoDisp: time
+    enNoDisp: str
     fecha: datetime
     reporte05: date
     turno05: int
