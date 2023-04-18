@@ -78,3 +78,34 @@ async def get_esferas_report(esfera: str, fecha: str):
             status_code=501,
             content={"message": e}
         )
+    
+
+@router.get('/patines/{patin}/fecha/{fecha}')
+async def get_patin_report(patin: str, fecha: str):
+    try:
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        url_patin = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}.pdf"
+        params = {"fecha": fecha}
+        
+        res = s.get(url=url_patin, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"Patin{patin}_{fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
+    
