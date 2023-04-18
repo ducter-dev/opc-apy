@@ -382,7 +382,7 @@ class Patin(Model):
 
 class Cromatografo(Model):
     hora = CharField()
-    cromatrografo = CharField()
+    cromatografo = CharField()
     corriente: IntegerField(null=True)
     c6 = DoubleField(null=True)
     propano = DoubleField(null=True)
