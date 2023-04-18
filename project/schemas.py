@@ -450,6 +450,7 @@ class FechaReportesRequestModel(BaseModel):
 
 # --------- esferas ---------
 class EsferaRequestModel(BaseModel):
+    hora: int
     presion: float
     temperatura: float
     densidad: float
@@ -471,6 +472,7 @@ class EsferaRequestModel(BaseModel):
 
 class EsferaResponseModel(ResponseModel):
     id: int
+    hora: int
     presion: float
     temperatura: float
     densidad: float
@@ -494,6 +496,7 @@ class EsferaResponseModel(ResponseModel):
 
 # --------- patines ---------
 class PatinRequestModel(BaseModel):
+    hora: int
     presion: float
     flujoVolumen: float
     flujoMasico: float
@@ -516,6 +519,7 @@ class PatinRequestModel(BaseModel):
 
 class PatinResponseModel(ResponseModel):
     id: int
+    hora: int
     presion: float
     flujoVolumen: float
     flujoMasico: float
@@ -538,6 +542,7 @@ class PatinResponseModel(ResponseModel):
 
 class CromatografoResponseModel(ResponseModel):
     id: int
+    hora: int
     cromatrografo: str
     corriente: int
     c6: float
@@ -561,7 +566,7 @@ class CromatografoResponseModel(ResponseModel):
 
 class BombaResponseModel(ResponseModel):
     id: int
-    hora: str
+    hora: int
     bomba: str
     estatus: str
     totalHorasOper: int

@@ -56,6 +56,7 @@ async def register_patin():
         FI_401A_VOL_NAT_PROM_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-401A_VOL_NAT_PROM_ENT')
 
         patin1 = Patin.create(
+            hora = f"{hora}:00",
             presion = PI_401A_PROM / 100,
             temperatura = TI_401A_PROM / 100,
             densidadNat = DI_401A_NAT_PROM / 10000,
@@ -110,6 +111,7 @@ async def register_patin():
 
 
         patin2 = Patin.create(
+            hora = f"{hora}:00",
             presion = PI_401B_PROM / 100,
             temperatura = TI_401B_PROM / 100,
             densidadNat = DI_401B_NAT_PROM / 10000,
@@ -164,6 +166,7 @@ async def register_patin():
 
 
         patin3 = Patin.create(
+            hora = f"{hora}:00",
             presion = PI_402A_PROM / 100,
             temperatura = TI_402A_PROM / 100,
             densidadNat = DI_402A_NAT_PROM / 10000,
@@ -217,6 +220,7 @@ async def register_patin():
         FI_402B_VOL_NAT_PROM_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-402B_VOL_NAT_PROM_ENT')
 
         patin4 = Patin.create(
+            hora = f"{hora}:00",
             presion = PI_402B_PROM / 100,
             temperatura = TI_402B_PROM / 100,
             densidadNat = DI_402B_NAT_PROM / 10000,

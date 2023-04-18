@@ -32,6 +32,7 @@ async def register_esfera():
         MASA_NETA_301A_DEC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.MASA_NETA_301A_DEC')
         MASA_DISP_301A_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.MASA_DISP_301A_ENT')
         MASA_DISP_301A_DEC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.MASA_DISP_301A_DEC')
+        print(PRES_PI_301A)
         """
         PRES_PI_301A = 813
         TEMP_TI_301A = 2108
@@ -94,6 +95,7 @@ async def register_esfera():
         turno24 = obtenerTurno24(int(hora))
     
         esferaRegister1 = Esfera.create(
+            hora = f"{hora}:00",
             presion = PRES_PI_301A / 100,
             temperatura = TEMP_TI_301A / 100,
             densidad = DENS_DI_NAT_301A / 10000,
@@ -115,6 +117,7 @@ async def register_esfera():
         )
 
         esferaRegister2 = Esfera.create(
+            hora = f"{hora}:00",
             presion = PRES_PI_301B / 100,
             temperatura = TEMP_TI_301B / 100,
             densidad = DENS_DI_NAT_301B / 10000,

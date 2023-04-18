@@ -327,6 +327,7 @@ class Folio(Model):
 
 # ----- Esfera -----
 class Esfera(Model):
+    hora = CharField()
     presion = DoubleField(null=True)
     temperatura = DoubleField(null=True)
     densidad = DoubleField(null=True)
@@ -353,6 +354,7 @@ class Esfera(Model):
 
 
 class Patin(Model):
+    hora = CharField()
     presion = DoubleField(null=True)
     flujoVolumen = DoubleField(null=True)
     flujoMasico = DoubleField(null=True)
@@ -379,6 +381,7 @@ class Patin(Model):
 
 
 class Cromatografo(Model):
+    hora = CharField()
     cromatrografo = CharField()
     corriente: IntegerField(null=True)
     c6 = DoubleField(null=True)

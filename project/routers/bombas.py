@@ -57,7 +57,7 @@ async def register_bomba():
 
 
         bomba1 = Bomba.create(
-            hora = hora,
+            hora = f"{hora}:00",
             bomba = 'BA-301A',
             estatus = getStatus(BA_301A_STATUS),
             totalHorasOper = BA_301A_MODE,
@@ -83,7 +83,7 @@ async def register_bomba():
         )
 
         bomba2 = Bomba.create(
-            hora = hora,
+            hora = f"{hora}:00",
             bomba = 'BA-301B',
             estatus = getStatus(BA_301B_STATUS),
             totalHorasOper = BA_301B_MODE,
@@ -109,7 +109,7 @@ async def register_bomba():
         )
 
         bomba3 = Bomba.create(
-            hora = hora,
+            hora = f"{hora}:00",
             bomba = 'BA-301C',
             estatus = getStatus(BA_301C_STATUS),
             totalHorasOper = BA_301A_MODE,

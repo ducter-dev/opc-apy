@@ -39,6 +39,7 @@ async def register_cromatografo():
         DENSIDAD_IRGE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.DENSIDAD_IRGE')
 
         cromatrografo1 = Cromatografo.create(
+            hora = f"{hora}:00",
             cromatrografo = 'IRGE',
             corriente = 1,
             c6 = C6_IRGE / 100,
@@ -76,6 +77,7 @@ async def register_cromatografo():
         OLEFINAS_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR1')
 
         cromatrografo2 = Cromatografo.create(
+            hora = f"{hora}:00",
             cromatrografo = 'EB04',
             corriente = 1,
             c6 = C6_EB4_STR1 / 100,
@@ -111,6 +113,7 @@ async def register_cromatografo():
         OLEFINAS_EB4_STR2 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR2')
 
         cromatrografo3 = Cromatografo.create(
+            hora = f"{hora}:00",
             cromatrografo = 'EB04',
             corriente = 2,
             c6 = C6_EB4_STR2 / 100,
@@ -146,6 +149,7 @@ async def register_cromatografo():
         OLEFINAS_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR3')
 
         cromatrografo4 = Cromatografo.create(
+            hora = f"{hora}:00",
             cromatrografo = 'EB04',
             corriente = 3,
             c6 = C6_EB4_STR3 / 100,
