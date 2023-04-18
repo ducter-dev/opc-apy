@@ -38,9 +38,9 @@ async def register_cromatografo():
         OLEFINAS_IRGE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_IRGE')
         DENSIDAD_IRGE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.DENSIDAD_IRGE')
 
-        cromatrografo1 = Cromatografo.create(
+        cromatografo1 = Cromatografo.create(
             hora = f"{hora}:00",
-            cromatrografo = 'IRGE',
+            cromatografo = 'IRGE',
             corriente = 1,
             c6 = C6_IRGE / 100,
             propano = PROPANO_IRGE / 100,
@@ -76,9 +76,9 @@ async def register_cromatografo():
         ETANO_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETANO_EB4_STR1')
         OLEFINAS_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR1')
 
-        cromatrografo2 = Cromatografo.create(
+        cromatografo2 = Cromatografo.create(
             hora = f"{hora}:00",
-            cromatrografo = 'EB04',
+            cromatografo = 'EB04',
             corriente = 1,
             c6 = C6_EB4_STR1 / 100,
             propano = PROPANO_EB4_STR1 / 100,
@@ -112,9 +112,9 @@ async def register_cromatografo():
         ETANO_EB4_STR2 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETANO_EB4_STR2')
         OLEFINAS_EB4_STR2 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR2')
 
-        cromatrografo3 = Cromatografo.create(
+        cromatografo3 = Cromatografo.create(
             hora = f"{hora}:00",
-            cromatrografo = 'EB04',
+            cromatografo = 'EB04',
             corriente = 2,
             c6 = C6_EB4_STR2 / 100,
             propano = PROPANO_EB4_STR2 / 100,
@@ -148,9 +148,9 @@ async def register_cromatografo():
         ETANO_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETANO_EB4_STR3')
         OLEFINAS_EB4_STR3 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_EB4_STR3')
 
-        cromatrografo4 = Cromatografo.create(
+        cromatografo4 = Cromatografo.create(
             hora = f"{hora}:00",
-            cromatrografo = 'EB04',
+            cromatografo = 'EB04',
             corriente = 3,
             c6 = C6_EB4_STR3 / 100,
             propano = PROPANO_EB4_STR3 / 100,
