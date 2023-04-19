@@ -45,6 +45,12 @@ async def get_tanks():
     return [ tank for tank in tanks ]
 
 
+@router.get('/{tank_id}', response_model=TankResponseModel)
+async def get_tanks_id(tank_id: int):
+    tank = Tank.select().where(Tank.id == tank_id).first()
+    return tank
+
+
 @router.put('/{tank_id}', response_model=TankResponseModel)
 async def edit_tank(tank_id: int, tank_request: TankRequestModel):
     tank = Tank.select().where(Tank.id == tank_id).first()
