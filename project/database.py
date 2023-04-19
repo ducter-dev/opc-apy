@@ -440,3 +440,20 @@ class Bomba(Model):
     class Meta:
         database = database
         table_name = 'bombas'
+
+
+class BombaReporte(Model):
+    hora = CharField()
+    oper_ba301a = CharField()
+    mantto_ba301a = CharField()
+    stat_ba301a = CharField()
+    oper_ba301b = CharField()
+    mantto_ba301b = CharField()
+    stat_ba301b = CharField()
+    oper_ba301c = CharField()
+    mantto_ba301c = CharField()
+    stat_ba301c = CharField()
+
+    class Meta:
+        database = database
+        table_name = 'bombas_reporte'
