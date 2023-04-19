@@ -45,10 +45,11 @@ async def get_tanks():
     return [ tank for tank in tanks ]
 
 
-@router.get('/{tank_id}', response_model=TankResponseModel)
+@router.get('/detalle/{tank_id}', response_model=TankResponseModel)
 async def get_tanks_id(tank_id: int):
     tank = Tank.select().where(Tank.id == tank_id).first()
     return tank
+
 
 
 @router.put('/{tank_id}', response_model=TankResponseModel)
@@ -306,10 +307,12 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
             content={"message": e}
         )
 
+
 @router.get('/espera', response_model=List[TankWaitingResponseModel])
 async def get_tanksWaiting():
     tanks = TankWaiting.select().order_by(TankWaiting.posicion)
     return [ tankWaiting for tankWaiting in tanks ]
+
 
 @router.delete('/espera/{tank_id}', response_model=TankWaitingResponseModel)
 async def delete_tankWaiting(tank_id: int):
@@ -324,6 +327,7 @@ async def delete_tankWaiting(tank_id: int):
     tank.delete_instance()
 
     return tank
+
 
 @router.put('/espera/{tank_id}', response_model=TankWaitingResponseModel)
 async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestModel):
@@ -351,6 +355,7 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestModel
 
     return tank
 
+
 @router.post('/espera/mover-inicio', response_model=TankWaitingResponseModel)
 async def post_tankWaitingchangePosition(tank_request: TankWaitingRequestPosicionPutModel):
     # Obtener datos del tanque seleccionado
@@ -376,6 +381,7 @@ async def post_tankWaitingchangePosition(tank_request: TankWaitingRequestPosicio
 
     return tankSelect
 
+
 @router.post('/espera/llamar/{tank_id}')
 async def post_tankWaitingCall(tank_id: int):
     # Obtener datos del tanque seleccionado
@@ -389,6 +395,7 @@ async def post_tankWaitingCall(tank_id: int):
         status_code=201,
         content={ "message": f'Se ha mandado a llamar al autotanque {tankSelect.atName} que estaba en la posicion {tankSelect.posicion}' }
     )
+
 
 @router.post('/espera/borrar')
 async def post_tankWaitingDelete():
