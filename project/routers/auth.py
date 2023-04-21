@@ -37,12 +37,14 @@ async def login(credentials: HTTPBasicCredentials):
 
     fecha05 = obtenerFecha05Reporte()
     fecha24 = obtenerFecha24Reporte()
+    now = datetime.now()
+    ahora = now.strftime("%Y:%m-%d %H:%M:%S")
 
     Bitacora.create(
         user = user.id,
         evento = 1,
         actividad = f"El usuario {user.username} ha iniciado sesión.",
-        fecha = user.created_at,
+        fecha = ahora,
         reporte24 = fecha24,
         reporte05 = fecha05
     )

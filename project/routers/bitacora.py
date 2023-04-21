@@ -29,9 +29,9 @@ async def create_bitacora(bitacora: BitacoraRequestModel):
     )
 
 
-@router.get('', response_model=List[BitacoraResponseModel])
-async def get_bitacora():
-    bitacoras = Bitacora.select().join(User, on=(User.id == Bitacora.user_id)).join(Evento, on=(Evento.id == Bitacora.evento_id)).order_by(Bitacora.id.asc())
+@router.get('/{fecha}', response_model=List[BitacoraResponseModel])
+async def get_bitacora(fecha: str):
+    bitacoras = Bitacora.select().join(User, on=(User.id == Bitacora.user_id)).join(Evento, on=(Evento.id == Bitacora.evento_id)).where(Bitacora.reporte05 == fecha).order_by(Bitacora.id.asc())
     return [ bitacora for bitacora in bitacoras ]
 
 
