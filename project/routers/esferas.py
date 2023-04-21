@@ -89,7 +89,7 @@ async def register_esfera():
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
         now = datetime.now()
-        ahora = now.strftime("%Y:%m-%d %H:%M:%S")
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
         hora = now.strftime("%H")
         turno05 = obtenerTurno05(int(hora))
         turno24 = obtenerTurno24(int(hora))

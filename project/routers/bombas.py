@@ -19,7 +19,7 @@ async def register_bomba():
         #   Primero obtenemos los valores de las variables
         print('register Bomba')
         now = datetime.now()
-        ahora = now.strftime("%Y:%m-%d %H:%M:%S")
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
         hora = now.strftime("%H")
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()

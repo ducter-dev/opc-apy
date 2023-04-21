@@ -147,7 +147,7 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
-        fechaEntrada = now.strftime("%Y:%m-%d")
+        fechaEntrada = now.strftime("%Y-%m-%d")
         horaEntrada = now.strftime("%H:%M-%S")
         
         TanksEntry.create(
@@ -264,7 +264,7 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
         horaEntrada = now.strftime("%H:%M:%S")
-        fechaEntrada = now.strftime("%Y:%m:%d")
+        fechaEntrada = now.strftime("%Y-%m-%d")
 
         tankWaiting = TankWaiting.create(
             posicion = tank_request.posicion,

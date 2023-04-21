@@ -365,9 +365,6 @@ class BitacoraRequestModel(BaseModel):
     user: int
     actividad: str
     evento: int
-    fecha: str
-    reporte24: str
-    reporte05:  str
 
 # --------- Eventos ---------
 class EventoResponseModel(ResponseModel):

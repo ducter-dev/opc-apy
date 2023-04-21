@@ -6,21 +6,27 @@ from ..database import Bitacora, User, Evento
 from ..schemas import BitacoraRequestModel, BitacoraResponseModel
 
 from ..middlewares import VerifyTokenRoute
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix='/api/v1/bitacora', route_class=VerifyTokenRoute)
 
 @router.post('', response_model=BitacoraResponseModel)
 async def create_bitacora(bitacora: BitacoraRequestModel):
     try:
-        bitacora = Bitacora.create(
-            actividad = bitacora.actividad,
-            user_id = bitacora.usuario,
-            evento_id = bitacora.evento,
-            fecha = bitacora.fecha,
-            reporte24 = bitacora.reporte24,
-            reporte05 = bitacora.reporte05
-        )
+        now = datetime.now()
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+        fecha05 = obtenerFecha05Reporte()
+        fecha24 = obtenerFecha24Reporte()
 
+        bitacora = Bitacora.create(
+            user = bitacora.user,
+            evento = bitacora.evento,
+            actividad = bitacora.actividad,
+            fecha = ahora,
+            reporte24 = fecha24,
+            reporte05 = fecha05
+        )
         return bitacora
     except Exception as e:
         return JSONResponse(

@@ -17,7 +17,7 @@ router = APIRouter(prefix='/api/v1/cromatografo', route_class=VerifyTokenRoute)
 async def register_cromatografo():
     try:
         now = datetime.now()
-        ahora = now.strftime("%Y:%m-%d %H:%M:%S")
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
         hora = now.strftime("%H")
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
