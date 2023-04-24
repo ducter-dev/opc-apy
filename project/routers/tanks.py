@@ -20,6 +20,8 @@ from ..schemas import TankRequestModel, TankResponseModel
 
 from ..middlewares import VerifyTokenRoute
 
+from ..funciones import obtenerFecha05Reporte
+
 #from ..opc import OpcServices
 
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
@@ -260,9 +262,9 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_VOLAUTOR',tank.capacidad)
 
         now = datetime.now()
-        fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
+        
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-        fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte()
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y-%m-%d")
 

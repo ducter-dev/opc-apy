@@ -100,7 +100,7 @@ async def get_getEstado():
     try:
         estado = OpcServices.readDataPLC(path_estadoListaDespacho)
         return JSONResponse(
-            status_code=201,
+            status_code=200,
             content={"estado": estado}
         )
     except Exception as e:
@@ -424,6 +424,30 @@ async def post_reasignarAsignacion():
             content={"message": str(e)}
         )
     
+
+# -> resetear llenadera 
+@router.post('/liberar/{llenadera}')
+async def post_liberar_llenadera(llenadera: int):
+    try:
+        pathLiberar = getPathAsignarLlenadera(llenadera)
+        OpcServices.writeOPC(pathLiberar, 0)
+        
+        return JSONResponse(
+            status_code=201,
+            content={
+                "estado": True,
+                "message": f'Se ha Liberado la llenadera {llenadera}.'
+            }
+        )
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": str(e)}
+        )
+    
+
+
+
 # -> salidas Llenaderas
 @router.post('/asignacion/salida')
 async def postGetSenalesSalidas():
@@ -636,9 +660,10 @@ async def get_llenadera_disponible():
         llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
         if llenaderaDisponible is None:
             return JSONResponse(
-                status_code=404,
+                status_code=200,
                 content={
-                    "message": "OPC servidor no disponible."
+                    "message": "OPC servidor no disponible.",
+                    "llenaderaDisponible": 0
                 }
             )
 

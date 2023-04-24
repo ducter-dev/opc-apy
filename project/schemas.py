@@ -117,10 +117,6 @@ class TankWaitingRequestPutModel(BaseModel):
     embarque: int
     capacidad: int
     conector: int
-    horaEntrada: str
-    fechaEntrada: str
-    reporte24: str
-    reporte05: str
 
 class TankWaitingRequestPosicionPutModel(BaseModel):
     tanque: str
@@ -133,7 +129,6 @@ class TanksEntryRequestModel(BaseModel):
     atName: str
     capacidad: int
     conector: int
-    fechaEntrada: str
     
 class TanksEntryResponseModel(ResponseModel):
     id: int
