@@ -8,7 +8,7 @@ from project.opc import OpcServices
 from ..database import Llenadera, Folio, Tank, TankAssign, TankWaiting, TanksInService, TankInTrucks, TankExit
 from ..schemas import LlenaderaRequestModel, LlenaderaResponseModel, EstadoLlenaderaRequesteModel, NumeroLlenaderaRequesteModel, LlenaderaWithEstadoResponseModel, LlenaderaAsignarRequestModel, TanksInServiceResponseModel
 from ..schemas import FoliosRequestModel, FoliosResponseModel
-
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
 from ..logs import LogsServices
 
 from ..middlewares import VerifyTokenRoute
@@ -28,6 +28,7 @@ path_ver_conector = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.Entry
 path_ver_listaPos = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_LISTAPOS'
 path_siguienteAsinacion = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_SIGLLENADERA'
 path_cancelarAsignacion = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFVER_ELIMINAASIGNA'
+path_reasignarLlenadera = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.REASIGNA_LLENADERA'
 
 @router.post('', response_model=LlenaderaResponseModel)
 async def create_llenadera(llenadera:LlenaderaRequestModel):
@@ -161,6 +162,12 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
 
     try:
         # 1 Obtener tanque y llenadera
+        if OpcServices.activo == False :
+            return JSONResponse(
+                status_code=501,
+                content={"message": "Servidor Opc No encontrado"}
+            )
+        
         tanque = Tank.select().where(Tank.atName == request.tanque).first()
         if tanque is None:
             return JSONResponse(
@@ -207,7 +214,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
 
                     LogsServices.write(f'Tanque asignado: {tanque.atId} | {tipoAT} | {tanque.conector} | {tanque.capacidad90}')
                     return JSONResponse(
-                        status_code=404,
+                        status_code=201,
                         content={
                             "message": 'AutotanquePreasignado',
                         }
@@ -240,7 +247,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
             OpcServices.writeOPC(path_statusAsignacion, 0)
             LogsServices.write(f'-------Tanque preasignado-------')
             return JSONResponse(
-                status_code=404,
+                status_code=201,
                 content={
                     "message": 'Preasignado',
                 }
@@ -259,8 +266,8 @@ async def post_asignarLlenadera():
     
     try: 
         # Poner llenadera ocupada y con tipo de pg
-        llenaderaDisponible = 14
-        """
+        #llenaderaDisponible = 14
+        
         llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
         pathLlenaderaLibre =  getPLCLlenaderaLibre(llenaderaDisponible)
         pathLlenaderaTipo = getPLCLlenaderaTipo(llenaderaDisponible)
@@ -278,19 +285,19 @@ async def post_asignarLlenadera():
         OpcServices.writeOPC(pathNipLlenadera, idAT)
         OpcServices.writeOPC(pathPGLlenadra, idAT)
         OpcServices.writeOPC(pathLlenaderaTipo, tipoAT)
-        OpcServices.writeOPC(pathLlenaderaLibre, 0) """
+        OpcServices.writeOPC(pathLlenaderaLibre, 0)
 
+        """
         idAT = 3001
         tipoAT = 2
         numPG = "PG-3001B"
         volProg = 17800
         conector = 3
-
+        """
         
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         now = datetime.now()
-        fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
-        fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte()
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y-%m-%d")
 
@@ -396,8 +403,8 @@ async def post_cancelarAsignacion():
 async def post_reasignarAsignacion():
     try:
         # 1 = Obtener La llenadera disponible
-        #llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
-        llenaderaDisponible = 6
+        llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+        #llenaderaDisponible = 6
         if llenaderaDisponible is None:
             return JSONResponse(
                 status_code=404,
@@ -409,7 +416,7 @@ async def post_reasignarAsignacion():
         # 2 Escribir el valor en la llenadera que se elija
         pathReasignar = getPathAsignarLlenadera(llenaderaDisponible)
         OpcServices.writeOPC(pathReasignar, 1)
-        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.REASIGNA_LLENADERA',1)
+        OpcServices.writeOPC(path_reasignarLlenadera,1)
         
         return JSONResponse(
             status_code=201,
@@ -484,39 +491,39 @@ async def postGetSenalesSalidas():
                 print(atType)
                 tanqueToExit = TanksInService.select().where(TanksInService.atID == atID, TanksInService.atTipo == atType).order_by(TanksInService.id.desc()).first()
                 print(f'tanqueToExit.atName: {tanqueToExit.atName}')
-                #volumen = getVolumenLlenadera(llenadera.numero)
-                volumen = 39800
+                volumen = getVolumenLlenadera(llenadera.numero)
+                #volumen = 39800
                 volumenBls = volumen / 158.9873
-                #volumen20 = getVolumenCorrLlenadera(llenadera.numero)
-                volumen20 = 41200
+                volumen20 = getVolumenCorrLlenadera(llenadera.numero)
+                #volumen20 = 41200
                 volumen20Bls = volumen20 / 158.9873
-                #masa = getMasaCorrLlenadera(llenadera.numero)
-                masa = 20220
+                masa = getMasaCorrLlenadera(llenadera.numero)
+                #masa = 20220
                 masaTons = masa / 1000
-                #densidad = getDensidadLlenadera(llenadera.numero) / 10000
-                densidad = 5250 / 10000
-                #densidad20 = getDensidadCorrLlenadera(llenadera.numero) / 10000
-                densidad20 = 5345 / 10000
-                #porcentaje = getPorcentajeLlenadera(llenadera.numero) / 100
-                porcentaje = 8990 / 100
-                #temperatura = getTemperaturaLlenadera(llenadera.numero) / 100
-                temperatura = 1980 / 100
-                #presion = getPresionLlenadera(llenadera.numero) / 100
-                presion = 1344 / 100
-                #modo = getModoLlenadera(llenadera.numero)
-                modo = 2
-                #anioInicio = getAnioInicioLlenadera(llenadera.numero)
-                anioInicio = 2023
-                #mesInicio = getMesInicioLlenadera(llenadera.numero)
-                mesInicio = 3
-                #diaInicio = getDiaInicioLlenadera(llenadera.numero)
-                diaInicio = 14
-                #horaInicio = getHoraInicioLlenadera(llenadera.numero)
-                horaInicio = 13
-                #minutoInicio = getMinutoInicioLlenadera(llenadera.numero)
-                minutoInicio = 50
-                #horaFin = getHoraFinLlenadera(llenadera.numero)
-                horaFin = 14
+                densidad = getDensidadLlenadera(llenadera.numero) / 10000
+                #densidad = 5250 / 10000
+                densidad20 = getDensidadCorrLlenadera(llenadera.numero) / 10000
+                #densidad20 = 5345 / 10000
+                porcentaje = getPorcentajeLlenadera(llenadera.numero) / 100
+                #porcentaje = 8990 / 100
+                temperatura = getTemperaturaLlenadera(llenadera.numero) / 100
+                #temperatura = 1980 / 100
+                presion = getPresionLlenadera(llenadera.numero) / 100
+                #presion = 1344 / 100
+                modo = getModoLlenadera(llenadera.numero)
+                #modo = 2
+                anioInicio = getAnioInicioLlenadera(llenadera.numero)
+                #anioInicio = 2023
+                mesInicio = getMesInicioLlenadera(llenadera.numero)
+                #mesInicio = 3
+                diaInicio = getDiaInicioLlenadera(llenadera.numero)
+                #diaInicio = 14
+                horaInicio = getHoraInicioLlenadera(llenadera.numero)
+                #horaInicio = 13
+                minutoInicio = getMinutoInicioLlenadera(llenadera.numero)
+                #minutoInicio = 50
+                horaFin = getHoraFinLlenadera(llenadera.numero)
+                #horaFin = 14
                 #minutoFin = getMinutoFinLlenadera(llenadera.numero)
                 minutoFin = 21
                 fechaEntrada = f"{tanqueToExit.fechaEntrada} {tanqueToExit.horaEntrada}"
@@ -559,9 +566,9 @@ async def postGetSenalesSalidas():
                     reporte05 =  tanqueToExit.reporte05,
                     tipoCarga = tipoCarga
                 )
-                #tanqueToExit.delete_instance()
+                tanqueToExit.delete_instance()
                 # Liberar llenadera
-                #OpcServices.writeOPC(getFolioGuardadoLlenadera(llen), folioLlenadera)
+                OpcServices.writeOPC(getFolioGuardadoLlenadera(llen), folioLlenadera)
                 LogsServices.write(f'salida: {salida.atName} | {salida.atId} | {salida.atTipo} | {salida.conector} | {salida.capacidad} | {volumen} | {volumen20} | Folio: {salida.folioPLC} | llenadera: {salida.llenadera}')
                 
                 # Guardar registro en ultimas salidas
@@ -602,7 +609,7 @@ async def postGetSenalesSalidas():
             
             else:
                 print(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
-                #LogsServices.write(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
+                LogsServices.write(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
     except Exception as e:
         LogsServices.write(f'Error: {e}')
         return JSONResponse(
@@ -737,19 +744,20 @@ async def desasignar(llenadera: int):
                 status_code=401,
                 content={"message": "Debe proporcionar un numero correcto de llenadera."}
             )
-        #libre = OpcServices.readDataPLC(strLibre)
-        libre = True
+        libre = OpcServices.readDataPLC(strLibre)
+        print(libre)
+        #libre = True
         # obtener el turno de la llenadera
         
-        #strTurno = getPLCLlenaderaTurno(llenadera)
-        #turno = OpcServices.readDataPLC(strTurno)
-        turno = 0
+        strTurno = getPLCLlenaderaTurno(llenadera)
+        turno = OpcServices.readDataPLC(strTurno)
+        #turno = 0
 
         # si la llenadera esta libre y el turno es menor o igual a cero -> se debe modificar la llenadera
         if libre is True and turno <= 0:
             print('Libre true y turno cero')
-            #strDesasignar = OpcServices.readDataPLC(llenadera)
-            #OpcServices.writeOPC(strDesasignar)
+            strDesasignar = OpcServices.readDataPLC(llenadera)
+            OpcServices.writeOPC(strDesasignar)
             return JSONResponse(
                 status_code=201,
                 content={"message": f"El estatus de la llenadera {llenadera} se ha actualizado."}
@@ -1209,9 +1217,9 @@ def getMinutoFinLlenadera(llenadera):
 
 def getSufijoTanque(atTipo):
     tabla_tipos = {
-        1: '',
-        2: 'A',
-        3: 'B',
+        0: '',
+        1: 'A',
+        2: 'B',
     }
     
     return tabla_tipos.get(atTipo, 0 )

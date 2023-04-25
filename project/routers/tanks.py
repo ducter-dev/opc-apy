@@ -20,9 +20,9 @@ from ..schemas import TankRequestModel, TankResponseModel
 
 from ..middlewares import VerifyTokenRoute
 
-from ..funciones import obtenerFecha05Reporte
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
 
-#from ..opc import OpcServices
+from ..opc import OpcServices
 
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 
@@ -95,9 +95,9 @@ async def call_tank(tank_id: int):
                 status_code=404,
                 content={"message": "Tanque no encontrado"}
             )
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tank.atId)
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tank.atTipo)
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tank.atId)
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tank.atTipo)
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
         return JSONResponse(
             status_code=201,
             content={"message": f"El Tanque {tank.atName} ha sido mandado a llamar."}
@@ -111,7 +111,7 @@ async def call_tank(tank_id: int):
 @router.post('/alarmar')
 async def alarm_tanks():
     try:
-        #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.HABILITA_ALARMA', 1)
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.HABILITA_ALARMA', 1)
         return JSONResponse(
             status_code=201,
             content={"message": "Se ha habilitado la alarma sonora."}
@@ -148,7 +148,7 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         now = datetime.now()
         fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-        fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte()
         fechaEntrada = now.strftime("%Y-%m-%d")
         horaEntrada = now.strftime("%H:%M-%S")
         
@@ -390,9 +390,9 @@ async def post_tankWaitingCall(tank_id: int):
     tankSelect = TankWaiting.select().where(TankWaiting.id == tank_id).first()
     
     # Escribir en las variables del opc
-    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tankSelect.atId)
-    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tankSelect.atTipo)
-    # OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
+    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tankSelect.atId)
+    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tankSelect.atTipo)
+    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
     return JSONResponse(
         status_code=201,
         content={ "message": f'Se ha mandado a llamar al autotanque {tankSelect.atName} que estaba en la posicion {tankSelect.posicion}' }
