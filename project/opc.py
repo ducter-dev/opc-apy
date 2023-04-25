@@ -16,14 +16,17 @@ class OpcServices():
     server = SERVER_OPC
     host = HOST_OPC
     opc = OpenOPC.client()
+    activo = False
     
     @classmethod
     def conectarOPC(self):
         try:
             print(self.opc)
             self.opc.connect(self.server, self.host)
+            self.activo = True
             return True
         except Exception as e:
+            self.activo = False
             print(f'Error: {e}')
             return False
 
