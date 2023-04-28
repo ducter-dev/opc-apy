@@ -16,7 +16,7 @@ from ..schemas import TankAssignRequestModel, TankAssignResponseModel
 
 from ..schemas import TankInTrucksRequestModel, TankInTrucksResponseModel
 
-from ..schemas import TankRequestModel, TankResponseModel
+from ..schemas import TankRequestModel, TankResponseModel, TankSingleRequestModel
 
 from ..middlewares import VerifyTokenRoute
 
@@ -25,6 +25,11 @@ from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTur
 from ..opc import OpcServices
 
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
+
+
+path_Sig_Asigna_NumPG = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG'
+path_Sig_Asigna_TipoAT = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT'
+path_SIGUIENTE_ASIGN = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN'
 
 # ---------------- Tanques ---------------------
 
@@ -86,15 +91,19 @@ async def delete_tank(tank_id: int):
     return tank
 
 
-@router.post('/llamar/{tank_id}')
-async def call_tank(tank_id: int):
+@router.post('/llamar')
+async def call_tank():
     try:
+        LogsServices.write('----------- Llamar Tanque --------------')
         tank = Tank.select().where(Tank.id == tank_id).first()
         if tank is None:
             return JSONResponse(
                 status_code=404,
                 content={"message": "Tanque no encontrado"}
             )
+        
+        LogsServices.write(f'tanque_id: {tank.atId}')
+        LogsServices.write(f'tanque_tipo: {tank.atTipo}')
         OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tank.atId)
         OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tank.atTipo)
         OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
@@ -111,6 +120,7 @@ async def call_tank(tank_id: int):
 @router.post('/alarmar')
 async def alarm_tanks():
     try:
+        LogsServices.write('----------- Alarmar Tanques --------------')
         OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.HABILITA_ALARMA', 1)
         return JSONResponse(
             status_code=201,
@@ -384,15 +394,30 @@ async def post_tankWaitingchangePosition(tank_request: TankWaitingRequestPosicio
     return tankSelect
 
 
-@router.post('/espera/llamar/{tank_id}')
-async def post_tankWaitingCall(tank_id: int):
+@router.post('/espera/llamar')
+async def post_tankWaitingCall(req: TankSingleRequestModel):
     # Obtener datos del tanque seleccionado
-    tankSelect = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+    LogsServices.write('----------------- Llamando Tanque -----------------')
+    LogsServices.write(f'req.tanque: {req.tanque}')
+    tankSelect = TankWaiting.select().where(TankWaiting.atName == req.tanque).first()
+    if tankSelect is None:
+        return JSONResponse(
+            status_code=404,
+            content={ "message": 'No se encontró el tanque en la lista de espera.' }
+            )
     
+    LogsServices.write(f'tankSelect: {tankSelect.atName}')
     # Escribir en las variables del opc
-    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG', tankSelect.atId)
-    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT', tankSelect.atTipo)
-    OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN', 1)
+
+    OpcServices.writeOPC(path_Sig_Asigna_NumPG, tankSelect.atId)
+    OpcServices.writeOPC(path_Sig_Asigna_TipoAT, tankSelect.atTipo)
+    OpcServices.writeOPC(path_SIGUIENTE_ASIGN, 1)
+    
+    LogsServices.write(f'path_Sig_Asigna_NumPG: {OpcServices.readDataPLC(path_Sig_Asigna_NumPG)}') 
+    LogsServices.write(f'path_Sig_Asigna_TipoAT: {OpcServices.readDataPLC(path_Sig_Asigna_TipoAT)}') 
+    LogsServices.write(f'path_SIGUIENTE_ASIGN: {OpcServices.readDataPLC(path_SIGUIENTE_ASIGN)}')
+    
+
     return JSONResponse(
         status_code=201,
         content={ "message": f'Se ha mandado a llamar al autotanque {tankSelect.atName} que estaba en la posicion {tankSelect.posicion}' }

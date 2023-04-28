@@ -332,6 +332,10 @@ class TankResponseModel(ResponseModel):
     transportadora: int
 
 
+class TankSingleRequestModel(ResponseModel):
+    tanque: str
+    
+
 # --------- Llenadera ---------
 class LlenaderaRequestModel(BaseModel):
     numero: int
