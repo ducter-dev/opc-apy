@@ -162,6 +162,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
 
     try:
         # 1 Obtener tanque y llenadera
+        LogsServices.write("------------Iniciando Preaasignacion---------------")
         if OpcServices.activo == False :
             return JSONResponse(
                 status_code=501,
@@ -176,10 +177,14 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
             )
 
         inicialTanque = '' if tanque.atTipo == 0 else tanque.atTipo
+        LogsServices.write(f"tanque.atTipo: {tanque.atTipo}")
+        LogsServices.write(f"inicialTanque: {inicialTanque}")
         tipoAT = int(f'{inicialTanque}{tanque.atId}')
+        LogsServices.write(f"tipoAT: {tipoAT}")
 
         # Variables que se usan en asignacion
         llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+        LogsServices.write(f"llenaderaDisponible: {llenaderaDisponible}")
 
         llenadera = Llenadera.select().where(Llenadera.numero == llenaderaDisponible).first()
         if llenadera is None:
@@ -189,18 +194,22 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
             )
         
         # Leer variables
-        estadoLlenadera = OpcServices.readDataPLC(path_estadoListaDespacho)
+        # OpcServices.writeOPC(path_estadoListaDespacho, 0)
         asignacionStatus = OpcServices.readDataPLC(path_statusAsignacion)
         verificacionStatus = OpcServices.readDataPLC(path_statusVerificado)
         listaDespacho = OpcServices.readDataPLC(path_estadoListaDespacho)
-        
+        LogsServices.write(f"listaDespacho: {listaDespacho}")
+        LogsServices.write(f"asignacionStatus: {asignacionStatus}")
+        LogsServices.write(f"verificacionStatus: {verificacionStatus}")
         
         if listaDespacho == 0:
-            print('Lista de Despacho Libre')
+            LogsServices.write('Lista de Despacho Libre')
+            LogsServices.write(f'listaDespacho: {listaDespacho}')
             if llenaderaDisponible > 0:
-                print('Llenadera Disponible')
                 if asignacionStatus == 0 & verificacionStatus == 0:
                     print('Servidor puede asignar tanques')
+                    LogsServices.write(f"asignacionStatus: {asignacionStatus}")
+
                     # Escribir variables en los registros de la plc
                     OpcServices.writeOPC(path_ver_numPG, tanque.atId)
                     OpcServices.writeOPC(path_ver_tipoAT, tipoAT)
@@ -211,12 +220,29 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
                     OpcServices.writeOPC(path_statusAsignacion, 1)
                     OpcServices.writeOPC(path_ver_listaPos, 1)
                     OpcServices.writeOPC(path_statusVerificado, 1)
+                    
+                    LogsServices.write("------Preasignacion-------")
+                    LogsServices.write(f"llenederaDisp: {OpcServices.readDataPLC(path_llenaderaDisponible)}")
+                    LogsServices.write(f"path_ver_numPG: {OpcServices.readDataPLC(path_ver_numPG)}")
+                    LogsServices.write(f"path_ver_tipoAT: {OpcServices.readDataPLC(path_ver_tipoAT)}")
+                    LogsServices.write(f"path_ver_clave: {OpcServices.readDataPLC(path_ver_clave)}")
+                    LogsServices.write(f"path_ver_volProg: {OpcServices.readDataPLC(path_ver_volProg)}")
+                    LogsServices.write(f"path_ver_conector: {OpcServices.readDataPLC(path_ver_conector)}")
+                    LogsServices.write(f"path_ver_numPG: {OpcServices.readDataPLC(path_ver_numPG)}")
+                    LogsServices.write(f"path_aceptaAsignacion: {OpcServices.readDataPLC(path_aceptaAsignacion)}")
 
-                    LogsServices.write(f'Tanque asignado: {tanque.atId} | {tipoAT} | {tanque.conector} | {tanque.capacidad90}')
+                    LogsServices.write(f"tanque.atId: {tanque.atId}")
+                    LogsServices.write(f"tipoAT: {tipoAT}")
+                    LogsServices.write(f"tanque.capacidad90: {tanque.capacidad90}")
+                    LogsServices.write(f"tanque.conector: {tanque.conector}")
+
+                    LogsServices.write(f'Tanque preasignado: {tanque.atId} | {tipoAT} | {tanque.conector} | {tanque.capacidad90} en llenadera {llenaderaDisponible}')
+                    LogsServices.write('-------------------------------')
+
                     return JSONResponse(
                         status_code=201,
                         content={
-                            "message": 'AutotanquePreasignado',
+                            "message": 'Autotanque Preasignado',
                         }
                     )
 
@@ -242,10 +268,12 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
         if (asignacionStatus == 1 & verificacionStatus == 1):
             # Removiendo tanque de monitor de asignacion
             # Se mete tanque a servicio
-            OpcServices.writeOPC(path_llenaderaDisponible, 0)
-            OpcServices.writeOPC()
+            #OpcServices.writeOPC(path_llenaderaDisponible, 0)
             OpcServices.writeOPC(path_statusAsignacion, 0)
-            LogsServices.write(f'-------Tanque preasignado-------')
+            LogsServices.write(f'asignacionStatus: 1')
+            LogsServices.write(f'verificacionStatus 1')
+            LogsServices.write(f'path_statusAsignacion: 0')
+            LogsServices.write(f'path_llenaderaDisponible: 0')
             return JSONResponse(
                 status_code=201,
                 content={
@@ -262,39 +290,64 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
 
 
 @router.post('/asignacion/asignar', response_model=TanksInServiceResponseModel)
-async def post_asignarLlenadera():
+async def post_asignarLlenadera(request: LlenaderaAsignarRequestModel):
     
     try: 
         # Poner llenadera ocupada y con tipo de pg
         #llenaderaDisponible = 14
-        
+        LogsServices.write("------------Asignar---------------")
+        tanque = Tank.select().where(Tank.atName == request.tanque).first()
+        if tanque is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Tanque no encontrado"}
+            )
+        LogsServices.write(f"tanque: {tanque.atId}")
         llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
+        LogsServices.write(f"llenaderaDisponible: {llenaderaDisponible}")
         pathLlenaderaLibre =  getPLCLlenaderaLibre(llenaderaDisponible)
         pathLlenaderaTipo = getPLCLlenaderaTipo(llenaderaDisponible)
         pathAsigLlenadera = getPathAsignarLlenadera(llenaderaDisponible)
         pathNipLlenadera = getPLCNipLlenadera(llenaderaDisponible)
         pathPGLlenadra = getPLCPGLlenadera(llenaderaDisponible)
-
+        LogsServices.write(f"llenadera: {llenaderaDisponible}")
+        
+        """
         idAT = OpcServices.readDataPLC(path_ver_clave)
         tipoAT = OpcServices.readDataPLC(path_ver_tipoAT)
         numPG = OpcServices.readDataPLC(path_ver_numPG)
         volProg = OpcServices.readDataPLC(path_ver_volProg)
         conector = OpcServices.readDataPLC(path_ver_conector)
+        """
+        
+        
 
+        inicialTanque = '' if tanque.atTipo == 0 else tanque.atTipo
+        print(inicialTanque)
+        tipoAT = int(f'{inicialTanque}{tanque.atId}')
+        print(tipoAT)
+            
+        idAT = tanque.atId
+        tipoAT = tipoAT
+        numPG = tanque.atName
+        volProg = tanque.capacidad90
+        conector =tanque.conector
+        
+        LogsServices.write("------------Encontrado---------------")
+        LogsServices.write(f"idAT: {idAT}")
+        LogsServices.write(F"tipoAT: {tipoAT}")
+        LogsServices.write(F"numPG: {numPG}")
+        LogsServices.write(F"volProg: {volProg}")
+        LogsServices.write(F"conector: {conector}")
+
+        OpcServices.writeOPC(path_aceptaAsignacion, 1)
         OpcServices.writeOPC(pathAsigLlenadera, 1)
         OpcServices.writeOPC(pathNipLlenadera, idAT)
         OpcServices.writeOPC(pathPGLlenadra, idAT)
         OpcServices.writeOPC(pathLlenaderaTipo, tipoAT)
         OpcServices.writeOPC(pathLlenaderaLibre, 0)
+        OpcServices.writeOPC(path_statusAsignacion, 0)
 
-        """
-        idAT = 3001
-        tipoAT = 2
-        numPG = "PG-3001B"
-        volProg = 17800
-        conector = 3
-        """
-        
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         now = datetime.now()
         fecha05 = obtenerFecha05Reporte()
@@ -312,7 +365,6 @@ async def post_asignarLlenadera():
         
 
         ultimaAsignacion.posicion = 1
-        
         ultimaAsignacion.atId = idAT
         ultimaAsignacion.atTipo = tipoAT
         ultimaAsignacion.atName = numPG
@@ -734,44 +786,49 @@ async def update_folio(folio_id: int, request: FoliosRequestModel):
 async def desasignar(llenadera: int):
 
     try: 
-
-        print(llenadera)
+        LogsServices.write('------------------ Desasignar Llenadera ------------------')
+        LogsServices.write(f"llenadera: {llenadera}")
         # obtener si la llenadera esta libre
         strLibre = getPLCLlenaderaLibre(llenadera)
-        print(strLibre)
+        LogsServices.write(f"rutaOPC: {strLibre}")
         if strLibre is False:
             return JSONResponse(
                 status_code=401,
                 content={"message": "Debe proporcionar un numero correcto de llenadera."}
             )
         libre = OpcServices.readDataPLC(strLibre)
-        print(libre)
+        LogsServices.write(f"libre: {libre}")
         #libre = True
         # obtener el turno de la llenadera
         
         strTurno = getPLCLlenaderaTurno(llenadera)
+        LogsServices.write(f"rutaOCP - turno : {strTurno}")
         turno = OpcServices.readDataPLC(strTurno)
+        LogsServices.write(f"turno: {turno}")
         #turno = 0
 
         # si la llenadera esta libre y el turno es menor o igual a cero -> se debe modificar la llenadera
         if libre is True and turno <= 0:
-            print('Libre true y turno cero')
-            strDesasignar = OpcServices.readDataPLC(llenadera)
-            OpcServices.writeOPC(strDesasignar)
+            LogsServices.write('Libre true y turno cero')
+
+            strDesasignar = getPLCLlenaderaDesasignar(llenadera)
+            OpcServices.writeOPC(strDesasignar, llenadera)
             return JSONResponse(
                 status_code=201,
-                content={"message": f"El estatus de la llenadera {llenadera} se ha actualizado."}
+                content={"message": f"El estatus de la llenadera {llenadera} se ha actualizado, PLC liberará llenadera."}
             )
 
         
         # si la llenadera esta libre y el turno es mayor a cero -> enviar mensaje que ya esta deasignada
         elif libre is True and turno > 0:
+            LogsServices.write(f"La llenadera {llenadera} ya se encuentra disponible.")
             return JSONResponse(
                 status_code=201,
-                content={"message": f"La llenadera {llenadera} ya se encuanetra disponible."}
+                content={"message": f"La llenadera {llenadera} ya se encuentra disponible."}
             )
         # de lo contrario enviar que se realice de forma manual
         else:
+            LogsServices.write(f"La llenadera {llenadera} no se encuentra liberada en el SCD, debe resetear la secuencia.")
             return JSONResponse(
                 status_code=201,
                 content={"message": f"La llenadera {llenadera} no se encuentra liberada en el SCD, debe resetear la secuencia."}
@@ -779,7 +836,7 @@ async def desasignar(llenadera: int):
     except Exception as e:
         return JSONResponse(
             status_code=501,
-            content={"message": str(e)}
+            content={"message": f"{str(e)} - No se pudo desasignar la llenadera."}
         )
     
 
@@ -900,7 +957,7 @@ def getPLCPGLlenadera(llenadera):
 
 
 def getFolioLllenadera(llenadera):
-    """ tabla_llenaderas = {
+    tabla_llenaderas = {
         5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN5',
         6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN6',
         7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN7',
@@ -911,19 +968,8 @@ def getFolioLllenadera(llenadera):
         12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN12',
         13: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN13',
         14: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN14'
-    } """
-    tabla_llenaderas = {
-        5: 1491,
-        6: 1450,
-        7: 1555,
-        8: 1527,
-        9: 1572,
-        10: 1548,
-        11: 1464,
-        12: 1328,
-        13: 1149,
-        14: 1489
     }
+    
     return tabla_llenaderas.get(llenadera, 0 )
 
 
