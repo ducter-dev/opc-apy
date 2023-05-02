@@ -328,17 +328,32 @@ async def get_tanksWaiting():
 
 @router.delete('/espera/{tank_id}', response_model=TankWaitingResponseModel)
 async def delete_tankWaiting(tank_id: int):
-    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+    try:
+        tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
 
-    if tank is None:
+        if tank is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Entrada de tanque no encontrada"}
+            )
+
+        tank.delete_instance()
+
+        # Actualizar las posiciones
+        tanques = TankWaiting.select().order_by(TankWaiting.posicion.asc)
+    
+        # Recorrer los tanques y aumentar 1 en la posicion
+        for i in range(len(tanques)):
+            tanques[i].posicion = i + 1
+            tanques[i].save()
+
+        return tank
+    
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={"message": "Entrada de tanque no encontrada"}
-        )
-
-    tank.delete_instance()
-
-    return tank
+        status_code=501,
+        content={"message": str(e)}
+    )
 
 
 @router.put('/espera/{tank_id}', response_model=TankWaitingResponseModel)
@@ -396,35 +411,43 @@ async def post_tankWaitingchangePosition(tank_request: TankWaitingRequestPosicio
 
 @router.post('/espera/llamar')
 async def post_tankWaitingCall(req: TankSingleRequestModel):
-    # Obtener datos del tanque seleccionado
-    LogsServices.write('----------------- Llamando Tanque -----------------')
-    LogsServices.write(f'req.tanque: {req.tanque}')
-    tankSelect = TankWaiting.select().where(TankWaiting.atName == req.tanque).first()
-    if tankSelect is None:
+    
+    try:
+        # Obtener datos del tanque seleccionado
+        LogsServices.write('----------------- Llamando Tanque -----------------')
+        LogsServices.write(f'req.tanque: {req.tanque}')
+        tankSelect = TankWaiting.select().where(TankWaiting.atName == req.tanque).first()
+        if tankSelect is None:
+            return JSONResponse(
+                status_code=404,
+                content={ "message": 'No se encontró el tanque en la lista de espera.' }
+                )
+        
+        LogsServices.write(f'tankSelect: {tankSelect.atName}')
+        # Escribir en las variables del opc
+
+        OpcServices.writeOPC(path_Sig_Asigna_NumPG, tankSelect.atId)
+        OpcServices.writeOPC(path_Sig_Asigna_TipoAT, tankSelect.atTipo)
+        OpcServices.writeOPC(path_SIGUIENTE_ASIGN, 1)
+        
+        LogsServices.write(f'path_Sig_Asigna_NumPG: {OpcServices.readDataPLC(path_Sig_Asigna_NumPG)}') 
+        LogsServices.write(f'path_Sig_Asigna_TipoAT: {OpcServices.readDataPLC(path_Sig_Asigna_TipoAT)}') 
+        LogsServices.write(f'path_SIGUIENTE_ASIGN: {OpcServices.readDataPLC(path_SIGUIENTE_ASIGN)}')
+        
+
         return JSONResponse(
-            status_code=404,
-            content={ "message": 'No se encontró el tanque en la lista de espera.' }
-            )
-    
-    LogsServices.write(f'tankSelect: {tankSelect.atName}')
-    # Escribir en las variables del opc
+            status_code=201,
+            content={ "message": f'Se ha mandado a llamar al autotanque {tankSelect.atName} que estaba en la posicion {tankSelect.posicion}' }
+        )
 
-    OpcServices.writeOPC(path_Sig_Asigna_NumPG, tankSelect.atId)
-    OpcServices.writeOPC(path_Sig_Asigna_TipoAT, tankSelect.atTipo)
-    OpcServices.writeOPC(path_SIGUIENTE_ASIGN, 1)
-    
-    LogsServices.write(f'path_Sig_Asigna_NumPG: {OpcServices.readDataPLC(path_Sig_Asigna_NumPG)}') 
-    LogsServices.write(f'path_Sig_Asigna_TipoAT: {OpcServices.readDataPLC(path_Sig_Asigna_TipoAT)}') 
-    LogsServices.write(f'path_SIGUIENTE_ASIGN: {OpcServices.readDataPLC(path_SIGUIENTE_ASIGN)}')
-    
-
-    return JSONResponse(
-        status_code=201,
-        content={ "message": f'Se ha mandado a llamar al autotanque {tankSelect.atName} que estaba en la posicion {tankSelect.posicion}' }
+    except Exception as e:
+        return JSONResponse(
+        status_code=501,
+        content={"message": str(e)}
     )
 
 
-@router.post('/espera/borrar')
+@router.post('/espera/borrar/lista')
 async def post_tankWaitingDelete():
     # Obtener datos del tanque seleccionado
     tanks = TankWaiting.select()
