@@ -72,7 +72,7 @@ class UserResponseModel(ResponseModel):
 class UserRequestPutModel(BaseModel, UserValidator):
     username: str
     categoria: int
-    departamento: str
+    departamento: int
 
 class UserChangePasswordRequestModel(BaseModel, UserValidator):
     user_id: int
@@ -89,10 +89,6 @@ class TankWaitingRequestModel(BaseModel):
     embarque: int
     capacidad: int
     conector: int
-    horaEntrada: str
-    fechaEntrada: str
-    reporte24: str
-    reporte05: str
 
 class TankWaitingResponseModel(ResponseModel):
     id: int

@@ -43,6 +43,7 @@ async def create_llenadera(llenadera:LlenaderaRequestModel):
 
 @router.get('', response_model=List[LlenaderaResponseModel])
 async def get_llenaderas():
+    LogsServices.setNameFile()
     llenaderas = Llenadera.select()
     return [ llenadera for llenadera in llenaderas ]
 
@@ -84,6 +85,7 @@ async def post_changeEstado(request: EstadoLlenaderaRequesteModel):
     # 1 = Detener lista de despacho
     # 0 = Liberar lista de despacho
     try:
+        LogsServices.setNameFile()
         OpcServices.writeOPC(path_estadoListaDespacho, request.estado)
         estado = request.estado
         return JSONResponse(
@@ -99,6 +101,7 @@ async def post_changeEstado(request: EstadoLlenaderaRequesteModel):
 @router.get('/estado')
 async def get_getEstado():
     try:
+        LogsServices.setNameFile()
         estado = OpcServices.readDataPLC(path_estadoListaDespacho)
         return JSONResponse(
             status_code=200,
@@ -116,6 +119,7 @@ async def get_getEstado():
 @router.post('/asignacion/aceptar')
 async def post_aceptarAsignaciones():
     try:
+        LogsServices.setNameFile()
         OpcServices.writeOPC(path_aceptaAsignacion, 1)
         return JSONResponse(
             status_code=201,
@@ -134,6 +138,7 @@ async def post_aceptarAsignaciones():
 @router.post('/asignacion/siguiente')
 async def post_aceptarAsignaciones():
     try:
+        LogsServices.setNameFile()
         OpcServices.writeOPC(path_siguienteAsinacion, 1)
         return JSONResponse(
             status_code=201,
@@ -152,6 +157,7 @@ async def post_aceptarAsignaciones():
 
 @router.post('/asignacion/verificar')
 async def post_aceptarAsignaciones():
+    LogsServices.setNameFile()
     OpcServices.writeOPC(path_statusVerificado, 0)
 
 
@@ -162,6 +168,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
 
     try:
         # 1 Obtener tanque y llenadera
+        LogsServices.setNameFile()
         LogsServices.write("------------Iniciando Preaasignacion---------------")
         if OpcServices.activo == False :
             return JSONResponse(
@@ -435,6 +442,7 @@ async def post_cancelarAsignacion():
     # 1 = Cancelar asignacion RFVER_ELIMINAASIGNA
 
     try:
+        LogsServices.setNameFile()
         OpcServices.writeOPC(path_cancelarAsignacion, 1)
         
         return JSONResponse(
@@ -455,6 +463,7 @@ async def post_cancelarAsignacion():
 async def post_reasignarAsignacion():
     try:
         # 1 = Obtener La llenadera disponible
+        LogsServices.setNameFile()
         llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
         #llenaderaDisponible = 6
         if llenaderaDisponible is None:
@@ -488,6 +497,7 @@ async def post_reasignarAsignacion():
 @router.post('/liberar/{llenadera}')
 async def post_liberar_llenadera(llenadera: int):
     try:
+        LogsServices.setNameFile()
         pathLiberar = getPathAsignarLlenadera(llenadera)
         OpcServices.writeOPC(pathLiberar, 0)
         
@@ -512,6 +522,7 @@ async def post_liberar_llenadera(llenadera: int):
 async def postGetSenalesSalidas():
     try:
         # Revisar Folio Llenadera
+        LogsServices.setNameFile()
         numLlenaderas = [5,6,7,8,9,10,11,12,13,14]
 
         for llen in numLlenaderas:
@@ -716,6 +727,7 @@ async def get_llenadera_libre():
 @router.get('/disponible')
 async def get_llenadera_disponible():
     try:
+        LogsServices.setNameFile()
         llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
         if llenaderaDisponible is None:
             return JSONResponse(

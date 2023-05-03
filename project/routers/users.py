@@ -15,7 +15,26 @@ router = APIRouter(prefix='/api/v1/users', route_class=VerifyTokenRoute)
 async def get_users():
     users = User.select()
     return [ user for user in users ]
-        
+
+
+
+@router.put('/{user_id}', response_model=UserResponseModel)
+async def put_user(user_id: int, req: UserRequestPutModel):
+    user = User.select().where(User.id == user_id).first()
+
+    if user is None:
+        return JSONResponse(
+            status_code=404,
+            content={"message": 'Usuario no encontrado.'}
+        )
+
+    user.username = req.username
+    user.categoria = req.categoria
+    user.departamento = req.departamento
+    user.save()
+
+    return user
+
 
 @router.delete('/{user_id}', response_model=UserResponseModel)
 async def delete_user(user_id: int):

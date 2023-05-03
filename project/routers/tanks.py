@@ -358,29 +358,44 @@ async def delete_tankWaiting(tank_id: int):
 
 @router.put('/espera/{tank_id}', response_model=TankWaitingResponseModel)
 async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestModel):
-    tank = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+    LogsServices.write('---------- update tanque lista espera ------------')
+    tankW = TankWaiting.select().where(TankWaiting.id == tank_id).first()
+    LogsServices.write(f'tank_id : {tank_id}')
 
-    if tank is None:
+    if tankW is None:
         return JSONResponse(
             status_code=404,
             content={"message": "Registro de Tanque en lista de espera no encontrada"}
         )
+    old_atName = tankW.atName
+    LogsServices.write(f'tankW.atName : {tankW.atName}')
+    LogsServices.write(f'old_atName : {old_atName}')
     
-    tank.posicion = tank_request.posicion
-    tank.atId = tank_request.atId
-    tank.atTipo = tank_request.atTipo
-    tank.atName = tank_request.atName
-    tank.password = tank_request.password
-    tank.embarque = tank_request.embarque
-    tank.capacidad = tank_request.capacidad
-    tank.conector = tank_request.conector
-    tank.horaEntrada = tank_request.horaEntrada
-    tank.fechaEntrada = tank_request.fechaEntrada
-    tank.reporte24 = tank_request.reporte24
-    tank.reporte05 = tank_request.reporte05
-    tank.save()
+    LogsServices.write(f'tank_request.atName : {tank_request.atName}')
+    tankW.posicion = tank_request.posicion 
+    tankW.atId = tank_request.atId
+    tankW.atTipo = tank_request.atTipo
+    tankW.atName = tank_request.atName
+    tankW.password = tank_request.password
+    tankW.embarque = tank_request.embarque
+    tankW.capacidad = tank_request.capacidad
+    tankW.conector = tank_request.conector
+    tankW.save()
 
-    return tank
+    # Actualizar tanque de la lista de entrada
+    entryTank = TankEntry.select().where(TankEntry.atName == old_atName).order_by(TankEntry.id.desc()).first()
+    if entryTank is None:
+        LogsServices.write('entryTank is None..')
+    else:
+        LogsServices.write(f'entryTank.atName : {entryTank.atName}')
+        entryTank.atName = tankW.atName
+        entryTank.atId = tankW.atId
+        entryTank.atTipo = tankW.atTipo
+        entryTank.capacidad = tankW.capacidad
+        entryTank.conector = tankW.conector
+        entryTank.save()
+
+    return tankW
 
 
 @router.post('/espera/mover-inicio', response_model=TankWaitingResponseModel)
