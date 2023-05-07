@@ -186,7 +186,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
         inicialTanque = '' if tanque.atTipo == 0 else tanque.atTipo
         LogsServices.write(f"tanque.atTipo: {tanque.atTipo}")
         LogsServices.write(f"inicialTanque: {inicialTanque}")
-        tipoAT = int(f'{inicialTanque}{tanque.atId}')
+        tipoAT = f'{inicialTanque}{tanque.atId}'
         LogsServices.write(f"tipoAT: {tipoAT}")
 
         # Variables que se usan en asignacion
@@ -201,7 +201,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
             )
         
         # Leer variables
-        # OpcServices.writeOPC(path_estadoListaDespacho, 0)
+        OpcServices.writeOPC(path_estadoListaDespacho, 0)
         asignacionStatus = OpcServices.readDataPLC(path_statusAsignacion)
         verificacionStatus = OpcServices.readDataPLC(path_statusVerificado)
         listaDespacho = OpcServices.readDataPLC(path_estadoListaDespacho)
@@ -523,156 +523,195 @@ async def postGetSenalesSalidas():
     try:
         # Revisar Folio Llenadera
         LogsServices.setNameFile()
+        LogsServices.write('---------------- Revisando Salidas ---------------')
         numLlenaderas = [5,6,7,8,9,10,11,12,13,14]
 
         for llen in numLlenaderas:
-            #print(f'llen: {llen}')
-            llenadera = Llenadera.select().where(Llenadera.numero == llen).first()
-            #print(f'llenadera: {llenadera.numero}')
-            folioDB = Folio.select().where(Folio.llenadera_id == llenadera.id).first()
-            #print(f'folioDB: {folioDB.folio}')
-            folioLlenadera = getFolioLllenadera(llenadera.numero)
-            #print(f'folioLlenadera: {folioLlenadera}')
-
-            # Si folioPCL es diferente al folioDB Se registra - else se omite el registro
-            if (folioLlenadera != folioDB.folio):
-                # Obtener el tanque de la lista de Servicio
-                
-                #tipoAtUCL = getPLCLlenaderaTipo(llenadera.numero)
-                tipoAtUCL = 12100
-                tipoAtUCLSt = f"{tipoAtUCL}"
-                atID = ''
-                atType = ''
-                if len(tipoAtUCLSt) < 5:
-                    atID = tipoAtUCL
-                    atType = 0
-                else:
-                    atID = int(tipoAtUCLSt[1:5])
-                    atType = int(tipoAtUCLSt[0])
-
-                print(atID)
-                print(atType)
-                tanqueToExit = TanksInService.select().where(TanksInService.atID == atID, TanksInService.atTipo == atType).order_by(TanksInService.id.desc()).first()
-                print(f'tanqueToExit.atName: {tanqueToExit.atName}')
-                volumen = getVolumenLlenadera(llenadera.numero)
-                #volumen = 39800
-                volumenBls = volumen / 158.9873
-                volumen20 = getVolumenCorrLlenadera(llenadera.numero)
-                #volumen20 = 41200
-                volumen20Bls = volumen20 / 158.9873
-                masa = getMasaCorrLlenadera(llenadera.numero)
-                #masa = 20220
-                masaTons = masa / 1000
-                densidad = getDensidadLlenadera(llenadera.numero) / 10000
-                #densidad = 5250 / 10000
-                densidad20 = getDensidadCorrLlenadera(llenadera.numero) / 10000
-                #densidad20 = 5345 / 10000
-                porcentaje = getPorcentajeLlenadera(llenadera.numero) / 100
-                #porcentaje = 8990 / 100
-                temperatura = getTemperaturaLlenadera(llenadera.numero) / 100
-                #temperatura = 1980 / 100
-                presion = getPresionLlenadera(llenadera.numero) / 100
-                #presion = 1344 / 100
-                modo = getModoLlenadera(llenadera.numero)
-                #modo = 2
-                anioInicio = getAnioInicioLlenadera(llenadera.numero)
-                #anioInicio = 2023
-                mesInicio = getMesInicioLlenadera(llenadera.numero)
-                #mesInicio = 3
-                diaInicio = getDiaInicioLlenadera(llenadera.numero)
-                #diaInicio = 14
-                horaInicio = getHoraInicioLlenadera(llenadera.numero)
-                #horaInicio = 13
-                minutoInicio = getMinutoInicioLlenadera(llenadera.numero)
-                #minutoInicio = 50
-                horaFin = getHoraFinLlenadera(llenadera.numero)
-                #horaFin = 14
-                #minutoFin = getMinutoFinLlenadera(llenadera.numero)
-                minutoFin = 21
-                fechaEntrada = f"{tanqueToExit.fechaEntrada} {tanqueToExit.horaEntrada}"
-                fechaInicio = f"{anioInicio}-{mesInicio}-{diaInicio} {horaInicio}:{minutoInicio}:00"
-                now = datetime.now()
-                fecha =  now.strftime("%Y-%m-%d")
-                fechaFin = f"{fecha} {horaFin}:{minutoFin}:00"
-                tipoCarga = 1 if masa > 0 else 0
-
-                # Llenar datos de llenadera
-                salida = TankInTrucks.create(
-                    productoNombre = tanqueToExit.productoNombre,
-                    productoDescripcion = tanqueToExit.productoDescripcion,
-                    atId = tanqueToExit.atID,
-                    atTipo = tanqueToExit.atTipo,
-                    atName = tanqueToExit.atName,
-                    conector = tanqueToExit.conector,
-                    embarque = tanqueToExit.embarque,
-                    capacidad = tanqueToExit.capacidad,
-                    capacidadStd = tanqueToExit.capacidad - volumen,
-                    llenadera = llenadera.numero,
-                    folioPLC = folioLlenadera,
-                    volNatLts = volumen,
-                    volNatBls = volumenBls,
-                    volCorLts = volumen20,
-                    volCorBls = volumen20Bls,
-                    masa = masa,
-                    masaTons = masaTons,
-                    densidadNat = densidad,
-                    densidadCor = densidad20,
-                    porcentaje = porcentaje,
-                    temperaturaBase = 20,
-                    temperatura = temperatura,
-                    presion = presion,
-                    modo = modo,
-                    fechaEntrada = fechaEntrada,
-                    fechaInicio = fechaInicio,
-                    fechaFin = fechaFin,
-                    reporte24 =  tanqueToExit.reporte24,
-                    reporte05 =  tanqueToExit.reporte05,
-                    tipoCarga = tipoCarga
-                )
-                tanqueToExit.delete_instance()
-                # Liberar llenadera
-                OpcServices.writeOPC(getFolioGuardadoLlenadera(llen), folioLlenadera)
-                LogsServices.write(f'salida: {salida.atName} | {salida.atId} | {salida.atTipo} | {salida.conector} | {salida.capacidad} | {volumen} | {volumen20} | Folio: {salida.folioPLC} | llenadera: {salida.llenadera}')
-                
-                # Guardar registro en ultimas salidas
-                tanqueLastExit = TankExit.select().where(TankExit.id == 1).first()
-                tanqueLastExit.productoNombre = salida.productoNombre,
-                print(salida.productoNombre)
-                tanqueLastExit.productoDescripcion = salida.productoNombre,
-                print(salida.productoDescripcion)
-                tanqueLastExit.atId = salida.atId,
-                print(salida.atId)
-                tanqueLastExit.atTipo = salida.atTipo,
-                print(salida.atTipo)
-                tanqueLastExit.atName = salida.atName,
-                print(salida.atName)
-                tanqueLastExit.conector = salida.conector,
-                print(salida.conector)
-                tanqueLastExit.embarque = salida.embarque,
-                print(salida.embarque)
-                tanqueLastExit.capacidad = salida.capacidad,
-                print(salida.capacidad)
-                tanqueLastExit.capacidadStd = salida.capacidadStd,
-                print(salida.capacidadStd)
-                tanqueLastExit.masa = salida.masa,
-                print(salida.masa)
-                tanqueLastExit.fechaSalida = salida.fechaFin
-                print(salida.fechaFin)
-                tanqueLastExit.save()
-                # Mandar error al grabar la ultima salida.
-                # ---------------------------------------
-                # ---------------------------------------
-                
-                LogsServices.write(f'tanqueLastExit: {tanqueLastExit.atName} | {tanqueLastExit.atId} | {tanqueLastExit.atTipo} | {tanqueLastExit.conector} | {tanqueLastExit.capacidad} | {tanqueLastExit.fechaSalida}')
-                
-                return JSONResponse(
-                    status_code=201,
-                    content={"message": "Revisados Folios de asignación"}
-                )
-            
+            url_llenaderaLibre = getPLCLlenaderaLibre(llen)
+            #LogsServices.write(f'path_llenaderaLibre: {url_llenaderaLibre}')
+            llenaderaIsLibre = OpcServices.readDataPLC(url_llenaderaLibre)
+            #LogsServices.write(f'llenadera IsLibre: {llenaderaIsLibre}')
+            if llenaderaIsLibre == 0 :
+                #LogsServices.write(f'-------- Cargando Pasamos a otra llenadera ---------')
+                #LogsServices.write(f'************************************')
+                continue
             else:
-                print(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
-                LogsServices.write(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
+                LogsServices.write(f'-----------Revisar Folio----------')
+                LogsServices.write(f'llen: {llen}')
+                #LogsServices.write(f'llenadera IsLibre: {llenaderaIsLibre}')
+                llenadera = Llenadera.select().where(Llenadera.numero == llen).first()
+                #LogsServices.write(f'llenadera: {llenadera.numero}')
+                folioDB = Folio.select().where(Folio.llenadera_id == llenadera.id).first()
+                #LogsServices.write(f'folioDB: {folioDB.folio}')
+                pathFolioLlenadera = getFolioLllenadera(llenadera.numero)
+                #LogsServices.write(f'pathFolioLlenadera: {pathFolioLlenadera}')
+                folioLlenadera = OpcServices.readDataPLC(pathFolioLlenadera)
+                #LogsServices.write(f'folioLlenadera: {folioLlenadera}')
+
+                # Si folioPCL es diferente al folioDB Se registra - else se omite el registro
+                if (folioLlenadera != folioDB.folio):
+                    # Obtener el tanque de la lista de Servicio
+                    LogsServices.write(f'-----------Registrar Carga----------')
+                    tipoAtUCL = OpcServices.readDataPLC(getPLCLlenaderaTipo(llenadera.numero))
+                    #tipoAtUCL = 12100
+                    #LogsServices.write(f'tipoAtUCL: {tipoAtUCL}')
+                    tipoAtUCLSt = f"{tipoAtUCL}"
+                    #LogsServices.write(f'tipoAtUCLSt: {tipoAtUCLSt}')
+                    atID = ''
+                    atType = ''
+                    if len(tipoAtUCLSt) < 5:
+                        atID = tipoAtUCL
+                        atType = 0
+                    else:
+                        atID = int(tipoAtUCLSt[1:5])
+                        atType = int(tipoAtUCLSt[0])
+
+                    #LogsServices.write(f'atID: {atID}')
+                    #LogsServices.write(f'atType: {atType}')
+                    tanqueToExit = TanksInService.select().where(TanksInService.atID == atID, TanksInService.atTipo == atType).order_by(TanksInService.id.desc()).first()
+
+                    registerInService = True
+                    if tanqueToExit is None:
+                        tanqueToExit = Tank.select().where(Tank.atId == atID, Tank.atTipo == atType).first()
+                        if tanqueToExit is None:
+                            continue
+                        registerInService = False
+                    
+                    #LogsServices.write(f'tanqueToExit.atName: {tanqueToExit.atName}')
+                    volumen = OpcServices.readDataPLC(getVolumenLlenadera(llenadera.numero))
+                    volumenBls = volumen / 158.9873
+                    volumen20 = OpcServices.readDataPLC(getVolumenCorrLlenadera(llenadera.numero))
+                    volumen20Bls = volumen20 / 158.9873
+                    masa = OpcServices.readDataPLC(getMasaCorrLlenadera(llenadera.numero))
+                    masaTons = masa / 1000
+                    densidad = OpcServices.readDataPLC(getDensidadLlenadera(llenadera.numero)) / 10000
+                    densidad20 = OpcServices.readDataPLC(getDensidadCorrLlenadera(llenadera.numero)) / 10000
+                    porcentaje = OpcServices.readDataPLC(getPorcentajeLlenadera(llenadera.numero)) / 100
+                    temperatura = OpcServices.readDataPLC(getTemperaturaLlenadera(llenadera.numero)) / 100
+                    presion = OpcServices.readDataPLC(getPresionLlenadera(llenadera.numero)) / 100
+                    modo = OpcServices.readDataPLC(getModoLlenadera(llenadera.numero))
+                    anioInicio = OpcServices.readDataPLC(getAnioInicioLlenadera(llenadera.numero))
+                    mesInicio = OpcServices.readDataPLC(getMesInicioLlenadera(llenadera.numero))
+                    diaInicio = OpcServices.readDataPLC(getDiaInicioLlenadera(llenadera.numero))
+                    horaInicio = OpcServices.readDataPLC(getHoraInicioLlenadera(llenadera.numero))
+                    minutoInicio = OpcServices.readDataPLC(getMinutoInicioLlenadera(llenadera.numero))
+                    horaFin = OpcServices.readDataPLC(getHoraFinLlenadera(llenadera.numero))
+                    minutoFin = OpcServices.readDataPLC(getMinutoFinLlenadera(llenadera.numero))
+                    now = datetime.now()
+                    fecha =  now.strftime("%Y-%m-%d")
+                    fechaFin = f"{fecha} {horaFin}:{minutoFin}:00"
+                    tipoCarga = 1 if masa > 0 else 0
+
+                    fechaEntrada = ''
+                    fechaInicio = ''
+                    if tipoCarga == 1 :
+
+                        if registerInService == True:
+                            fechaEntrada = f"{tanqueToExit.fechaEntrada} {tanqueToExit.horaEntrada}"
+                            fechaInicio = f"{anioInicio}-{mesInicio}-{diaInicio} {horaInicio}:{minutoInicio}:00"
+                            report24 = tanqueToExit.reporte24
+                            report05 = tanqueToExit.reporte05
+                            producto = tanqueToExit.productoNombre
+                            productDescripcion = tanqueToExit.productoDescripcion
+                            atID = tanqueToExit.atID
+                            embarque = tanqueToExit.embarque
+                            capacidad = tanqueToExit.capacidad
+                        else:
+                            fechaEntrada: now.strftime("%Y-%m-%d %H:%M:%S")
+                            fechaInicio: fechaEntrada
+                            report24 = obtenerFecha24Reporte()
+                            report05 = obtenerFecha05Reporte()
+                            producto = 'Propano'
+                            productDescripcion = 'Gas L.P.'
+                            atID = tanqueToExit.atId
+                            embarque = 0
+                            capacidad = tanqueToExit.capacidad90
+
+                        # Llenar datos de llenadera
+                        salida = TankInTrucks.create(
+                            productoNombre = producto,
+                            productoDescripcion = productDescripcion,
+                            atId = atID,
+                            atTipo = tanqueToExit.atTipo,
+                            atName = tanqueToExit.atName,
+                            conector = tanqueToExit.conector,
+                            embarque = embarque,
+                            capacidad = capacidad,
+                            capacidadStd = capacidad - volumen,
+                            llenadera = llenadera.numero,
+                            folioPLC = folioLlenadera,
+                            volNatLts = volumen,
+                            volNatBls = volumenBls,
+                            volCorLts = volumen20,
+                            volCorBls = volumen20Bls,
+                            masa = masa,
+                            masaTons = masaTons,
+                            densidadNat = densidad,
+                            densidadCor = densidad20,
+                            porcentaje = porcentaje,
+                            temperaturaBase = 20,
+                            temperatura = temperatura,
+                            presion = presion,
+                            modo = modo,
+                            fechaEntrada = fechaEntrada,
+                            fechaInicio = fechaInicio,
+                            fechaFin = fechaFin,
+                            reporte24 =  report24,
+                            reporte05 =  report05,
+                            tipoCarga = tipoCarga
+                        )
+                        if registerInService == True:
+                            tanqueToExit.delete_instance()
+                        # Liberar llenadera
+                        OpcServices.writeOPC(getFolioGuardadoLlenadera(llen), folioLlenadera)
+                        #LogsServices.write(f'salida: {salida.atName} | {salida.atId} | {salida.atTipo} | {salida.conector} | {salida.capacidad} | {volumen} | {volumen20} | Folio: {salida.folioPLC} | llenadera: {salida.llenadera}')
+                        
+
+                        # Actualizar Folio de llenadera
+                        folioLlen = Folio.select().where(Folio.llenadera == llenadera.id).first()
+                        folioLlen.folio = folioLlenadera
+                        folioLlen.save()
+
+                        # Guardar registro en ultimas salidas
+                        tanqueLastExit = TankExit.select().where(TankExit.id == 1).first()
+                        tanqueLastExit.productoNombre = salida.productoNombre
+                        #LogsServices.write(salida.productoNombre)
+                        tanqueLastExit.productoDescripcion = salida.productoNombre
+                        #LogsServices.write(salida.productoDescripcion)
+                        tanqueLastExit.atId = salida.atId
+                        #LogsServices.write(salida.atId)
+                        tanqueLastExit.atTipo = salida.atTipo
+                        #LogsServices.write(salida.atTipo)
+                        tanqueLastExit.atName = salida.atName
+                        #LogsServices.write(salida.atName)
+                        tanqueLastExit.conector = salida.conector
+                        #LogsServices.write(salida.conector)
+                        tanqueLastExit.embarque = salida.embarque
+                        #LogsServices.write(salida.embarque)
+                        tanqueLastExit.capacidad = salida.capacidad
+                        #LogsServices.write(salida.capacidad)
+                        tanqueLastExit.capacidadStd = salida.capacidadStd
+                        #LogsServices.write(salida.capacidadStd)
+                        tanqueLastExit.masa = salida.masa
+                        #LogsServices.write(salida.masa)
+                        tanqueLastExit.fechaSalida = salida.fechaFin
+                        #LogsServices.write(salida.fechaFin)
+                        tanqueLastExit.save()
+                        # Mandar error al grabar la ultima salida.
+                        # ---------------------------------------
+                        # ---------------------------------------
+                        LogsServices.write(f'tanqueLastExit: {tanqueLastExit.atName} | {tanqueLastExit.atId} | {tanqueLastExit.atTipo} | {tanqueLastExit.conector} | {tanqueLastExit.capacidad} | {tanqueLastExit.fechaSalida}')
+                        LogsServices.write(f'************************************')
+                    else:
+                        LogsServices.write(f'llen: {llen}')
+                        LogsServices.write(f'Carga No Valida')
+                        LogsServices.write(f'************************************')
+                else:
+                    LogsServices.write(f'llen: {llen}')
+                    LogsServices.write(f'-----------NO Registrar Carga----------')
+                    #print(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
+                    #LogsServices.write(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
+                    LogsServices.write(f'************************************')
     except Exception as e:
         LogsServices.write(f'Error: {e}')
         return JSONResponse(
@@ -820,7 +859,7 @@ async def desasignar(llenadera: int):
         #turno = 0
 
         # si la llenadera esta libre y el turno es menor o igual a cero -> se debe modificar la llenadera
-        if libre is True and turno <= 0:
+        if libre == 1 and turno <= 0:
             LogsServices.write('Libre true y turno cero')
 
             strDesasignar = getPLCLlenaderaDesasignar(llenadera)
@@ -970,11 +1009,11 @@ def getPLCPGLlenadera(llenadera):
 
 def getFolioLllenadera(llenadera):
     tabla_llenaderas = {
-        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN5',
-        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN6',
-        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN7',
-        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN8',
-        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN9',
+        5: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN05',
+        6: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN06',
+        7: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN07',
+        8: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN08',
+        9: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN09',
         10: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN10',
         11: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN11',
         12: 'GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Llenaderas.FIN_LLEN12',

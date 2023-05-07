@@ -114,6 +114,10 @@ class TankWaitingRequestPutModel(BaseModel):
     capacidad: int
     conector: int
 
+class TankWaitingRequestMovModel(BaseModel):
+    inicial: int
+    destino: int
+
 class TankWaitingRequestPosicionPutModel(BaseModel):
     tanque: str
 
