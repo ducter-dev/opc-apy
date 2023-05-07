@@ -156,7 +156,6 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
             )
         
         now = datetime.now()
-        fecha_base = datetime(now.year, now.month, now.day, 5, 0, 0)
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         fecha05 = obtenerFecha05Reporte()
         fechaEntrada = now.strftime("%Y-%m-%d")
