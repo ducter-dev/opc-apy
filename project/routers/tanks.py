@@ -8,7 +8,7 @@ from ..database import Tank, TankAssign, TankExit, TanksInService, TankInTrucks,
 
 from ..schemas import TanksEntryRequestModel, TanksEntryResponseModel, TanksLastEntryResponseModel
 
-from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel, TankWaitingRequestPosicionPutModel
+from ..schemas import TankWaitingRequestModel, TankWaitingResponseModel, TankWaitingRequestPutModel, TankWaitingRequestPosicionPutModel, TankWaitingRequestMovModel
 
 from ..schemas import TanksInServiceResponseModel, TanksInServiceRequestModel, TanksLastAssignResponseModel, TanksLastExitResponseModel
 
@@ -339,7 +339,7 @@ async def delete_tankWaiting(tank_id: int):
         tank.delete_instance()
 
         # Actualizar las posiciones
-        tanques = TankWaiting.select().order_by(TankWaiting.posicion.asc)
+        tanques = TankWaiting.select().order_by(TankWaiting.posicion.asc())
     
         # Recorrer los tanques y aumentar 1 en la posicion
         for i in range(len(tanques)):
@@ -421,6 +421,106 @@ async def post_tankWaitingchangePosition(tank_request: TankWaitingRequestPosicio
     tankSelect.save()
 
     return tankSelect
+
+
+@router.post('/espera/mover-posicion')
+async def post_tankWaitingchangePosition(req: TankWaitingRequestMovModel):
+    print(f'req.inicial: {req.inicial}')
+    print(f'req.destino: {req.destino}')
+    
+    if req.inicial == req.destino:
+        return JSONResponse(
+            status_code=401,
+            content={ "message": 'Las posiciones son iguales.' }
+        )
+    
+    intLugares = 0
+
+    if req.inicial < 1 or req.destino < 1:
+        return JSONResponse(
+            status_code=401,
+            content={ "message": 'La posición es incorrecta, revise su inicio.' }
+        )
+    
+    countTanques = len(TankWaiting.select())
+    print(f'countTanques: {countTanques}')
+
+    if req.destino > countTanques or req.inicial > countTanques :
+        return JSONResponse(
+            status_code=401,
+            content={ "message": 'La posición es incorrecta, revise su destino' }
+        )
+
+    indexList = req.inicial
+    if req.destino < req.inicial:
+        intLugares = req.inicial - req.destino
+        print(f'intLugares: {intLugares}')
+        for i in range(intLugares):
+            print(f'i: {i}')
+            print(f'indexList: {indexList}')
+            moveUpTankTruck( indexList)
+            indexList = indexList - 1
+    else:
+        intLugares = req.destino - req.inicial
+        print(f'intLugares: {intLugares}')
+        for i in range(intLugares):
+            print(f'i: {i}')
+            print(f'indexList: {indexList}')
+            moveDownTankTruck( indexList)
+            indexList = indexList + 1
+
+    return JSONResponse(
+        status_code= 201,
+        content= {
+            "message": f'Se cambio de la posición {req.inicial} a {req.destino}'
+        }
+    )
+
+def moveUpTankTruck(positionToMove):
+    print(f'moveUpTankTruck - positionToMove: {positionToMove}')
+    if positionToMove <= 1 :
+        return
+    tanksW = TankWaiting.select().order_by(TankWaiting.posicion.asc())
+    # Recorrer los tanques de lista de espera
+
+    for i in range(len(tanksW)):
+        posicion = tanksW[i].posicion
+
+        if posicion < positionToMove - 1:
+            continue
+        elif posicion == positionToMove - 1:
+            tanksW[i].posicion = tanksW[i].posicion + 1
+            tanksW[i].save()
+        elif posicion == positionToMove:
+            tanksW[i].posicion = tanksW[i].posicion - 1
+            tanksW[i].save()
+        elif posicion > positionToMove:
+            continue
+    return True
+
+
+def moveDownTankTruck(positionToMove):
+    print(f'moveDownTankTruck - positionToMove: {positionToMove}')
+    if positionToMove < 1 :
+        return
+    tanksW = TankWaiting.select().order_by(TankWaiting.posicion.asc())
+    # Recorrer los tanques de lista de espera
+
+    for i in range(len(tanksW)):
+        posicion = tanksW[i].posicion
+
+        if posicion < positionToMove:
+            continue
+        elif posicion == positionToMove:
+            tanksW[i].posicion = tanksW[i].posicion + 1
+            tanksW[i].save()
+        elif posicion == positionToMove + 1:
+            tanksW[i].posicion = tanksW[i].posicion - 1
+            tanksW[i].save()
+        elif posicion > positionToMove:
+            continue
+    return True
+
 
 
 @router.post('/espera/llamar')
