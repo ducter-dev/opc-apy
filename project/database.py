@@ -85,7 +85,7 @@ class Tank(Model):
     atId =  IntegerField(null=True)
     atTipo =  IntegerField(null=True)
     atName = CharField(12, null=True)
-    conector =  IntegerField(null=True)
+    conector = IntegerField(null=True)
     capacidad90 =  IntegerField(null=True)
     transportadora = IntegerField(null=True)
     created_at =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
@@ -106,7 +106,7 @@ class TankWaiting(Model):
     password =  IntegerField(null=True)
     embarque =  IntegerField(null=True)
     capacidad =  IntegerField(null=True)
-    conector =  IntegerField(null=True)
+    conector = IntegerField(null=True)
     horaEntrada =  TimeField(default=datetime.now, formats='%H:%M:%S')
     fechaEntrada =  DateField(default=datetime.now, formats='%Y-%m-%d')
     reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
@@ -129,7 +129,7 @@ class TanksEntry(Model):
     atTipo =  IntegerField(null=True)
     atName = CharField(12, null=True)
     capacidad =  IntegerField(null=True)
-    conector =  IntegerField(null=True)
+    conector = IntegerField(null=True)
     horaEntrada =  TimeField(default=datetime.now, formats='%H:%M:%S')
     fechaEntrada =  DateField(default=datetime.now, formats='%Y-%m-%d')
     reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
@@ -152,7 +152,7 @@ class TankEntry(Model):
     atTipo =  IntegerField(null=True)
     atName = CharField(12, null=True)
     capacidad =  IntegerField(null=True)
-    conector =  IntegerField(null=True)
+    conector = IntegerField(null=True)
     fechaEntrada = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
     class Meta:
@@ -457,3 +457,31 @@ class BombaReporte(Model):
     class Meta:
         database = database
         table_name = 'bombas_reporte'
+
+
+class TipoTanque(Model):
+    tipo = IntegerField(null=True)
+    descripcion = CharField()
+    
+    class Meta:
+        database = database
+        table_name = 'tipos_tanques'
+
+
+
+class ConectorTanque(Model):
+    descripcion = CharField()
+    abreviatura = CharField()
+    
+    class Meta:
+        database = database
+        table_name = 'conectores_tanques'
+
+
+
+
+
+
+
+
+
