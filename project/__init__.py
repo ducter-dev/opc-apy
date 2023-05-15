@@ -34,7 +34,7 @@ from .opc import OpcServices
 
 app = FastAPI(
     title='SCADA-IRGE',
-    description='Api para servir OPC',
+    description='Api para servir SCADA IRGE',
     version='1.0'
 )
 
