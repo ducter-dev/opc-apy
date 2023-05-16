@@ -153,6 +153,8 @@ class TankEntry(Model):
     atName = CharField(12, null=True)
     capacidad =  IntegerField(null=True)
     conector = IntegerField(null=True)
+    tipoEntrada = IntegerField(null=True)
+    estatusSol = IntegerField(null=True)
     fechaEntrada = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
     class Meta:

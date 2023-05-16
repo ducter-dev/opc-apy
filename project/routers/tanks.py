@@ -30,6 +30,9 @@ router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 path_Sig_Asigna_NumPG = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_NumPG'
 path_Sig_Asigna_TipoAT = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.Sig_Asigna_TipoAT'
 path_SIGUIENTE_ASIGN = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.SIGUIENTE_ASIGN'
+path_ANT_RFENT_NumPG = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_NumPG'
+path_ANT_RFENT_TipoAT = 'GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_TipoAT'
+
 
 # ---------------- Tanques ---------------------
 
@@ -95,7 +98,7 @@ async def delete_tank(tank_id: int):
 async def call_tank():
     try:
         LogsServices.write('----------- Llamar Tanque --------------')
-        tank = Tank.select().where(Tank.id == tank_id).first()
+        tank = Tank.select().where(Tank.id == 1).first()
         if tank is None:
             return JSONResponse(
                 status_code=404,
@@ -135,13 +138,12 @@ async def alarm_tanks():
 
 # ---------------- Lista de Entrada ---------------------
 
-@router.post('/entrada', response_model=TanksEntryResponseModel)
+@router.post('/entrada/manual', response_model=TanksEntryResponseModel)
 #@router.post('/entrada')
-async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
+async def create_tanque_entrada_manual(tank_request: TanksEntryRequestModel):
     
     try:
         #   Escribiendo datos de Entrada Manulmente
-
         #   Checar si existe el autotanque si no se crea uno nuevo
         tank = Tank.select().where(Tank.atId == tank_request.atId, Tank.atTipo == tank_request.atTipo ).first()
 
@@ -159,7 +161,7 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         fecha05 = obtenerFecha05Reporte()
         fechaEntrada = now.strftime("%Y-%m-%d")
-        horaEntrada = now.strftime("%H:%M-%S")
+        horaEntrada = now.strftime("%H:%M:%S")
         
         TanksEntry.create(
             posicion = tank_request.posicion,
@@ -185,6 +187,8 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         lastEntry.atName = entryInserted.atName
         lastEntry.capacidad = entryInserted.capacidad
         lastEntry.conector = entryInserted.conector
+        lastEntry.tipoEntrada = 1
+        lastEntry.estatusSol = 2
         lastEntry.fechaEntrada = fechaE
         lastEntry.save()
         LogsServices.write(f'lastEntry: {lastEntry.id}: {lastEntry.atId} | {lastEntry.atName} | {lastEntry.atTipo} | {lastEntry.conector} | {lastEntry.capacidad} | {lastEntry.fechaEntrada}')
@@ -197,6 +201,92 @@ async def create_tanque_entrada(tank_request: TanksEntryRequestModel):
         status_code=501,
         content={"message": e}
     )
+
+
+@router.post('/entrada/radiofrecuencia', response_model=TanksEntryResponseModel)
+#@router.post('/entrada')
+async def create_tanque_entrada_radiofrecuencia():
+    
+    try:
+        #   Escribiendo datos desde Transfounder
+
+        # Obtenemos los datos del opc
+        transf_tank_id = OpcServices.readDataPLC(path_ANT_RFENT_NumPG)
+        transf_tank_type = OpcServices.readDataPLC(path_ANT_RFENT_TipoAT)
+        #transf_tank_id = 333
+        #transf_tank_type = 0
+
+        # Se el número de pg es mayou a 0 y el tipo de pg es diferente de 4
+        if transf_tank_id > 0 and transf_tank_type != 4:
+            # si el número de PG es diferente al de la última entrada ó el tipo de Pg es diferente en caso de fulls actualizamos ultima entrada
+            tank_lastEntry = TankEntry.select().where(TankEntry.id == 1).first()
+
+            if transf_tank_id != tank_lastEntry.atId or transf_tank_type != tank_lastEntry.atTipo :
+                tank_lastEntry = TankEntry.select().where(TankEntry.id == 1).first()
+                #tank_id_formated = '{:0>4}'.format(transf_tank_id)
+                LogsServices.write(f'tank_lastEntry: {tank_lastEntry.atName}')
+
+                # Obtenemos el tanque de la BD
+                tankBD = Tank.select().where(Tank.atId == transf_tank_id, Tank.atTipo == transf_tank_type).first()
+                
+                now = datetime.now()
+                fechaHoraEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
+                #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
+                fecha05 = obtenerFecha05Reporte()
+                fechaEntrada = now.strftime("%Y-%m-%d")
+                horaEntrada = now.strftime("%H:%M:%S")
+                fechaE = f"{fechaEntrada} {horaEntrada}:00"
+                waitingListCount = TankWaiting.select().where(TankWaiting.reporte05 == fecha05)
+                
+                if tankBD is None:
+                    LogsServices.write(f'Autotanque No esta registrado en Base de Datos')
+                    LogsServices.write('--------------------------------------------------')
+                    return JSONResponse(
+                        status_code=404,
+                        content={"message": "Autotanque No esta registrado en Base de Datos"}
+                    )
+                
+                else: 
+
+                    LogsServices.write(f'tankBD: {tankBD.atName}')
+                    LogsServices.write(f'len(waitingListCount) + 1: {len(waitingListCount) + 1}')
+                    tank_lastEntry.atId = tankBD.atId
+                    tank_lastEntry.atTipo = tankBD.atTipo
+                    tank_lastEntry.atName = tankBD.atName
+                    tank_lastEntry.capacidad = tankBD.capacidad90
+                    tank_lastEntry.conector = tankBD.conector
+                    tank_lastEntry.tipoEntrada = 2
+                    tank_lastEntry.fechaEntrada = fechaE
+                    tank_lastEntry.posicion = len(waitingListCount) + 1
+                    tank_lastEntry.statusSol = 2
+                    tank_lastEntry.save()
+                    LogsServices.write(f'tank_lastEntry: ${tank_lastEntry.atName} - ')
+                    
+
+                    entryInserted = TanksEntry.create(
+                        posicion = len(waitingListCount) + 1,
+                        atId = tankBD.atId,
+                        atTipo = tankBD.atTipo,
+                        atName = tankBD.atName,
+                        capacidad = tankBD.capacidad90,
+                        conector = tankBD.conector,
+                        horaEntrada = horaEntrada,
+                        fechaEntrada = fechaEntrada,
+                        reporte24 = fechaEntrada,
+                        reporte05 = fecha05
+                    )
+                    #entryInserted = TanksEntry.select().order_by(TanksEntry.id.desc()).first()
+                    LogsServices.write(f'entryInserted: {entryInserted.id}: {entryInserted.atId} | {entryInserted.atName} | {entryInserted.conector} | {entryInserted.capacidad} | {entryInserted.fechaEntrada} {entryInserted.horaEntrada}')
+                    LogsServices.write(f'lastEntry: {tank_lastEntry.id}: {tank_lastEntry.atId} | {tank_lastEntry.atName} | {tank_lastEntry.atTipo} | {tank_lastEntry.conector} | {tank_lastEntry.capacidad} | {tank_lastEntry.fechaEntrada}')
+
+                    return entryInserted
+
+    except Exception as e:
+        LogsServices.write(f'Error: {e}')
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
 
     
 @router.get('/entrada/fecha/{fecha}', response_model=List[TanksEntryResponseModel])
