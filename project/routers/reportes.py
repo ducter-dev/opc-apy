@@ -109,6 +109,36 @@ async def get_cargas_diarias_report(fecha: str):
             status_code=501,
             content={"message": e}
         )
+
+
+@router.get('/despacho-diario/{fecha}')
+async def get_cargas_diarias_report(fecha: str):
+    try:
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        url_despachoDiario = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/despachoDiario.pdf"
+        params = {"fecha": fecha}
+        
+        res = s.get(url=url_despachoDiario, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"despacho_diario{fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
     
 
 
