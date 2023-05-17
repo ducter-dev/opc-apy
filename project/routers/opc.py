@@ -11,10 +11,9 @@ router = APIRouter(prefix='/api/v1/opc', route_class=VerifyTokenRoute)
 async def read_antena_entrada():
 
     try:
-        #numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_NumPG')
-        #tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_TipoAT')
-        numPG = 1500
-        tipoPG = 3
+        numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_NumPG')
+        tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFENT_TipoAT')
+        
         return JSONResponse(
             status_code=200,
             content={
@@ -34,10 +33,8 @@ async def read_antena_entrada():
 async def read_antena_verificacion():
 
     try:
-        #numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFVER_NUMPG')
-        #tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFVER_TIPOAT')
-        numPG = 2300
-        tipoPG = 2
+        numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFVER_NUMPG')
+        tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFVER_TIPOAT')
         return JSONResponse(
             status_code=200,
             content={
@@ -57,10 +54,9 @@ async def read_antena_verificacion():
 async def read_antena_salida():
 
     try:
-        #numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFSAL_NUMPG')
-        #tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFSAL_TIPOAT')
-        numPG = 3690
-        tipoPG = 3
+        numPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFSAL_NUMPG')
+        tipoPG = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.ANT_RFSAL_TIPOAT')
+        
         return JSONResponse(
             status_code=200,
             content={
@@ -70,9 +66,9 @@ async def read_antena_salida():
         )
     except Exception as e:
         return JSONResponse(
-        status_code=501,
-        content={"message": e}
-    )
+            status_code=501,
+            content={"message": e}
+        )
 
 
 @router.post('/llenadera/folio/{value}')

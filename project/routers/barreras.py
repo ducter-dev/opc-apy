@@ -11,28 +11,40 @@ router = APIRouter(prefix='/api/v1/barrera', route_class=VerifyTokenRoute)
 
 @router.post('/entrada')
 async def post_changeBarreraEntrada(request: BarreraRequesteModel):
-    # 1 = Abrir barrera de entrada
-    # 2 = Cerrar barrera de entrada
+    # 2 = Abrir barrera de entrada
+    # 1 = Cerrar barrera de entrada
     try:
-        estado = OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT', request.estado)
+        estadoInt = 2 if request.estado == True else 1
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT', estadoInt)
+        barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT')
+        if barrera is None:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No hay comunicación con la barrera de entrada'}
+            )
         #estado = 1
-        estadoVal = True if estado == 1 else False
+        estadoVal = True if barrera == 2 else False
         return JSONResponse(
             status_code=201,
             content={"estado": estadoVal }
         )
     except Exception as e:
         return JSONResponse(
-        status_code=501,
-        content={"message": str(e)}
-    )
+            status_code=501,
+            content={"message": str(e)}
+        )
 
 @router.get('/entrada')
 async def get_getBarreraEntrada():
     try:
         barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_ENT')
         #barrera = 1
-        estado = True if barrera == 1 else False
+        if barrera is None:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No hay comunicación con la barrera de entrada'}
+            )
+        estado = True if barrera == 2 else False
         return JSONResponse(
             status_code=200,
             content={"estado": estado}
@@ -48,8 +60,16 @@ async def post_changeBarreraVerificacion(request: BarreraRequesteModel):
     # 1 = Abrir barrera de Verificacion
     # 2 = Cerrar barrera de Verificacion
     try:
-        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER', request.estado)
-        estado = True if request.estado == 1 else False
+        estadoInt = 2 if request.estado == True else 1
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER', estadoInt)
+        barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
+        #barrera = 1
+        if barrera is None:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No hay comunicación con la barrera de verificación'}
+            )
+        estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=201,
             content={"estado": estado}
@@ -65,6 +85,11 @@ async def get_getBarreraVerificacion():
     try:
         barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_VER')
         #barrera = 1
+        if barrera is None:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No hay comunicación con la barrera de verificación'}
+            )
         estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=200,
@@ -82,8 +107,16 @@ async def post_changeBarreraSalida(request: BarreraRequesteModel):
     # 1 = Abrir barrera de salida
     # 2 = Cerrar barrera de salida
     try:
-        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL', request.estado)
-        estado = True if request.estado == 1 else False
+        estadoInt = 2 if request.estado == True else 1
+        OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL', estadoInt)
+        barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL')
+        #barrera = 1
+        if barrera is None:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No hay comunicación con la barrera de salida'}
+            )
+        estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=201,
             content={"estado": estado}
@@ -99,6 +132,11 @@ async def get_getBarreraSalida():
     try:
         barrera = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.CIERRA_BAR_SAL')
         #barrera = 1
+        if barrera is None:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No hay comunicación con la barrera de salida'}
+            )
         estado = True if barrera == 1 else False
         return JSONResponse(
             status_code=200,

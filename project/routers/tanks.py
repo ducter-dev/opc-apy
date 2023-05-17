@@ -212,6 +212,11 @@ async def create_tanque_entrada_radiofrecuencia():
 
         # Obtenemos los datos del opc
         transf_tank_id = OpcServices.readDataPLC(path_ANT_RFENT_NumPG)
+        if transf_tank_id is None:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No se puede obtener información de la Antena de Entrada.'}
+            )
         transf_tank_type = OpcServices.readDataPLC(path_ANT_RFENT_TipoAT)
         #transf_tank_id = 333
         #transf_tank_type = 0

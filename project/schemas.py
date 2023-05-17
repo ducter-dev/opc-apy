@@ -402,7 +402,7 @@ class RelojPLCResponseModel(ResponseModel):
 
 # --------- Barrera ---------
 class BarreraRequesteModel(BaseModel):
-    estado: int
+    estado: bool
 
 
 # --------- Estado Llenadera ---------
