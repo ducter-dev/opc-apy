@@ -285,7 +285,11 @@ async def create_tanque_entrada_radiofrecuencia():
                     LogsServices.write(f'lastEntry: {tank_lastEntry.id}: {tank_lastEntry.atId} | {tank_lastEntry.atName} | {tank_lastEntry.atTipo} | {tank_lastEntry.conector} | {tank_lastEntry.capacidad} | {tank_lastEntry.fechaEntrada}')
 
                     return entryInserted
-
+        else:
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No exite tanque para registar.'}
+            )
     except Exception as e:
         LogsServices.write(f'Error: {e}')
         return JSONResponse(
