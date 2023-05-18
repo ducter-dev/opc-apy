@@ -21,16 +21,18 @@ JASPER_SERVER = os.environ.get('JASPER_SERVER')
 
 s = requests.session()
 
-@router.get('/cargas-diarias/{fecha}')
-async def get_cargas_diarias_report(fecha: str):
+@router.get('/cargas-diarias/{fecha}/tipo/{tipo}')
+async def get_cargas_diarias_report(fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
+        
         s = requests.session()
         auth = ('jasperadmin', 'jasperadmin')
         url_login = f"{JASPER_SERVER}"
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
-        url_cargas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/cargasDiarias.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_cargas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/cargasDiarias{tipoRep}.pdf"
         params = {"fecha": fecha}
         
         res = s.get(url=url_cargas, params=params, stream=True)
@@ -51,8 +53,8 @@ async def get_cargas_diarias_report(fecha: str):
         )
     
 
-@router.get('/ultimas-cargas/{fecha}')
-async def get_cargas_diarias_report(fecha: str):
+@router.get('/ultimas-cargas/{fecha}/tipo/{tipo}')
+async def get_cargas_diarias_report(fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -60,7 +62,8 @@ async def get_cargas_diarias_report(fecha: str):
         url_login = f"{JASPER_SERVER}"
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
-        url_cargas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/ultimasCargas.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_cargas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/ultimasCargas{tipoRep}.pdf"
         params = {"fecha": fecha}
         
         res = s.get(url=url_cargas, params=params, stream=True)
@@ -81,8 +84,8 @@ async def get_cargas_diarias_report(fecha: str):
         )
 
 
-@router.get('/lista-llegada/{fecha}')
-async def get_cargas_diarias_report(fecha: str):
+@router.get('/lista-llegada/{fecha}/tipo/{tipo}')
+async def get_cargas_diarias_report(fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -90,7 +93,8 @@ async def get_cargas_diarias_report(fecha: str):
         url_login = f"{JASPER_SERVER}"
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
-        url_listaLlegada = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/lista_llegada.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_listaLlegada = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/lista_llegada{tipoRep}.pdf"
         params = {"fecha": fecha}
         
         res = s.get(url=url_listaLlegada, params=params, stream=True)
@@ -111,8 +115,8 @@ async def get_cargas_diarias_report(fecha: str):
         )
 
 
-@router.get('/despacho-diario/{fecha}')
-async def get_cargas_diarias_report(fecha: str):
+@router.get('/despacho-diario/{fecha}/tipo/{tipo}')
+async def get_cargas_diarias_report(fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -120,7 +124,8 @@ async def get_cargas_diarias_report(fecha: str):
         url_login = f"{JASPER_SERVER}"
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
-        url_despachoDiario = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/despachoDiario.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_despachoDiario = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/despachoDiario{tipoRep}.pdf"
         params = {"fecha": fecha}
         
         res = s.get(url=url_despachoDiario, params=params, stream=True)
@@ -142,8 +147,8 @@ async def get_cargas_diarias_report(fecha: str):
     
 
 
-@router.get('/esferas/{esfera}/fecha/{fecha}')
-async def get_esferas_report(esfera: str, fecha: str):
+@router.get('/esferas/{esfera}/fecha/{fecha}/tipo/{tipo}')
+async def get_esferas_report(esfera: str, fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -151,7 +156,8 @@ async def get_esferas_report(esfera: str, fecha: str):
         url_login = f"{JASPER_SERVER}"
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
-        url_esferas = f"{JASPER_SERVER}/rest_v2/reports/reportes/esferas/esfera_{esfera}.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_esferas = f"{JASPER_SERVER}/rest_v2/reports/reportes/esferas/esfera_{esfera}{tipoRep}.pdf"
         params = {"fecha": fecha}
         
         res = s.get(url=url_esferas, params=params, stream=True)
@@ -172,8 +178,8 @@ async def get_esferas_report(esfera: str, fecha: str):
         )
     
 
-@router.get('/patines/{patin}/fecha/{fecha}')
-async def get_patin_report(patin: str, fecha: str):
+@router.get('/patines/{patin}/fecha/{fecha}/tipo/{tipo}')
+async def get_patin_report(patin: str, fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -181,7 +187,8 @@ async def get_patin_report(patin: str, fecha: str):
         url_login = f"{JASPER_SERVER}"
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
-        url_patin = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_patin = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}{tipoRep}.pdf"
         params = {"fecha": fecha}
         
         res = s.get(url=url_patin, params=params, stream=True)
@@ -202,8 +209,8 @@ async def get_patin_report(patin: str, fecha: str):
         )
     
 
-@router.get('/cromatografo/{croma}/fecha/{fecha}')
-async def get_patin_report(croma: int, fecha: str):
+@router.get('/cromatografo/{croma}/fecha/{fecha}/tipo/{tipo}')
+async def get_patin_report(croma: int, fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -212,7 +219,8 @@ async def get_patin_report(croma: int, fecha: str):
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
         cromaSt = getCromatografo(croma)
-        url_croma = f"{JASPER_SERVER}/rest_v2/reports/reportes/cromatografo/{cromaSt}.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_croma = f"{JASPER_SERVER}/rest_v2/reports/reportes/cromatografo/{cromaSt}{tipoRep}.pdf"
         params = {"fecha": fecha}
         
         res = s.get(url=url_croma, params=params, stream=True)
@@ -334,8 +342,8 @@ def getCromatografo(croma):
     return tabla_cromas.get(croma, 0 )
 
 
-@router.get('/llenaderas/{llenadera}/fecha/{fecha}')
-async def get_esferas_report(llenadera: str, fecha: str):
+@router.get('/llenaderas/{llenadera}/fecha/{fecha}/tipo/{tipo}')
+async def get_esferas_report(llenadera: str, fecha: str,  tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -343,7 +351,8 @@ async def get_esferas_report(llenadera: str, fecha: str):
         url_login = f"{JASPER_SERVER}"
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
-        url_esferas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/llenaderas.pdf"
+        tipoRep = '_24' if tipo == 24 else ''
+        url_esferas = f"{JASPER_SERVER}/rest_v2/reports/reportes/cargas/llenaderas{tipoRep}.pdf"
         params = {
             "llenadera": llenadera,
             "fecha": fecha
