@@ -378,6 +378,7 @@ class BitacoraResponseModel(ResponseModel):
     actividad: str
     evento: EventoResponseModel
     fecha: datetime
+    ubicacion: str
     reporte05: date
     reporte24: date
 

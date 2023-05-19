@@ -291,6 +291,7 @@ class Bitacora(Model):
     actividad = CharField()
     user = ForeignKeyField(User, backref='usuarios')
     evento = ForeignKeyField(Evento, backref='eventos')
+    ubicacion = CharField()
     fecha = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')

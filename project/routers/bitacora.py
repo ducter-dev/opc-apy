@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from typing import List
 
@@ -12,18 +12,20 @@ from datetime import datetime, timedelta
 router = APIRouter(prefix='/api/v1/bitacora', route_class=VerifyTokenRoute)
 
 @router.post('', response_model=BitacoraResponseModel)
-async def create_bitacora(bitacora: BitacoraRequestModel):
+async def create_bitacora(bitacora: BitacoraRequestModel, request: Request):
     try:
         now = datetime.now()
         ahora = now.strftime("%Y-%m-%d %H:%M:%S")
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
+        host = request.client.host
 
         bitacora = Bitacora.create(
             user = bitacora.user,
             evento = bitacora.evento,
             actividad = bitacora.actividad,
             fecha = ahora,
+            ubicacion = host,
             reporte24 = fecha24,
             reporte05 = fecha05
         )
