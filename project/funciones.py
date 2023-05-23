@@ -33,3 +33,8 @@ def obtenerTurno24(hora):
         turno = 3
     
     return turno
+
+def obtenerDiaAnterior(fecha):
+    fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
+    fechaResult = (fechaDT - timedelta(days=1)).strftime('%Y-%m-%d')
+    return fechaResult
