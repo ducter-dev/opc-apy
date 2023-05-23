@@ -4,7 +4,12 @@ from fastapi.responses import JSONResponse, FileResponse
 from typing import List
 from datetime import datetime, timedelta
 from ..schemas import FechaReportesRequestModel
-from ..database import BombaReporte, Bomba
+from ..database import BombaReporte, Bomba, Patin, TankInTrucks, Esfera, BalanceDiario
+import peewee
+from peewee import *
+from peewee import fn
+from ..funciones import obtenerDiaAnterior
+
 
 import os
 from os.path import join, dirname
@@ -374,3 +379,505 @@ async def get_esferas_report(llenadera: str, fecha: str,  tipo: int):
             status_code=501,
             content={"message": e}
         )
+    
+
+@router.get('/bitacora/{fecha}/tipo/{tipo}')
+async def get_bitacora_report(fecha: str,  tipo: int):
+    try:
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        tipoRep = '_24' if tipo == 24 else ''
+        url_bitacora = f"{JASPER_SERVER}/rest_v2/reports/reportes/bitacora/bitacora{tipoRep}.pdf"
+        params = {
+            "fecha": fecha
+        }
+        
+        res = s.get(url=url_bitacora, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"bitacora{tipoRep}_{fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
+    
+
+
+@router.get('/balance-diario/{fecha}/tipo/{tipo}')
+async def get_balance_diario_report(fecha: str, tipo: int):
+    try:
+        # Función para llenar la tabla de balance diario 
+        # 1. Obtener los registro iniciales de las 0, 8, y 16
+        # 2. Obtener los registro finales de las 8, 16 y 24 hrs
+        fechaAnt = obtenerDiaAnterior(fecha)
+        
+        strTurno1 = '00-08' if tipo == 24 else '05-13'
+        strTurno2 = '08-16' if tipo == 24 else '13-21'
+        strTurno3 = '16-24' if tipo == 24 else '21-05'
+
+        strTurnos = [strTurno1, strTurno2, strTurno3]
+        
+        turnos = [1,2,3]
+        if tipo == 5:
+            dataPatines = Patin.select().where(Patin.reporte05 == fecha)
+            dataSalidas = TankInTrucks.select().where(TankInTrucks.reporte05 == fecha)
+            
+        else:
+            dataPatines = Patin.select().where(Patin.reporte24 == fecha)
+            dataSalidas = TankInTrucks.select().where(TankInTrucks.reporte24 == fecha)
+
+
+        dataReporte = []
+        dictTotales = {}
+        # Variables para llenar el reporte
+
+        inicial_nat = 0
+        inicial_cor = 0
+        inicial_tons = 0
+        recibo_nat = 0
+        recibo_cor = 0
+        recibo_tons = 0
+        ventas_nat = 0
+        ventas_cor = 0
+        ventas_tons = 0
+        ventas_pgs = 0
+        final_nat = 0
+        final_cor = 0
+        final_tons = 0
+
+        # Ciclo para obtener la data por turnos
+        for turno in turnos:
+            dictTurno = {}
+            if tipo == 5:
+                # Filtrando la data de patines
+                filtered_arr = [p for p in dataPatines if p.turno05 == turno]
+                dictTurno['turno'] = turno
+                blsNat_turno_rec = 0
+                blsCor_turno_rec = 0
+                tons_turno_rec = 0
+                blsNat_turno_venta = 0
+                blsCor_turno_venta = 0
+                tons_turno_venta = 0
+                if len(filtered_arr) > 0:
+                    for fa in filtered_arr:
+                        blsNat_turno_rec = blsNat_turno_rec + fa.volUnc
+                        blsCor_turno_rec = blsCor_turno_rec + fa.blsCor
+                        tons_turno_rec = tons_turno_rec + fa.ton
+                        recibo_nat = blsNat_turno_rec + fa.volUnc
+                        recibo_cor = blsCor_turno_rec + fa.blsCor
+                        recibo_tons = tons_turno_rec + fa.ton
+
+                    dictTurno['recibo_nat'] = blsNat_turno_rec
+                    dictTurno['recibo_cor'] = blsCor_turno_rec
+                    dictTurno['recibo_tons'] = tons_turno_rec
+                else:
+                    dictTurno['recibo_nat'] = 0
+                    dictTurno['recibo_cor'] = 0
+                    dictTurno['recibo_tons'] = 0
+                
+
+                # Filtrando la data de salidas
+                filter_salidas = [s for s in dataSalidas if s.turno05 == turno]
+                #print(f'Salidas {len(filter_salidas)}')
+                if len(filter_salidas) > 0:
+                    for fs in filter_salidas:
+                        ventas_nat = ventas_nat + fs.volNatBls
+                        ventas_cor = ventas_cor + fs.volCorBls
+                        ventas_tons = ventas_tons + fs.masaTons
+                        blsNat_turno_venta = blsNat_turno_venta + fs.volNatBls
+                        blsCor_turno_venta = blsCor_turno_venta + fs.volCorBls
+                        tons_turno_venta = tons_turno_venta + fs.masaTons
+                    dictTurno['ventas_nat'] = blsNat_turno_venta
+                    dictTurno['ventas_cor'] = blsCor_turno_venta
+                    dictTurno['ventas_tons'] = tons_turno_venta
+                    dictTurno['ventas_pgs'] = len(filter_salidas)
+                    ventas_pgs = ventas_pgs + len(filter_salidas)
+                else:
+                    dictTurno['ventas_nat'] = 0
+                    dictTurno['ventas_cor'] = 0
+                    dictTurno['ventas_tons'] = 0
+                    dictTurno['ventas_pgs'] = 0
+
+                # Leer data de inventarios de esferas inicio
+                esferas = [1,2]
+                
+                tot_volNat_esfera_ini = 0
+                tot_volCor_esfera_ini = 0
+                tot_tons_esfera_ini = 0
+                tot_volNat_esfera_fin = 0
+                tot_volCor_esfera_fin = 0
+                tot_tons_esfera_fin = 0
+
+                for j in esferas:
+                    if turno == 1:
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fechaAnt, Esfera.turno05 == 3, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dictTurno['turno'] = strTurnos[turno - 1]
+
+                        if dataEsferaInicio is None:
+                            dictTurno['inicial_nat'] = 0
+                            dictTurno['inicial_cor'] = 0
+                            dictTurno['inicial_tons'] = 0
+                        else:
+                            tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                            tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                            tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+
+                        dictTurno['inicial_nat'] = tot_volNat_esfera_ini
+                        dictTurno['inicial_cor'] = tot_volCor_esfera_ini
+                        dictTurno['inicial_tons'] = tot_tons_esfera_ini
+                        
+                        inicial_nat = tot_volNat_esfera_ini
+                        inicial_cor = tot_volCor_esfera_ini
+                        inicial_tons = tot_tons_esfera_ini
+
+                        dataEsferaFinal = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.turno05 == turno, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                        if dataEsferaFinal is None:
+                            dictTurno['final_nat'] = 0
+                            dictTurno['final_cor'] = 0
+                            dictTurno['final_tons'] = 0
+                        else:
+                            tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                            tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                            tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+
+                        dictTurno['final_nat'] = tot_volNat_esfera_fin
+                        dictTurno['final_cor'] = tot_volCor_esfera_fin
+                        dictTurno['final_tons'] = tot_tons_esfera_fin
+                        
+
+                    elif turno == 2:
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.turno05 == 1, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dictTurno['turno'] = strTurnos[turno - 1]
+                        
+                        if dataEsferaInicio is None:
+                            dictTurno['inicial_nat'] = 0
+                            dictTurno['inicial_cor'] = 0
+                            dictTurno['inicial_tons'] = 0
+                        else:
+                            tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                            tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                            tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+
+                        dictTurno['inicial_nat'] = tot_volNat_esfera_ini
+                        dictTurno['inicial_cor'] = tot_volCor_esfera_ini
+                        dictTurno['inicial_tons'] = tot_tons_esfera_ini
+
+                        dataEsferaFinal = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.turno05 == turno, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                        if dataEsferaFinal is None:
+                            dictTurno['final_nat'] = 0
+                            dictTurno['final_cor'] = 0
+                            dictTurno['final_tons'] = 0
+                        else:
+                            tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                            tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                            tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+
+                        dictTurno['final_nat'] = tot_volNat_esfera_fin
+                        dictTurno['final_cor'] = tot_volCor_esfera_fin
+                        dictTurno['final_tons'] = tot_tons_esfera_fin
+
+                    elif turno == 3:
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.turno05 == 2, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dictTurno['turno'] = strTurnos[turno - 1]
+                        
+                        if dataEsferaInicio is None:
+                            dictTurno['inicial_nat'] = 0
+                            dictTurno['inicial_cor'] = 0
+                            dictTurno['inicial_tons'] = 0
+                        else:
+                            tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                            tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                            tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+
+                        dictTurno['inicial_nat'] = tot_volNat_esfera_ini
+                        dictTurno['inicial_cor'] = tot_volCor_esfera_ini
+                        dictTurno['inicial_tons'] = tot_tons_esfera_ini
+
+                        dataEsferaFinal = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.turno05 == turno, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                        if dataEsferaFinal is None:
+                            dictTurno['final_nat'] = 0
+                            dictTurno['final_cor'] = 0
+                            dictTurno['final_tons'] = 0
+                        else:
+                            tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                            tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                            tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+                            final_nat = final_nat + tot_volNat_esfera_fin
+                            final_cor = final_cor + tot_volCor_esfera_fin
+                            final_tons = final_tons + tot_tons_esfera_fin
+
+                        dictTurno['final_nat'] = tot_volNat_esfera_fin
+                        dictTurno['final_cor'] = tot_volCor_esfera_fin
+                        dictTurno['final_tons'] = tot_tons_esfera_fin
+
+                dictTurno['dif_nat'] = tot_volNat_esfera_ini + blsNat_turno_rec - blsNat_turno_venta - tot_volNat_esfera_fin
+                dictTurno['dif_cor'] = tot_volCor_esfera_ini + blsCor_turno_rec - blsCor_turno_venta - tot_volCor_esfera_fin
+                dictTurno['dif_tons'] = tot_tons_esfera_ini + tons_turno_rec - tons_turno_venta - tot_tons_esfera_fin
+                
+            else:
+                # Filtrando la data de patines
+                filtered_arr = [p for p in dataPatines if p.turno24 == turno]
+                dictTurno['turno'] = turno
+                blsNat_turno_rec = 0
+                blsCor_turno_rec = 0
+                tons_turno_rec = 0
+                blsNat_turno_venta = 0
+                blsCor_turno_venta = 0
+                tons_turno_venta = 0
+                if len(filtered_arr) > 0:
+                    for fa in filtered_arr:
+                        blsNat_turno_rec = blsNat_turno_rec + fa.volUnc
+                        blsCor_turno_rec = blsCor_turno_rec + fa.blsCor
+                        tons_turno_rec = tons_turno_rec + fa.ton
+                        recibo_nat = blsNat_turno_rec + fa.volUnc
+                        recibo_cor = blsCor_turno_rec + fa.blsCor
+                        recibo_tons = tons_turno_rec + fa.ton
+
+                    dictTurno['recibo_nat'] = blsNat_turno_rec
+                    dictTurno['recibo_cor'] = blsCor_turno_rec
+                    dictTurno['recibo_tons'] = tons_turno_rec
+                else:
+                    dictTurno['recibo_nat'] = 0
+                    dictTurno['recibo_cor'] = 0
+                    dictTurno['recibo_tons'] = 0
+                
+
+                # Filtrando la data de salidas
+                filter_salidas = [s for s in dataSalidas if s.turno24 == turno]
+                #print(f'Salidas {len(filter_salidas)}')
+                if len(filter_salidas) > 0:
+                    for fs in filter_salidas:
+                        ventas_nat = ventas_nat + fs.volNatBls
+                        ventas_cor = ventas_cor + fs.volCorBls
+                        ventas_tons = ventas_tons + fs.masaTons
+                        blsNat_turno_venta = blsNat_turno_venta + fs.volNatBls
+                        blsCor_turno_venta = blsCor_turno_venta + fs.volCorBls
+                        tons_turno_venta = tons_turno_venta + fs.masaTons
+                    dictTurno['ventas_nat'] = blsNat_turno_venta
+                    dictTurno['ventas_cor'] = blsCor_turno_venta
+                    dictTurno['ventas_tons'] = tons_turno_venta
+                    dictTurno['ventas_pgs'] = len(filter_salidas)
+                    ventas_pgs = ventas_pgs + len(filter_salidas)
+                else:
+                    dictTurno['ventas_nat'] = 0
+                    dictTurno['ventas_cor'] = 0
+                    dictTurno['ventas_tons'] = 0
+                    dictTurno['ventas_pgs'] = 0
+
+                # Leer data de inventarios de esferas inicio
+                esferas = [1,2]
+                
+                tot_volNat_esfera_ini = 0
+                tot_volCor_esfera_ini = 0
+                tot_tons_esfera_ini = 0
+                tot_volNat_esfera_fin = 0
+                tot_volCor_esfera_fin = 0
+                tot_tons_esfera_fin = 0
+
+                for j in esferas:
+                    if turno == 1:
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fechaAnt, Esfera.turno24 == 3, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dictTurno['turno'] = strTurnos[turno - 1]
+
+                        if dataEsferaInicio is None:
+                            dictTurno['inicial_nat'] = 0
+                            dictTurno['inicial_cor'] = 0
+                            dictTurno['inicial_tons'] = 0
+                        else:
+                            tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                            tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                            tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+
+                        dictTurno['inicial_nat'] = tot_volNat_esfera_ini
+                        dictTurno['inicial_cor'] = tot_volCor_esfera_ini
+                        dictTurno['inicial_tons'] = tot_tons_esfera_ini
+                        
+                        inicial_nat = tot_volNat_esfera_ini
+                        inicial_cor = tot_volCor_esfera_ini
+                        inicial_tons = tot_tons_esfera_ini
+
+                        dataEsferaFinal = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.turno24 == turno, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                        if dataEsferaFinal is None:
+                            dictTurno['final_nat'] = 0
+                            dictTurno['final_cor'] = 0
+                            dictTurno['final_tons'] = 0
+                        else:
+                            tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                            tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                            tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+
+                        dictTurno['final_nat'] = tot_volNat_esfera_fin
+                        dictTurno['final_cor'] = tot_volCor_esfera_fin
+                        dictTurno['final_tons'] = tot_tons_esfera_fin
+                        
+
+                    elif turno == 2:
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.turno24 == 1, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dictTurno['turno'] = strTurnos[turno - 1]
+                        
+                        if dataEsferaInicio is None:
+                            dictTurno['inicial_nat'] = 0
+                            dictTurno['inicial_cor'] = 0
+                            dictTurno['inicial_tons'] = 0
+                        else:
+                            tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                            tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                            tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+
+                        dictTurno['inicial_nat'] = tot_volNat_esfera_ini
+                        dictTurno['inicial_cor'] = tot_volCor_esfera_ini
+                        dictTurno['inicial_tons'] = tot_tons_esfera_ini
+
+                        dataEsferaFinal = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.turno24 == turno, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                        if dataEsferaFinal is None:
+                            dictTurno['final_nat'] = 0
+                            dictTurno['final_cor'] = 0
+                            dictTurno['final_tons'] = 0
+                        else:
+                            tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                            tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                            tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+
+                        dictTurno['final_nat'] = tot_volNat_esfera_fin
+                        dictTurno['final_cor'] = tot_volCor_esfera_fin
+                        dictTurno['final_tons'] = tot_tons_esfera_fin
+
+                    elif turno == 3:
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.turno24 == 2, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dictTurno['turno'] = strTurnos[turno - 1]
+                        
+                        if dataEsferaInicio is None:
+                            dictTurno['inicial_nat'] = 0
+                            dictTurno['inicial_cor'] = 0
+                            dictTurno['inicial_tons'] = 0
+                        else:
+                            tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                            tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                            tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+
+                        dictTurno['inicial_nat'] = tot_volNat_esfera_ini
+                        dictTurno['inicial_cor'] = tot_volCor_esfera_ini
+                        dictTurno['inicial_tons'] = tot_tons_esfera_ini
+
+                        dataEsferaFinal = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.turno24 == turno, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                        if dataEsferaFinal is None:
+                            dictTurno['final_nat'] = 0
+                            dictTurno['final_cor'] = 0
+                            dictTurno['final_tons'] = 0
+                        else:
+                            tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                            tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                            tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+                            final_nat = final_nat + tot_volNat_esfera_fin
+                            final_cor = final_cor + tot_volCor_esfera_fin
+                            final_tons = final_tons + tot_tons_esfera_fin
+
+                        dictTurno['final_nat'] = tot_volNat_esfera_fin
+                        dictTurno['final_cor'] = tot_volCor_esfera_fin
+                        dictTurno['final_tons'] = tot_tons_esfera_fin
+
+                dictTurno['dif_nat'] = tot_volNat_esfera_ini + blsNat_turno_rec - blsNat_turno_venta - tot_volNat_esfera_fin
+                dictTurno['dif_cor'] = tot_volCor_esfera_ini + blsCor_turno_rec - blsCor_turno_venta - tot_volCor_esfera_fin
+                dictTurno['dif_tons'] = tot_tons_esfera_ini + tons_turno_rec - tons_turno_venta - tot_tons_esfera_fin
+            
+            dataReporte.append(dictTurno)
+            dif_nat = inicial_nat + recibo_nat - ventas_nat - final_nat
+            dif_cor = inicial_cor + recibo_cor - ventas_cor - final_cor
+            dif_tons = inicial_tons + recibo_tons - ventas_tons - final_tons
+
+            dictTotales['turno'] = 'TOTAL'
+            dictTotales['inicial_nat'] = inicial_nat
+            dictTotales['inicial_cor'] = inicial_cor
+            dictTotales['inicial_tons'] = inicial_tons
+            dictTotales['recibo_nat'] = recibo_nat
+            dictTotales['recibo_cor'] = recibo_cor
+            dictTotales['recibo_tons'] = recibo_tons
+            dictTotales['ventas_nat'] = ventas_nat
+            dictTotales['ventas_cor'] = ventas_cor
+            dictTotales['ventas_tons'] = ventas_tons
+            dictTotales['ventas_pgs'] = ventas_pgs
+            dictTotales['final_nat'] = final_nat
+            dictTotales['final_cor'] = final_cor
+            dictTotales['final_tons'] = final_tons
+            dictTotales['dif_nat'] = dif_nat
+            dictTotales['dif_cor'] = dif_cor
+            dictTotales['dif_tons'] = dif_tons
+
+        dataReporte.append(dictTotales)
+        
+        BalanceDiario.truncate_table()
+        for rep in dataReporte:
+            itemSaved = registerBalanceDiarioItem(rep)
+
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        tipoRep = '_24' if tipo == 24 else ''
+        url_balance = f"{JASPER_SERVER}/rest_v2/reports/reportes/balances/balanceDiario{tipoRep}.pdf"
+        params = {
+            "fecha": fecha
+        }
+        
+        res = s.get(url=url_balance, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"balance_{fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
+    
+
+
+def registerBalanceDiarioItem(item):
+
+    itemSaved = BalanceDiario.create(
+        turno = item['turno'],
+        inicial_nat = item['inicial_nat'],
+        inicial_cor = item['inicial_cor'],
+        inicial_tons = item['inicial_tons'],
+        recibo_nat = item['recibo_nat'],
+        recibo_cor = item['recibo_cor'],
+        recibo_tons = item['recibo_tons'],
+        ventas_nat = item['ventas_nat'],
+        ventas_cor = item['ventas_cor'],
+        ventas_tons = item['ventas_tons'],
+        ventas_pgs = item['ventas_pgs'],
+        final_nat = item['final_nat'],
+        final_cor = item['final_cor'],
+        final_tons = item['final_tons'],
+        dif_nat = item['dif_nat'],
+        dif_cor = item['dif_cor'],
+        dif_tons = item['dif_tons'],
+    )
+
+    return itemSaved

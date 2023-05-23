@@ -27,6 +27,7 @@ from .database import Patin
 from .database import Cromatografo
 from .database import Bomba
 from .database import BombaReporte
+from .database import BalanceDiario
 from .database import database as connection
 
 from .opc import OpcServices
@@ -96,6 +97,7 @@ def startup():
         Cromatografo,
         Bomba,
         BombaReporte,
+        BalanceDiario,
     ])
     LogsServices.setNameFile()
     LogsServices.write('Iniciando api')

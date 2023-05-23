@@ -221,6 +221,8 @@ class TankInTrucks(Model):
     fechaFin = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
     reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    turno05 = IntegerField(null=True)
+    turno24 = IntegerField(null=True)
     tipoCarga = IntegerField(null=True)
     created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
 
@@ -481,6 +483,28 @@ class ConectorTanque(Model):
         table_name = 'conectores_tanques'
 
 
+class BalanceDiario(Model):
+    turno = CharField()
+    inicial_nat = DoubleField(null=True)
+    inicial_cor = DoubleField(null=True)
+    inicial_tons = DoubleField(null=True)
+    recibo_nat = DoubleField(null=True)
+    recibo_cor = DoubleField(null=True)
+    recibo_tons = DoubleField(null=True)
+    ventas_nat = DoubleField(null=True)
+    ventas_cor = DoubleField(null=True)
+    ventas_tons = DoubleField(null=True)
+    ventas_pgs = IntegerField(null=True)
+    final_nat = DoubleField(null=True)
+    final_cor = DoubleField(null=True)
+    final_tons = DoubleField(null=True)
+    dif_nat = DoubleField(null=True)
+    dif_cor = DoubleField(null=True)
+    dif_tons = DoubleField(null=True)
+
+    class Meta:
+        database = database
+        table_name = 'balance_diario'
 
 
 
