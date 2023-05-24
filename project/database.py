@@ -524,3 +524,24 @@ class ReportePatin(Model):
     class Meta:
         database = database
         table_name = 'recibo_patin'
+
+# Densidaddes
+class Densidades(Model):
+    hora = CharField()
+    fecha =  DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+    presSupEsf1 = DoubleField(null=True)
+    presSupInf1 = DoubleField(null=True)
+    presSupEsf2 = DoubleField(null=True)
+    presSupInf2 = DoubleField(null=True)
+    densNatEsf1 = DoubleField(null=True)
+    densNatEsf2 = DoubleField(null=True)
+    densitometro = DoubleField(null=True)
+    cromatografo = DoubleField(null=True)
+    analisisCrom = DoubleField(null=True)
+    reporte05 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    reporte24 =  DateField(default=datetime.now, formats='%Y-%m-%d')
+    created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
+
+    class Meta:
+        database = database
+        table_name = 'densidades'
