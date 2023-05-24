@@ -24,10 +24,12 @@ from .database import Bloqueado
 from .database import Caducidad
 from .database import Esfera
 from .database import Patin
+from .database import PatinData
 from .database import Cromatografo
 from .database import Bomba
 from .database import BombaReporte
 from .database import BalanceDiario
+from .database import ReportePatin
 from .database import database as connection
 
 from .opc import OpcServices
@@ -94,10 +96,12 @@ def startup():
         Caducidad,
         Esfera,
         Patin,
+        PatinData,
         Cromatografo,
         Bomba,
         BombaReporte,
         BalanceDiario,
+        ReportePatin,
     ])
     LogsServices.setNameFile()
     LogsServices.write('Iniciando api')
