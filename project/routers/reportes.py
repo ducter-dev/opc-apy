@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from typing import List
 from datetime import datetime, timedelta
 from ..schemas import FechaReportesRequestModel
-from ..database import BombaReporte, Bomba, Patin, TankInTrucks, Esfera, BalanceDiario
+from ..database import BombaReporte, Bomba, PatinData, TankInTrucks, Esfera, BalanceDiario, Patin, ReportePatin
 import peewee
 from peewee import *
 from peewee import fn
@@ -431,11 +431,11 @@ async def get_balance_diario_report(fecha: str, tipo: int):
         
         turnos = [1,2,3]
         if tipo == 5:
-            dataPatines = Patin.select().where(Patin.reporte05 == fecha)
+            dataPatines = PatinData.select().where(PatinData.reporte05 == fecha)
             dataSalidas = TankInTrucks.select().where(TankInTrucks.reporte05 == fecha)
             
         else:
-            dataPatines = Patin.select().where(Patin.reporte24 == fecha)
+            dataPatines = PatinData.select().where(PatinData.reporte24 == fecha)
             dataSalidas = TankInTrucks.select().where(TankInTrucks.reporte24 == fecha)
 
 
@@ -857,6 +857,76 @@ async def get_balance_diario_report(fecha: str, tipo: int):
         )
     
 
+@router.get('/patin-pares/{fecha}/tipo/{tipo}/patin/{patin}')
+async def get_patin_individual_report(fecha: str, tipo: int, patin: int):
+    try:
+
+        # Obtener la data de los patines
+        dataPatines = None
+        id_patin1 = 0
+        id_patin2 = 0
+        if patin == 401:
+            id_patin1 = 1
+            id_patin2 = 2
+        else:
+            id_patin1 = 3
+            id_patin2 = 4
+        if tipo == 5:
+            dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
+                (PatinData.reporte05 == fecha) & (PatinData.patin == id_patin1) |
+                (PatinData.reporte05 == fecha) & (PatinData.patin == id_patin2)
+            ).group_by(Patin.descripcion)
+        else:
+            dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
+                (PatinData.reporte24 == fecha) & (PatinData.patin == id_patin1) |
+                (PatinData.reporte24 == fecha) & (PatinData.patin == id_patin2)
+            ).group_by(Patin.descripcion)
+
+        if dataPatines is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": 'No hay registros'}
+            )
+        ReportePatin.truncate_table()
+        for dp in dataPatines.objects():
+            print(f'toneladas: {dp.toneladas}')
+            print(f'blsNat: {dp.blsNat}')
+            print(f'blsCor: {dp.blsCor}')
+            print(f'medidor: {dp.descripcion}')
+            itemSaved = resgisterReciboPatinItem(dp)
+
+
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        tipoRep = '_24' if tipo == 24 else ''
+        path_report = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}{tipoRep}.pdf"
+        print(path_report)
+        url_patin = path_report
+        params = {
+            "fecha": fecha
+        }
+        
+        res = s.get(url=url_patin, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"patin{patin}_{tipoRep}_{fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
+    
 
 def registerBalanceDiarioItem(item):
 
@@ -881,3 +951,15 @@ def registerBalanceDiarioItem(item):
     )
 
     return itemSaved
+
+
+
+def resgisterReciboPatinItem(item):
+    itemsaved = ReportePatin.create(
+        medidor = item.descripcion,
+        toneladas = item.toneladas,
+        blsNat = item.blsNat,
+        blsCor = item.blsCor,
+    )
+
+    return itemsaved

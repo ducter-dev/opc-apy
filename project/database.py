@@ -359,6 +359,13 @@ class Esfera(Model):
 
 
 class Patin(Model):
+    descripcion = CharField()
+    
+    class Meta:
+        database = database
+        table_name = 'patines'
+
+class PatinData(Model):
     hora = CharField()
     presion = DoubleField(null=True)
     flujoVolumen = DoubleField(null=True)
@@ -370,7 +377,7 @@ class Patin(Model):
     blsNat = DoubleField(null=True)
     blsCor = DoubleField(null=True)
     ton = DoubleField(null=True)
-    patin = DoubleField(null=True)
+    patin = ForeignKeyField(Patin, backref='patines')
     totalizadorBlsNat = DoubleField(null=True)
     totalizadorBlsCor = DoubleField(null=True)
     totalizadorMassTon = DoubleField(null=True)
@@ -382,7 +389,7 @@ class Patin(Model):
     created_at = DateTimeField(default=datetime.now, formats='%Y-%m-%d %H:%M:%S')
     class Meta:
         database = database
-        table_name = 'patines'
+        table_name = 'patin_data'
 
 
 class Cromatografo(Model):
@@ -508,7 +515,12 @@ class BalanceDiario(Model):
 
 
 
+class ReportePatin(Model):
+    medidor = CharField()
+    toneladas = DoubleField(null=True)
+    blsNat = DoubleField(null=True)
+    blsCor = DoubleField(null=True)
 
-
-
-
+    class Meta:
+        database = database
+        table_name = 'recibo_patin'

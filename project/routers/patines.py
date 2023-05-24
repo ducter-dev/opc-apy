@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime, timedelta
 from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
 
-from ..database import Patin, Bitacora
+from ..database import PatinData, Bitacora
 from ..schemas import PatinRequestModel, PatinResponseModel
 
 from ..opc import OpcServices
@@ -55,7 +55,7 @@ async def register_patin():
         FI_401A_VOL_NAT_PROM_DEC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-401A_VOL_NAT_PROM_DEC')
         FI_401A_VOL_NAT_PROM_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-401A_VOL_NAT_PROM_ENT')
 
-        patin1 = Patin.create(
+        patin1 = PatinData.create(
             hora = f"{hora}:00",
             presion = PI_401A_PROM / 100,
             temperatura = TI_401A_PROM / 100,
@@ -110,7 +110,7 @@ async def register_patin():
         FI_401B_VOL_NAT_PROM_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-401B_VOL_NAT_PROM_ENT')
 
 
-        patin2 = Patin.create(
+        patin2 = PatinData.create(
             hora = f"{hora}:00",
             presion = PI_401B_PROM / 100,
             temperatura = TI_401B_PROM / 100,
@@ -165,7 +165,7 @@ async def register_patin():
         FI_402A_VOL_NAT_PROM_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-402A_VOL_NAT_PROM_ENT')
 
 
-        patin3 = Patin.create(
+        patin3 = PatinData.create(
             hora = f"{hora}:00",
             presion = PI_402A_PROM / 100,
             temperatura = TI_402A_PROM / 100,
@@ -219,7 +219,7 @@ async def register_patin():
         FI_402B_VOL_NAT_PROM_DEC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-402B_VOL_NAT_PROM_DEC')
         FI_402B_VOL_NAT_PROM_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.FI-402B_VOL_NAT_PROM_ENT')
 
-        patin4 = Patin.create(
+        patin4 = PatinData.create(
             hora = f"{hora}:00",
             presion = PI_402B_PROM / 100,
             temperatura = TI_402B_PROM / 100,
@@ -264,5 +264,5 @@ async def register_patin():
 
 @router.get('', response_model=List[PatinResponseModel])
 async def get_patines():
-    patines = Patin.select()
+    patines = PatinData.select()
     return [ patin for patin in patines ]
