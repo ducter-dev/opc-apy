@@ -586,3 +586,21 @@ class BombaResponseModel(ResponseModel):
     turno05: int
     reporte24: date
     turno24: int
+
+
+# ---- Densidades ----
+class DensidadResponseModel(ResponseModel):
+    id: int
+    hora: str
+    fecha: datetime
+    presSupEsf1: float
+    presInfEsf1: float
+    presSupEsf2: float
+    presInfEsf2: float
+    densNatEsf1: float
+    densNatEsf2: float
+    densitometro: float
+    cromatografo: float
+    analisisCrom: float
+    reporte05: date
+    reporte24: date
