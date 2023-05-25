@@ -785,10 +785,15 @@ async def get_tanksInTrucks():
     return [ tankInTrucks for tankInTrucks in tanks ]
 
 
-@router.get('/salida/fecha/{fecha}', response_model=List[TankInTrucksResponseModel])
-async def get_tanksInTrucks(fecha: str):
-    tanks = TankInTrucks.select().where(TankInTrucks.reporte05 == fecha)
-    return [ tankInTrucks for tankInTrucks in tanks ]
+@router.get('/salida/fecha/{fecha}/limit/{limit}', response_model=List[TankInTrucksResponseModel])
+async def get_tanksInTrucks(fecha: str, limit: int):
+    if limit > 0 :
+        tanks = TankInTrucks.select().where(TankInTrucks.reporte05 == fecha).order_by(TankInTrucks.id.desc()).limit(limit)
+    else:
+        tanks = TankInTrucks.select().where(TankInTrucks.reporte05 == fecha).order_by(TankInTrucks.id.desc())
+    print(tanks)
+    print(len(tanks))
+    return [ tank for tank in tanks ]
 
 
 @router.put('/salida/{tank_id}', response_model=TankInTrucksResponseModel)

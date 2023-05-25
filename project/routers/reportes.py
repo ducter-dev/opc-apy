@@ -863,30 +863,41 @@ async def get_patin_individual_report(fecha: str, tipo: int, patin: int):
 
         # Obtener la data de los patines
         dataPatines = None
-        id_patin1 = 0
-        id_patin2 = 0
-        if patin == 401:
-            id_patin1 = 1
-            id_patin2 = 2
+        if patin == 400:
+            if tipo == 5:
+                dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
+                        PatinData.reporte05 == fecha).group_by(Patin.descripcion)
+                
+                print(dataPatines)
+            else:
+                dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
+                        PatinData.reporte24 == fecha).group_by(Patin.descripcion)
         else:
-            id_patin1 = 3
-            id_patin2 = 4
-        if tipo == 5:
-            dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
-                (PatinData.reporte05 == fecha) & (PatinData.patin == id_patin1) |
-                (PatinData.reporte05 == fecha) & (PatinData.patin == id_patin2)
-            ).group_by(Patin.descripcion)
-        else:
-            dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
-                (PatinData.reporte24 == fecha) & (PatinData.patin == id_patin1) |
-                (PatinData.reporte24 == fecha) & (PatinData.patin == id_patin2)
-            ).group_by(Patin.descripcion)
+            id_patin1 = 0
+            id_patin2 = 0
+            if patin == 401:
+                id_patin1 = 1
+                id_patin2 = 2
+            else:
+                id_patin1 = 3
+                id_patin2 = 4
+            if tipo == 5:
+                dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
+                    (PatinData.reporte05 == fecha) & (PatinData.patin == id_patin1) |
+                    (PatinData.reporte05 == fecha) & (PatinData.patin == id_patin2)
+                ).group_by(Patin.descripcion)
+            else:
+                dataPatines = PatinData.select(Patin, fn.SUM(PatinData.ton).alias('toneladas'), fn.SUM(PatinData.blsNat).alias('blsNat'), fn.SUM(PatinData.blsCor).alias('blsCor')).join(Patin).where(
+                    (PatinData.reporte24 == fecha) & (PatinData.patin == id_patin1) |
+                    (PatinData.reporte24 == fecha) & (PatinData.patin == id_patin2)
+                ).group_by(Patin.descripcion)
 
-        if dataPatines is None:
-            return JSONResponse(
-                status_code=404,
-                content={"message": 'No hay registros'}
-            )
+            if dataPatines is None:
+                return JSONResponse(
+                    status_code=404,
+                    content={"message": 'No hay registros'}
+                )
+            
         ReportePatin.truncate_table()
         for dp in dataPatines.objects():
             print(f'toneladas: {dp.toneladas}')
@@ -903,7 +914,10 @@ async def get_patin_individual_report(fecha: str, tipo: int, patin: int):
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
         tipoRep = '_24' if tipo == 24 else ''
-        path_report = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}{tipoRep}.pdf"
+        if patin == 400:
+            path_report = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patines{tipoRep}.pdf"
+        else:
+            path_report = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}{tipoRep}.pdf"
         print(path_report)
         url_patin = path_report
         params = {
