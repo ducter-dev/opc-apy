@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 def obtenerFecha05Reporte():
     now = datetime.now()
@@ -38,3 +38,7 @@ def obtenerDiaAnterior(fecha):
     fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
     fechaResult = (fechaDT - timedelta(days=1)).strftime('%Y-%m-%d')
     return fechaResult
+
+def obtenerUltimoDiaMes(any_day):
+    last_day = date(any_day.year, any_day.month + 1, 1) - timedelta(days=1)
+    return last_day

@@ -2,13 +2,13 @@ import requests
 from fastapi import APIRouter, Response
 from fastapi.responses import JSONResponse, FileResponse
 from typing import List
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from ..schemas import FechaReportesRequestModel
 from ..database import BombaReporte, Bomba, PatinData, TankInTrucks, Esfera, BalanceDiario, Patin, ReportePatin
 import peewee
 from peewee import *
 from peewee import fn
-from ..funciones import obtenerDiaAnterior
+from ..funciones import obtenerDiaAnterior, obtenerUltimoDiaMes
 
 
 import os
@@ -336,17 +336,6 @@ async def get_patin_report(fecha: str):
         )
     
 
-def getCromatografo(croma):
-    tabla_cromas = {
-        1: 'cromatografoIrge',
-        2: 'cromatografoC1',
-        3: 'cromatografoC2',
-        4: 'cromatografoC3',
-    }
-    
-    return tabla_cromas.get(croma, 0 )
-
-
 @router.get('/llenaderas/{llenadera}/fecha/{fecha}/tipo/{tipo}')
 async def get_esferas_report(llenadera: str, fecha: str,  tipo: int):
     try:
@@ -413,7 +402,6 @@ async def get_bitacora_report(fecha: str,  tipo: int):
             content={"message": e}
         )
     
-
 
 @router.get('/balance-diario/{fecha}/tipo/{tipo}')
 async def get_balance_diario_report(fecha: str, tipo: int):
@@ -973,6 +961,48 @@ async def get_bitacora_report(fecha: str,  tipo: int):
             status_code=501,
             content={"message": e}
         )
+    
+
+@router.get('/cromatografo-mensual/{fecha}/croma/{croma}/tipo/{tipo}')
+async def get_bitacora_report(fecha: str,  tipo: int, croma: str):
+    try:
+        fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
+        fechaI = date(fechaDT.year, fechaDT.month, 1)
+        fechaF = obtenerUltimoDiaMes(datetime.strptime(fecha, '%Y-%m-%d'))
+
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        tipoRep = '_24' if tipo == 24 else ''
+        cromaTipo = f'{croma}_{tipo}'
+        cromaSel = getNameCromatografoMensual(cromaTipo)
+        pathReport = f"{JASPER_SERVER}/rest_v2/reports/reportes/cromatografo/{cromaSel}.pdf"
+        url_densidades = pathReport
+        params = {
+            "fecha": fecha,
+            "fechaI": fechaI,
+            "fechaF": fechaF,
+        }
+        
+        res = s.get(url=url_densidades, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"densidades{tipoRep}_{fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
 
 
 def registerBalanceDiarioItem(item):
@@ -1009,3 +1039,30 @@ def resgisterReciboPatinItem(item):
     )
 
     return itemsaved
+
+
+def getNameCromatografoMensual(croma):
+    tabla_cromas = {
+        'irge_5': 'cromatografoIrge_mensual',
+        'irge_24': 'cromatografoIrge_mensual_24',
+        'c1_5': 'cromatografoC1_mensual',
+        'c1_24': 'cromatografoC1_mensual_24',
+        'c2_5': 'cromatografoC2_mensual',
+        'c2_24': 'cromatografoC2_mensual_24',
+        'c3_5': 'cromatografoC3_mensual',
+        'c3_24': 'cromatografoC3_mensual_24',
+
+    }
+    
+    return tabla_cromas.get(croma, 0 )
+
+
+def getCromatografo(croma):
+    tabla_cromas = {
+        1: 'cromatografoIrge',
+        2: 'cromatografoC1',
+        3: 'cromatografoC2',
+        4: 'cromatografoC3',
+    }
+    
+    return tabla_cromas.get(croma, 0 )
