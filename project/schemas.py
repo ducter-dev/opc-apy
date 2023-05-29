@@ -467,7 +467,7 @@ class EsferaRequestModel(BaseModel):
 
 class EsferaResponseModel(ResponseModel):
     id: int
-    hora: int
+    hora: str
     presion: float
     temperatura: float
     densidad: float
@@ -514,7 +514,7 @@ class PatinRequestModel(BaseModel):
 
 class PatinResponseModel(ResponseModel):
     id: int
-    hora: int
+    hora: str
     presion: float
     flujoVolumen: float
     flujoMasico: float
@@ -525,7 +525,7 @@ class PatinResponseModel(ResponseModel):
     blsNat: float
     blsCor: float
     ton: float
-    patin: int
+    patin_id: int
     totalizadorBlsNat: float
     totalizadorBlsCor: float
     totalizadorMassTon: float
@@ -537,7 +537,7 @@ class PatinResponseModel(ResponseModel):
 
 class CromatografoResponseModel(ResponseModel):
     id: int
-    hora: int
+    hora: str
     cromatrografo: str
     corriente: int
     c6: float
@@ -561,7 +561,7 @@ class CromatografoResponseModel(ResponseModel):
 
 class BombaResponseModel(ResponseModel):
     id: int
-    hora: int
+    hora: str
     bomba: str
     estatus: str
     totalHorasOper: int
