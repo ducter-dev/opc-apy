@@ -193,7 +193,9 @@ async def get_patin_report(patin: str, fecha: str, tipo: int):
         res = s.get(url=url_login, auth=auth)
         res.raise_for_status()
         tipoRep = '_24' if tipo == 24 else ''
-        url_patin = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}{tipoRep}.pdf"
+        url_report = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}{tipoRep}.pdf"
+        print(url_report)
+        url_patin = url_report
         params = {"fecha": fecha}
         
         res = s.get(url=url_patin, params=params, stream=True)
