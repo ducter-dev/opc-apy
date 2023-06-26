@@ -188,6 +188,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
         LogsServices.write(f"inicialTanque: {inicialTanque}")
         tipoAT = f'{inicialTanque}{tanque.atId}'
         LogsServices.write(f"tipoAT: {tipoAT}")
+        OpcServices.writeOPC(path_statusVerificado, 0)
 
         # Variables que se usan en asignacion
         llenaderaDisponible = OpcServices.readDataPLC(path_llenaderaDisponible)
@@ -219,7 +220,7 @@ async def post_realizarAsignacion(request: LlenaderaAsignarRequestModel):
 
                     # Escribir variables en los registros de la plc
                     OpcServices.writeOPC(path_ver_numPG, tanque.atId)
-                    OpcServices.writeOPC(path_ver_tipoAT, tipoAT)
+                    OpcServices.writeOPC(path_ver_tipoAT, tanque.atTipo)
                     OpcServices.writeOPC(path_ver_clave, tanque.atId)
                     OpcServices.writeOPC(path_ver_volProg, tanque.capacidad90)
                     OpcServices.writeOPC(path_ver_conector, tanque.conector)
@@ -536,8 +537,8 @@ async def postGetSenalesSalidas():
                 #LogsServices.write(f'************************************')
                 continue
             else:
-                LogsServices.write(f'-----------Revisar Folio----------')
-                LogsServices.write(f'llen: {llen}')
+                #LogsServices.write(f'-----------Revisar Folio----------')
+                #LogsServices.write(f'llen: {llen}')
                 #LogsServices.write(f'llenadera IsLibre: {llenaderaIsLibre}')
                 llenadera = Llenadera.select().where(Llenadera.numero == llen).first()
                 #LogsServices.write(f'llenadera: {llenadera.numero}')
@@ -547,11 +548,13 @@ async def postGetSenalesSalidas():
                 #LogsServices.write(f'pathFolioLlenadera: {pathFolioLlenadera}')
                 folioLlenadera = OpcServices.readDataPLC(pathFolioLlenadera)
                 #LogsServices.write(f'folioLlenadera: {folioLlenadera}')
+                #LogsServices.write(f'Llenadera: {llen}')
+                #LogsServices.write(f'folioLlenadera: {folioLlenadera}')
 
                 # Si folioPCL es diferente al folioDB Se registra - else se omite el registro
                 if (folioLlenadera != folioDB.folio):
                     # Obtener el tanque de la lista de Servicio
-                    LogsServices.write(f'-----------Registrar Carga----------')
+                    #LogsServices.write(f'-----------Registrar Carga----------')
                     tipoAtUCL = OpcServices.readDataPLC(getPLCLlenaderaTipo(llenadera.numero))
                     #tipoAtUCL = 12100
                     #LogsServices.write(f'tipoAtUCL: {tipoAtUCL}')
@@ -569,15 +572,18 @@ async def postGetSenalesSalidas():
                     #LogsServices.write(f'atID: {atID}')
                     #LogsServices.write(f'atType: {atType}')
                     tanqueToExit = TanksInService.select().where(TanksInService.atID == atID, TanksInService.atTipo == atType).order_by(TanksInService.id.desc()).first()
-
+                    #LogsServices.write(f'tanqueToExit.id: {tanqueToExit.id}')
+                    
                     registerInService = True
                     if tanqueToExit is None:
+
                         tanqueToExit = Tank.select().where(Tank.atId == atID, Tank.atTipo == atType).first()
                         if tanqueToExit is None:
                             continue
                         registerInService = False
                     
-                    #LogsServices.write(f'tanqueToExit.atName: {tanqueToExit.atName}')
+                    
+                    
                     volumen = OpcServices.readDataPLC(getVolumenLlenadera(llenadera.numero))
                     volumenBls = volumen / 158.9873
                     volumen20 = OpcServices.readDataPLC(getVolumenCorrLlenadera(llenadera.numero))
@@ -597,18 +603,25 @@ async def postGetSenalesSalidas():
                     minutoInicio = OpcServices.readDataPLC(getMinutoInicioLlenadera(llenadera.numero))
                     horaFin = OpcServices.readDataPLC(getHoraFinLlenadera(llenadera.numero))
                     minutoFin = OpcServices.readDataPLC(getMinutoFinLlenadera(llenadera.numero))
+
+                    
+                    
                     now = datetime.now()
                     fecha =  now.strftime("%Y-%m-%d")
                     fechaFin = f"{fecha} {horaFin}:{minutoFin}:00"
+                    LogsServices.write(f'fechaFin: {fechaFin}')
                     tipoCarga = 1 if masa > 0 else 0
 
                     fechaEntrada = ''
                     fechaInicio = ''
                     if tipoCarga == 1 :
+                        LogsServices.write(f'tanqueToExit.atName: {tanqueToExit.atName}')
+                        LogsServices.write(f'tanqueToExit.fechaEntrada: {tanqueToExit.fechaEntrada}')
+                        LogsServices.write(f'tanqueToExit.horaEntrada: {tanqueToExit.horaEntrada}')
 
                         if registerInService == True:
-                            fechaEntrada = f"{tanqueToExit.fechaEntrada} {tanqueToExit.horaEntrada}"
-                            fechaInicio = f"{anioInicio}-{mesInicio}-{diaInicio} {horaInicio}:{minutoInicio}:00"
+                            fechaEntrada = f'{tanqueToExit.fechaEntrada} {tanqueToExit.horaEntrada}'
+                            fechaInicio = datetime(anioInicio, mesInicio, diaInicio, horaInicio, minutoInicio, 0)
                             report24 = tanqueToExit.reporte24
                             report05 = tanqueToExit.reporte05
                             producto = tanqueToExit.productoNombre
@@ -626,6 +639,9 @@ async def postGetSenalesSalidas():
                             atID = tanqueToExit.atId
                             embarque = 0
                             capacidad = tanqueToExit.capacidad90
+                        
+                        #LogsServices.write(f"fechaEntrada: {fechaEntrada}")
+                        #LogsServices.write(f"fechaInicio: {fechaInicio}")
 
                         # Llenar datos de llenadera
                         salida = TankInTrucks.create(
@@ -658,7 +674,9 @@ async def postGetSenalesSalidas():
                             fechaFin = fechaFin,
                             reporte24 =  report24,
                             reporte05 =  report05,
-                            tipoCarga = tipoCarga
+                            tipoCarga = tipoCarga,
+                            turno05 = obtenerTurno05(horaFin),
+                            turno24 = obtenerTurno24(horaFin)
                         )
                         if registerInService == True:
                             tanqueToExit.delete_instance()
@@ -700,18 +718,19 @@ async def postGetSenalesSalidas():
                         # Mandar error al grabar la ultima salida.
                         # ---------------------------------------
                         # ---------------------------------------
-                        LogsServices.write(f'tanqueLastExit: {tanqueLastExit.atName} | {tanqueLastExit.atId} | {tanqueLastExit.atTipo} | {tanqueLastExit.conector} | {tanqueLastExit.capacidad} | {tanqueLastExit.fechaSalida}')
-                        LogsServices.write(f'************************************')
+                        #LogsServices.write(f'tanqueLastExit: {tanqueLastExit.atName} | {tanqueLastExit.atId} | {tanqueLastExit.atTipo} | {tanqueLastExit.conector} | {tanqueLastExit.capacidad} | {tanqueLastExit.fechaSalida}')
+                        #LogsServices.write(f'************************************')
                     else:
-                        LogsServices.write(f'llen: {llen}')
-                        LogsServices.write(f'Carga No Valida')
-                        LogsServices.write(f'************************************')
+                        #LogsServices.write(f'llen: {llen}')
+                        #LogsServices.write(f'Carga No Valida')
+                        #LogsServices.write(f'************************************')
+                        print(f'Carga No Valida')
                 else:
-                    LogsServices.write(f'llen: {llen}')
-                    LogsServices.write(f'-----------NO Registrar Carga----------')
-                    #print(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
+                    #LogsServices.write(f'llen: {llen}')
+                    #LogsServices.write(f'-----------NO Registrar Carga----------')
+                    print(f'-----------NO Registrar Carga----------')
                     #LogsServices.write(f'Llenadera {llenadera.numero} con folio plc {folioLlenadera} - folio BD: {folioDB.folio}')
-                    LogsServices.write(f'************************************')
+                    #LogsServices.write(f'************************************')
     except Exception as e:
         LogsServices.write(f'Error: {e}')
         return JSONResponse(
