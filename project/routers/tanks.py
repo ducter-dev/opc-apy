@@ -24,6 +24,10 @@ from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTur
 
 from ..opc import OpcServices
 
+# import all you need from fastapi-pagination
+from fastapi_pagination import paginate
+from fastapi_pagination.links import Page
+
 router = APIRouter(prefix='/api/v1/tanques', route_class=VerifyTokenRoute)
 
 
@@ -49,10 +53,23 @@ async def create_tanque(tank_request:TankRequestModel):
 
     return tank
 
-@router.get('', response_model=List[TankResponseModel])
+@router.get('', response_model=Page[TankResponseModel])
 async def get_tanks():
-    tanks = Tank.select()
-    return [ tank for tank in tanks ]
+    tanks = Tank.select().order_by(Tank.atId)
+    return paginate(tanks)
+
+
+@router.get('/all', response_model=List[TankResponseModel])
+async def get_tanks():
+    tanks = Tank.select().order_by(Tank.atId)
+    return [ tank for tank in tanks]
+
+
+@router.get('/search', response_model=Page[TankResponseModel])
+async def get_tanks_filter(atName: str):
+    print(atName)
+    tanks = Tank.select().where(Tank.atName.contains(atName))
+    return paginate(tanks)
 
 
 @router.get('/detalle/{tank_id}', response_model=TankResponseModel)

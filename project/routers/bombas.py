@@ -9,6 +9,9 @@ from ..schemas import BombaResponseModel
 
 from ..opc import OpcServices
 
+from fastapi_pagination import paginate
+from fastapi_pagination.links import Page
+
 from ..middlewares import VerifyTokenRoute
 router = APIRouter(prefix='/api/v1/bombas', route_class=VerifyTokenRoute)
 
@@ -142,10 +145,18 @@ async def register_bomba():
         )
 
 
+#@router.get('', response_model=Page[BombaResponseModel])
 @router.get('', response_model=List[BombaResponseModel])
-async def get_patines():
-    bombas = Bomba.select()
-    return [ bomba for bomba in bombas ]
+async def get_bombas():
+    try:
+        bombas = Bomba.select()
+        return [ bomba for bomba in bombas ]
+    except Exception as e:
+        print(e)
+        return JSONResponse(
+            status_code=501,
+            content={"message": str(e)}
+        )
 
 
 def getStatus(estado):

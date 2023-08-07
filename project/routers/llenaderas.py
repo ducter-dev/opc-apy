@@ -526,6 +526,7 @@ async def postGetSenalesSalidas():
         LogsServices.setNameFile()
         LogsServices.write('---------------- Revisando Salidas ---------------')
         numLlenaderas = [5,6,7,8,9,10,11,12,13,14]
+        
 
         for llen in numLlenaderas:
             url_llenaderaLibre = getPLCLlenaderaLibre(llen)
@@ -559,7 +560,7 @@ async def postGetSenalesSalidas():
                     #tipoAtUCL = 12100
                     #LogsServices.write(f'tipoAtUCL: {tipoAtUCL}')
                     tipoAtUCLSt = f"{tipoAtUCL}"
-                    #LogsServices.write(f'tipoAtUCLSt: {tipoAtUCLSt}')
+                    LogsServices.write(f'tipoAtUCLSt: {tipoAtUCLSt}')
                     atID = ''
                     atType = ''
                     if len(tipoAtUCLSt) < 5:
@@ -569,10 +570,9 @@ async def postGetSenalesSalidas():
                         atID = int(tipoAtUCLSt[1:5])
                         atType = int(tipoAtUCLSt[0])
 
-                    #LogsServices.write(f'atID: {atID}')
-                    #LogsServices.write(f'atType: {atType}')
+                    LogsServices.write(f'atID: {atID}')
+                    LogsServices.write(f'atType: {atType}')
                     tanqueToExit = TanksInService.select().where(TanksInService.atID == atID, TanksInService.atTipo == atType).order_by(TanksInService.id.desc()).first()
-                    #LogsServices.write(f'tanqueToExit.id: {tanqueToExit.id}')
                     
                     registerInService = True
                     if tanqueToExit is None:
@@ -583,7 +583,8 @@ async def postGetSenalesSalidas():
                         registerInService = False
                     
                     
-                    
+                    LogsServices.write(f'tanqueToExit.id: {tanqueToExit.id}')
+                    LogsServices.write(f'Registrado en servicio {registerInService}')
                     volumen = OpcServices.readDataPLC(getVolumenLlenadera(llenadera.numero))
                     volumenBls = volumen / 158.9873
                     volumen20 = OpcServices.readDataPLC(getVolumenCorrLlenadera(llenadera.numero))
@@ -604,22 +605,20 @@ async def postGetSenalesSalidas():
                     horaFin = OpcServices.readDataPLC(getHoraFinLlenadera(llenadera.numero))
                     minutoFin = OpcServices.readDataPLC(getMinutoFinLlenadera(llenadera.numero))
 
-                    
-                    
                     now = datetime.now()
                     fecha =  now.strftime("%Y-%m-%d")
                     fechaFin = f"{fecha} {horaFin}:{minutoFin}:00"
-                    LogsServices.write(f'fechaFin: {fechaFin}')
                     tipoCarga = 1 if masa > 0 else 0
 
                     fechaEntrada = ''
                     fechaInicio = ''
                     if tipoCarga == 1 :
-                        LogsServices.write(f'tanqueToExit.atName: {tanqueToExit.atName}')
-                        LogsServices.write(f'tanqueToExit.fechaEntrada: {tanqueToExit.fechaEntrada}')
-                        LogsServices.write(f'tanqueToExit.horaEntrada: {tanqueToExit.horaEntrada}')
-
+                        
                         if registerInService == True:
+                            LogsServices.write(f'tanqueToExit.atName: {tanqueToExit.atName}')
+                            LogsServices.write(f'tanqueToExit.fechaEntrada: {tanqueToExit.fechaEntrada}')
+                            LogsServices.write(f'tanqueToExit.horaEntrada: {tanqueToExit.horaEntrada}')
+
                             fechaEntrada = f'{tanqueToExit.fechaEntrada} {tanqueToExit.horaEntrada}'
                             fechaInicio = datetime(anioInicio, mesInicio, diaInicio, horaInicio, minutoInicio, 0)
                             report24 = tanqueToExit.reporte24
@@ -630,8 +629,8 @@ async def postGetSenalesSalidas():
                             embarque = tanqueToExit.embarque
                             capacidad = tanqueToExit.capacidad
                         else:
-                            fechaEntrada: now.strftime("%Y-%m-%d %H:%M:%S")
-                            fechaInicio: fechaEntrada
+                            fechaEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
+                            fechaInicio = fechaEntrada
                             report24 = obtenerFecha24Reporte()
                             report05 = obtenerFecha05Reporte()
                             producto = 'Propano'
@@ -734,7 +733,7 @@ async def postGetSenalesSalidas():
     except Exception as e:
         LogsServices.write(f'Error: {e}')
         return JSONResponse(
-            status_code=501,
+            status_code=201,
             content={"message": str(e)}
         )
 

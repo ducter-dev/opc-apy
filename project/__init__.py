@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+# import all you need from fastapi-pagination
+from fastapi_pagination import add_pagination
+
 import time
 from .logs import LogsServices
 
@@ -73,6 +76,8 @@ app.include_router(patin_router)
 app.include_router(croma_router)
 app.include_router(bomba_router)
 
+
+
 @app.on_event('startup')
 def startup():
     if connection.is_closed():
@@ -116,7 +121,7 @@ def startup():
         LogsServices.write('No se pudo conectara OPC Server.')
 
 
-
+add_pagination(app)
 @app.on_event('shutdown')
 def shutdown():
     if not connection.is_closed():

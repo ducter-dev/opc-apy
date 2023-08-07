@@ -1,6 +1,6 @@
 from datetime import date, datetime, time
-from typing import Any, List
-from pydantic import validator
+from typing import Any, List, Generic
+from pydantic import field_validator
 from pydantic import BaseModel
 from pydantic.utils import GetterDict
 from peewee import ModelSelect
@@ -8,21 +8,21 @@ from peewee import ModelSelect
 
 class PeeweeGetterDict(GetterDict):
     def get(self, key: Any, default: Any = None):
-      
-      res = getattr(self._obj, key, default)
-      if isinstance(res, ModelSelect):
-        return List
 
-      return res
+        res = getattr(self._obj, key, default)
+        if isinstance(res, ModelSelect):
+            return List
+
+        return res
 
 class ResponseModel(BaseModel):
-    class Config:
-      orm_mode = True
-      getter_dict = PeeweeGetterDict
+    class ConfigDict:
+        from_attributes = True
+        getter_dict = PeeweeGetterDict
 
 
-class UserValidator():
-    @validator('username')
+""" class UserValidator():
+    @field_validator('username')
     def username_validator(cls, username):
         if len(username) < 3 or len(username) > 20:
             raise ValueError('La longitud debe ser entre 3 y 20 caracteres.')
@@ -30,7 +30,7 @@ class UserValidator():
         return username
     
 
-    @validator('password')
+    @field_validator('password')
     def password_validator(cls, password):
         if len(password) < 8 or len(password) > 16:
             raise ValueError('La longitud debe ser entre 8 y 16 caracteres.')
@@ -38,7 +38,7 @@ class UserValidator():
         return password
     
 
-    @validator('categoria')
+    @field_validator('categoria')
     def categoria_validator(cls, categoria):
         if categoria < 1:
             raise ValueError('La categoría debe ser mayor a 0.')
@@ -46,17 +46,17 @@ class UserValidator():
         return categoria
 
 
-    @validator('departamento')
+    @field_validator('departamento')
     def departamento_validator(cls, departamento):
         if departamento < 1:
             raise ValueError('El departamento debe ser mayor a 0.')
 
         return departamento
-
+ """
 
 
 # --------- user ---------
-class UserRequestModel(BaseModel, UserValidator):
+class UserRequestModel(BaseModel):
     username: str
     password: str
     categoria: int
@@ -69,12 +69,12 @@ class UserResponseModel(ResponseModel):
     categoria: int
     departamento: int
 
-class UserRequestPutModel(BaseModel, UserValidator):
+class UserRequestPutModel(BaseModel):
     username: str
     categoria: int
     departamento: int
 
-class UserChangePasswordRequestModel(BaseModel, UserValidator):
+class UserChangePasswordRequestModel(BaseModel):
     user_id: int
     password: str
 
@@ -569,7 +569,7 @@ class BombaResponseModel(ResponseModel):
     totalTiempoOper: str
     horasOper: int
     minsOper: int
-    enOper: str
+    enOper: int
     horasMantto: int
     minsMantto: int
     enMantto: str

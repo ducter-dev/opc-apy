@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
-from ..database import User, Bloqueado
+from ..database import User, Bloqueado, Caducidad
 from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, BloqueadosRequestModel, BloqueadosResponseModel, BloqueadosUserRequestModel
 from typing import List
 from ..middlewares import VerifyTokenRoute
@@ -43,8 +43,20 @@ async def delete_user(user_id: int):
     if user is None:
         raise HTTPException(status_code=404, detail='Usuario no encontrado')
 
-    user.delete_instance()
-
+    try:
+        user.delete_instance()
+    
+    except Exception as e:
+        if ('1451' in str(e)):
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'No se puede eliminar el usuario porque tiene información almacenada.'}
+            )
+        else:
+            return JSONResponse(
+                status_code=501,
+                content={"message": str(e)}
+            )
     return user
 
 

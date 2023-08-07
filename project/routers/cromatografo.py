@@ -103,7 +103,7 @@ async def register_cromatografo():
             turno05 = turno05,
             reporte24 = fecha24,
             turno24 = turno24
-    )
+        )
 
         C6_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.C6_EB4_STR1')
         PROPANO_EB4_STR1 = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.PROPANO_EB4_STR1')
@@ -215,7 +215,7 @@ async def register_cromatografo():
         bitacora = Bitacora.create(
             user = 1,
             evento = 9,
-            actividad = 'Patines registrados correctamente.',
+            actividad = 'Cromotógrafo registrado correctamente.',
             fecha = ahora,
             reporte24 = fecha24,
             reporte05 = fecha05
@@ -223,7 +223,7 @@ async def register_cromatografo():
         
         return JSONResponse(
             status_code=201,
-            content={"message": 'Cromatografo registrados correctamente.'}
+            content={"message": 'Cromatografo registrado correctamente.'}
         )
         
     except Exception as e:
