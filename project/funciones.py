@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta, date
+import random
+import string
 
 def obtenerFecha05Reporte():
     now = datetime.now()
@@ -42,3 +44,9 @@ def obtenerDiaAnterior(fecha):
 def obtenerUltimoDiaMes(any_day):
     last_day = date(any_day.year, any_day.month + 1, 1) - timedelta(days=1)
     return last_day
+
+def generar_cadena_aleatoria(longitud):
+    caracteres = string.ascii_letters + string.digits
+    cadena_aleatoria = ''.join(random.choice(caracteres) for _ in range(longitud))
+    return cadena_aleatoria
+

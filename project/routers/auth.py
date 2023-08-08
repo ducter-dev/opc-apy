@@ -9,7 +9,9 @@ from ..tokenServices import validate_token, write_token
 
 from ..database import User, Caducidad, Bloqueado, Bitacora
 from datetime import datetime, timedelta
-from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, generar_cadena_aleatoria
+from ..emails import EmailServices
+from ..logs import LogsServices
 router = APIRouter(prefix='/api/v1/auth')
 
 @router.post('/login')
@@ -55,40 +57,54 @@ async def login(credentials: HTTPBasicCredentials):
     }
     return data_dic
 
-@router.post('/register', response_model=UserResponseModel)
+#@router.post('/register', response_model=UserResponseModel)
+@router.post('/register')
 async def create_user(user_req: UserRequestModel):
+    try:
+        if User.select().where(User.username == user_req.username).exists():
+            raise HTTPException(409, 'El usuario ya se encuentra en uso.')
+        
+        password_random = generar_cadena_aleatoria(10)
 
-    if User.select().where(User.username == user_req.username).exists():
-        raise HTTPException(409, 'El usuario ya se encuentra en uso.')
+        hash_password = User.create_password(password_random)
 
-    hash_password = User.create_password(user_req.password)
-    user = User.create(
-        username = user_req.username,
-        password = hash_password,
-        categoria = user_req.categoria,
-        departamento = user_req.departamento
-    )
-    usuarioRegistra = User.select().where(User.id == user_req.registra).first()
-    Caducidad.create(
-        password = user.password,
-        caducidad = user.created_at,
-        ultimoAcceso = user.created_at,
-        estado = 1,
-        user = user.id
-    )
-    fecha05 = obtenerFecha05Reporte()
-    fecha24 = obtenerFecha24Reporte()
+        user = User.create(
+            username = user_req.username,
+            password = hash_password,
+            email = user_req.email,
+            categoria = user_req.categoria,
+            departamento = user_req.departamento
+        )
 
-    Bitacora.create(
-        user = usuarioRegistra.id,
-        evento = 3,
-        actividad = f"El usuario {usuarioRegistra.username} ha registrado a {user.username}",
-        fecha = user.created_at,
-        reporte24 = fecha24,
-        reporte05 = fecha05
-    )
-    return user
+        Caducidad.create(
+            password = user.password,
+            caducidad = user.created_at,
+            ultimoAcceso = user.created_at,
+            estado = 1,
+            user = user.id
+        )
+        
+        
+        enviar_email = EmailServices.enviar_correo_activacion(user, password_random)
 
+        fecha05 = obtenerFecha05Reporte()
+        fecha24 = obtenerFecha24Reporte()
+
+        Bitacora.create(
+            user = 1,
+            evento = 3,
+            actividad = f"El usuario {user.username} ha sido registrado.",
+            fecha = user.created_at,
+            reporte24 = fecha24,
+            reporte05 = fecha05
+        )
+        return user
+    
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
 
 @router.post('/update-password', response_model=UserResponseModel)
 async def change_password(request_user: UserChangePasswordRequestModel):

@@ -58,10 +58,10 @@ class ResponseModel(BaseModel):
 # --------- user ---------
 class UserRequestModel(BaseModel):
     username: str
-    password: str
+    #password: str
+    email: str
     categoria: int
     departamento: int
-    registra: int
 
 class UserResponseModel(ResponseModel):
     id: int

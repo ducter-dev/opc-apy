@@ -26,6 +26,7 @@ database = MySQLDatabase(DATABASE_DB,
 class User(Model):
     username = CharField(max_length=50, unique=True)
     password = CharField()
+    email = CharField()
     categoria = IntegerField(default=3)
     departamento = IntegerField(default=3)
     created_at = DateTimeField(default=datetime.now)
