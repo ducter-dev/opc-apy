@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.params import Header
 from fastapi.security import HTTPBasicCredentials
 from fastapi.templating import Jinja2Templates
-from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, UserChangePasswordRequestModel, BloqueadosResponseModel, BloqueadosUserRequestModel, BloqueadosRequestModel
+from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, UserChangePasswordRequestModel, BloqueadosResponseModel, BloqueadosUserRequestModel, BloqueadosRequestModel, UserRecuperePasswordRequestModel
 
 from ..tokenServices import validate_token, write_token
 
@@ -147,9 +147,9 @@ async def activar_cuenta(token: str, request: Request):
 @router.post('/update-password', response_model=UserResponseModel)
 async def change_password(request_user: UserChangePasswordRequestModel):
     try: 
-        req_email = request_user.email
+        req_id = request_user.id
         req_pass = request_user.password
-        user = User.select().where(User.email == req_email).first()
+        user = User.select().where(User.id == req_id).first()
 
         if user is None:
             return JSONResponse(
@@ -278,3 +278,79 @@ async def status_bloqueados(request: BloqueadosUserRequestModel):
         status_code=501,
         content={"message": e}
     )
+
+@router.post('/recuperar-password')
+async def recovery_password(request: UserRecuperePasswordRequestModel):
+    try:
+        LogsServices.setNameFile()
+        email = request.email
+        LogsServices.write(f'email: {email}')
+        #   Obtener el usuario por medio del email
+        user = User.select().where(User.email == email).first()
+        
+        if user.verificado is None:
+            return JSONResponse(
+                status_code=419,
+                content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
+            )
+        
+        LogsServices.write(f'user {user.username}')
+
+        password_random = generar_cadena_aleatoria(10)
+        LogsServices.write(f'password_random: {password_random}')
+        hash_password = User.create_password(password_random)
+        LogsServices.write(f'hash_password: {hash_password}')
+
+        contrasenas = Caducidad.select().where(Caducidad.user == user.id)
+        if len(contrasenas) > 0:
+            existPassword = False
+            for i in range(len(contrasenas)):
+                #   Revisa que la password no exista ya
+                user_exist = User.validate_password(password_random, contrasenas[i].password)
+                #   Si existe retornamos error y mensaje ·
+                    
+                if user_exist:
+                    existPassword = True
+
+            if existPassword:
+                return JSONResponse(
+                    status_code=422,
+                    content={"message": "La contraseña ya fue registrada antes, intente con otra."}
+                )
+            else:
+                #   Actualizar password de usuario
+                hash_password = User.create_password(password_random)
+                user.password = hash_password
+                user.save()
+                
+                #   Actualizar estados de password en caducidad
+                for i in range(len(contrasenas)):
+                    contrasenas[i].estado = 2
+                    contrasenas[i].save()
+                
+                #   Insertar registro en caducidad
+                now = datetime.now()
+                ahora = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
+                fechaCaducidad = now + timedelta(days=60)
+                fechaCaducidadStr = fechaCaducidad.strftime('%Y-%m-%d %H:%M:%S')
+
+                Caducidad.create(
+                    password = hash_password,
+                    caducidad = fechaCaducidadStr,
+                    ultimoAcceso = ahora,
+                    estado = 1,
+                    user = user.id
+                )
+
+                #   Enviar correo con las nuevas credenciales
+                enviar_email = EmailServices.enviar_correo_recovery_password(user, password_random)
+                LogsServices.write(f'enviar_email: {enviar_email}')
+                return JSONResponse(
+                    status_code=200,
+                    content={"message": 'Sus nuevas credenciales se han enviado a su correo.'}
+                )
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )

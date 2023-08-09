@@ -76,8 +76,11 @@ class UserRequestPutModel(BaseModel):
     departamento: int
 
 class UserChangePasswordRequestModel(BaseModel):
-    email: str
+    id: int
     password: str
+
+class UserRecuperePasswordRequestModel(BaseModel):
+    email: str
 
 
 # --------- TanksWaiting ---------
