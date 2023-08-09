@@ -76,7 +76,7 @@ class UserRequestPutModel(BaseModel):
     departamento: int
 
 class UserChangePasswordRequestModel(BaseModel):
-    user_id: int
+    email: str
     password: str
 
 
