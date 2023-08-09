@@ -147,16 +147,21 @@ async def activar_cuenta(token: str, request: Request):
 @router.post('/update-password', response_model=UserResponseModel)
 async def change_password(request_user: UserChangePasswordRequestModel):
     try: 
-        user_id_req = request_user.user_id
-        pass_req = request_user.password
-        
-        contrasenas = Caducidad.select().where(Caducidad.user == user_id_req)
+        req_email = request_user.email
+        req_pass = request_user.password
+        user = User.select().where(User.email == req_email).first()
+
+        if user is None:
+            return JSONResponse(
+                status_code=422,
+                content={"message": "El correo no se encuentra registrado, verifique su información."}
+            )
+        contrasenas = Caducidad.select().where(Caducidad.user == user.id)
         if len(contrasenas) > 0:
             existPassword = False
             for i in range(len(contrasenas)):
                 #   Revisa que la password no exista ya
-                
-                user_exist = User.validate_password(pass_req, contrasenas[i].password)
+                user_exist = User.validate_password(req_pass, contrasenas[i].password)
                 #   Si existe retornamos error y mensaje ·
                 
                 if user_exist:
@@ -169,10 +174,9 @@ async def change_password(request_user: UserChangePasswordRequestModel):
                 )
             else:
                 #   Actualizar password de usuario
-                hash_password = User.create_password(pass_req)
-                userBD = User.select().where(User.id == user_id_req).first()
-                userBD.password = hash_password
-                userBD.save()
+                hash_password = User.create_password(req_pass)
+                user.password = hash_password
+                user.save()
 
 
                 for i in range(len(contrasenas)):
@@ -184,18 +188,22 @@ async def change_password(request_user: UserChangePasswordRequestModel):
                 ahora = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
                 fechaCaducidad = now + timedelta(days=60)
                 fechaCaducidadStr = fechaCaducidad.strftime('%Y-%m-%d %H:%M:%S')
+                
                 #   Insertar registro en caducidad
                 Caducidad.create(
                     password = hash_password,
                     caducidad = fechaCaducidadStr,
                     ultimoAcceso = ahora,
                     estado = 1,
-                    user = userBD.id
+                    user = user.id
                 )
 
+                #   Enviar correo con las nuevas credenciales
+
+        enviar_email = EmailServices.enviar_correo_nueva_password(user, req_pass)
         return JSONResponse(
-            status_code=201,
-            content={"message": True}
+            status_code=200,
+            content={"message": 'Credenciales actualizadas'}
         )
     except Exception as e:
         return JSONResponse(
@@ -208,7 +216,6 @@ async def change_password(request_user: UserChangePasswordRequestModel):
 async def verify_token(Authorization: str = Header(None)):
     token = Authorization.split(' ')[1]
     return validate_token(token, output=True)
-
 
 
 @router.post('/bloqueados', response_model=BloqueadosResponseModel)
@@ -271,4 +278,3 @@ async def status_bloqueados(request: BloqueadosUserRequestModel):
         status_code=501,
         content={"message": e}
     )
-    
