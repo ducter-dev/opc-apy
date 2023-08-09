@@ -25,10 +25,11 @@ database = MySQLDatabase(DATABASE_DB,
 # ---------- usuarios ---------- #
 class User(Model):
     username = CharField(max_length=50, unique=True)
-    password = CharField()
+    password = CharField(unique=True)
     email = CharField()
     categoria = IntegerField(default=3)
     departamento = IntegerField(default=3)
+    verificado = DateTimeField(null=True)
     created_at = DateTimeField(default=datetime.now)
 
     def __str__(self):

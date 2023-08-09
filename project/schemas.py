@@ -52,7 +52,7 @@ class ResponseModel(BaseModel):
             raise ValueError('El departamento debe ser mayor a 0.')
 
         return departamento
- """
+"""
 
 
 # --------- user ---------
@@ -68,6 +68,7 @@ class UserResponseModel(ResponseModel):
     username: str
     categoria: int
     departamento: int
+
 
 class UserRequestPutModel(BaseModel):
     username: str

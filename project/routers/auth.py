@@ -1,8 +1,10 @@
 from fastapi import HTTPException
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse
+from fastapi import Request
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.params import Header
 from fastapi.security import HTTPBasicCredentials
+from fastapi.templating import Jinja2Templates
 from ..schemas import UserResponseModel, UserRequestModel, UserRequestPutModel, UserChangePasswordRequestModel, BloqueadosResponseModel, BloqueadosUserRequestModel, BloqueadosRequestModel
 
 from ..tokenServices import validate_token, write_token
@@ -13,6 +15,8 @@ from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, generar_ca
 from ..emails import EmailServices
 from ..logs import LogsServices
 router = APIRouter(prefix='/api/v1/auth')
+
+templates = Jinja2Templates(directory="templates")
 
 @router.post('/login')
 async def login(credentials: HTTPBasicCredentials):
@@ -58,11 +62,15 @@ async def login(credentials: HTTPBasicCredentials):
     return data_dic
 
 #@router.post('/register', response_model=UserResponseModel)
-@router.post('/register')
+@router.post('/register', response_model=UserResponseModel)
 async def create_user(user_req: UserRequestModel):
     try:
+        LogsServices.setNameFile()
         if User.select().where(User.username == user_req.username).exists():
-            raise HTTPException(409, 'El usuario ya se encuentra en uso.')
+            return JSONResponse(
+                status_code=501,
+                content={"message": 'El usuario ya se encuentra en uso.'}
+            )
         
         password_random = generar_cadena_aleatoria(10)
 
@@ -86,6 +94,7 @@ async def create_user(user_req: UserRequestModel):
         
         
         enviar_email = EmailServices.enviar_correo_activacion(user, password_random)
+        LogsServices.write(f'enviar_email: {enviar_email}')
 
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
@@ -105,6 +114,27 @@ async def create_user(user_req: UserRequestModel):
             status_code=501,
             content={"message": e}
         )
+
+@router.get('/activar-cuenta/{token}', response_class=HTMLResponse)
+async def activar_cuenta(token: str, request: Request):
+    try:
+        LogsServices.setNameFile()
+        id_cuenta_desencriptado, token_desencriptado, success = EmailServices.desencriptar_enlace(token)
+        LogsServices.write(f'success: {success}')
+        LogsServices.write(f'id_cuenta_desencriptado: {id_cuenta_desencriptado}')
+        LogsServices.write(f'token_desencriptado: {token_desencriptado}')
+
+        user = User.select().where(User.id == id_cuenta_desencriptado).first()
+        now = datetime.now()
+        ahora = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
+        user.verificado = ahora
+        user.save()
+        
+        return templates.TemplateResponse('count_activated.html', {"request": request})
+    except Exception as e:
+        print(e)
+        return False
+
 
 @router.post('/update-password', response_model=UserResponseModel)
 async def change_password(request_user: UserChangePasswordRequestModel):
