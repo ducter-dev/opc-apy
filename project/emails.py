@@ -1502,7 +1502,7 @@ class EmailServices():
                                 <td align="left" style="font-size:0px;padding:0px 25px 0px 25px;padding-top:0px;padding-right:50px;padding-bottom:0px;padding-left:50px;word-break:break-word;">
                                 <div style="font-family:Open Sans, Helvetica, Arial, sans-serif;font-size:13px;line-height:22px;text-align:left;color:#797e82;">
         """
-        html2 = f'<p style="margin: 10px 0; text-align: center;">Hola {user.username}, tus credenciales sonlas siguientes:.&nbsp;</p>'
+        html2 = f'<p style="margin: 10px 0; text-align: center;">Hola {user.username}, tus credenciales son las siguientes:.&nbsp;</p>'
         html4 = f'<p style="margin: 10px 0; text-align: center;">Usuario: {user.username}&nbsp;</p>'
         html5 = f'<p style="margin: 10px 0; text-align: center;">Password: { password_plain }&nbsp;</p>'
         html6 = """

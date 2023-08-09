@@ -41,6 +41,25 @@ async def login(credentials: HTTPBasicCredentials):
             content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
         )
     
+    
+    now = datetime.now()
+    ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+
+    password_actual = Caducidad.select().where((Caducidad.user == user.id) & (Caducidad.estado == 1)).first()
+
+    if password_actual is None:
+        return JSONResponse(
+            status_code=419,
+            content={"message": "Error en la caducidad de credenciales."}
+        )
+    
+    if password_actual.caducidad <= now:
+        return JSONResponse(
+            status_code=419,
+            content={"message": "Las credenciales han cadudado. Debe renovar sus credenciales."}
+        )
+
+    
     user_dict = {
         "id": user.id,
         "username": user.username,
@@ -51,8 +70,6 @@ async def login(credentials: HTTPBasicCredentials):
 
     fecha05 = obtenerFecha05Reporte()
     fecha24 = obtenerFecha24Reporte()
-    now = datetime.now()
-    ahora = now.strftime("%Y-%m-%d %H:%M:%S")
 
     Bitacora.create(
         user = user.id,
