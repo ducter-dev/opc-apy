@@ -20,6 +20,7 @@ templates = Jinja2Templates(directory="templates")
 
 @router.post('/login')
 async def login(credentials: HTTPBasicCredentials):
+
     user = User.select().where(User.username == credentials.username).first()
     if user is None:
         return JSONResponse(
@@ -34,11 +35,18 @@ async def login(credentials: HTTPBasicCredentials):
             content={"message": "Las credenciales no coinciden con nuestros registros."}
         )
     
+    if user.verificado is None:
+        return JSONResponse(
+            status_code=419,
+            content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
+        )
+    
     user_dict = {
         "id": user.id,
         "username": user.username,
         "categoria": user.categoria,
-        "departamento": user.departamento
+        "departamento": user.departamento,
+        "verificado": user.verificado.strftime("%Y-%m-%d %H:%M:%S")
     }
 
     fecha05 = obtenerFecha05Reporte()
