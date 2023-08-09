@@ -2,12 +2,14 @@ import smtplib
 import os
 import secrets
 import hashlib
+import base64
 from os.path import join, dirname
 from dotenv import load_dotenv
 from .database import User
 from .logs import LogsServices
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from cryptography.fernet import Fernet
 
 dotenv_path = join(dirname(__file__), '.env')
 load_dotenv(dotenv_path)
@@ -19,18 +21,19 @@ MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
 MAIL_ENCRYPTION = os.environ.get('MAIL_ENCRYPTION')
 MAIL_FROM_ADDRESS = os.environ.get('MAIL_FROM_ADDRESS')
 MAIL_FROM_NAME = os.environ.get('MAIL_FROM_NAME')
+KEY_APP = os.environ.get('KEY_APP')
 
 class EmailServices():
     servidor = MAIL_HOST
     puerto_smtp = MAIL_PORT
     usuario = MAIL_USERNAME
     clave = MAIL_PASSWORD
+    key = KEY_APP
 
 
     @classmethod
     def enviar_correo_activacion(self, user: User, password_plain: str):
         try:
-
             # Aquí iría la lógica para enviar el correo con el enlace de activación al usuario
             # Crear el objeto SMTP
             conexion_smtp = smtplib.SMTP(self.servidor, self.puerto_smtp)
@@ -41,6 +44,7 @@ class EmailServices():
 
             asunto = 'Registro a SCA v2'
             enlace_activacion = self.generar_enlace_activacion(user.id)
+            LogsServices.write(f'enlace_activacion: {enlace_activacion}')
             
             sender = 'info@scav2.com'
             # Crear el objeto MIMEMultipart
@@ -75,18 +79,32 @@ class EmailServices():
             }
 
 
+
+    @classmethod
+    def generarClaveCifrado(self):
+        key = Fernet.generate_key()
+        LogsServices.write(f'key: {key}')
+
+
     @classmethod
     def generar_enlace_activacion(self, usuario_id: int):
-        # Generar un token seguro
+
+        # Generar un token aleatorio para el enlace
         token = secrets.token_urlsafe(32)
 
-        # Crear un hash HMAC del token utilizando el ID del usuario como clave
-        hmac_key = str(usuario_id).encode()
-        hmac_hash = hashlib.sha256(hmac_key).hexdigest()
+        # Concatenar el identificador y el token
+        mensaje = f'{token}:{usuario_id}'
+        LogsServices.write(f'mensaje: {mensaje}')
+        LogsServices.write(f'key: {self.key}')
+        mensaje_encriptado = self.encrypt(mensaje.encode(), self.key)
+        LogsServices.write(f'mensaje_encriptado: {mensaje_encriptado}')
+        cadena_encriptada = base64.urlsafe_b64encode(mensaje_encriptado).decode()
+        LogsServices.write(f'cadena_encriptada: {cadena_encriptada}')
 
-        # Combinar el token y el hash HMAC en un enlace de activación
-        enlace_activacion = f"http://10.122.50.96/api/v1/activar-cuenta/{token}/{hmac_hash}"
-
+        # Link original
+        enlace_activacion = f"http://10.122.50.90/sca/api/v1/auth/activar-cuenta/{cadena_encriptada}"
+        LogsServices.write(f'enlace_activacion: {enlace_activacion}')
+        
         return enlace_activacion
 
 
@@ -600,3 +618,31 @@ class EmailServices():
         mensaje = "" + html1 + html2 + html3 + html4 + html5 + html6 + html7 + html8  + html9 + html10
         return mensaje
         
+
+    @classmethod
+    def desencriptar_enlace(self, enlace_encriptado: str):
+        try:
+            # Desencriptar el enlace
+            cadena_activacion_encriptada = base64.urlsafe_b64decode(enlace_encriptado).decode()
+            LogsServices.write(cadena_activacion_encriptada)
+            cadena_activacion_desencriptada_bytes = self.decrypt(cadena_activacion_encriptada, self.key)
+            LogsServices.write(f'cadena_activacion_desencriptada_bytes: {cadena_activacion_desencriptada_bytes}')
+            cadena_activacion_desencriptada = cadena_activacion_desencriptada_bytes.decode()
+            LogsServices.write(f'cadena_activacion_desencriptada: {cadena_activacion_desencriptada}')
+            token, id_cuenta = cadena_activacion_desencriptada.split(':')
+            LogsServices.write(f'token: {token}')
+            LogsServices.write(f'id_cuenta: {id_cuenta}')
+            return id_cuenta, token, True
+        
+        except Exception as e:
+            return e, None, False
+        
+    @classmethod
+    def encrypt(self, message: bytes, key: bytes) -> bytes:
+        LogsServices.write(f'key: {key}')
+        return Fernet(key).encrypt(message)
+
+
+    @classmethod
+    def decrypt(self, token: bytes, key: bytes) -> bytes:
+        return Fernet(key).decrypt(token)
