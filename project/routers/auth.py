@@ -37,7 +37,7 @@ async def login(credentials: HTTPBasicCredentials):
     
     if user.verificado is None:
         return JSONResponse(
-            status_code=419,
+            status_code=420,
             content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
         )
     
@@ -49,13 +49,13 @@ async def login(credentials: HTTPBasicCredentials):
 
     if password_actual is None:
         return JSONResponse(
-            status_code=419,
+            status_code=421,
             content={"message": "Error en la caducidad de credenciales."}
         )
     
     if password_actual.caducidad <= now:
         return JSONResponse(
-            status_code=419,
+            status_code=422,
             content={"message": "Las credenciales han cadudado. Debe renovar sus credenciales."}
         )
 
