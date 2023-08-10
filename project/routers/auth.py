@@ -41,9 +41,20 @@ async def login(credentials: HTTPBasicCredentials):
             content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
         )
     
-    
     now = datetime.now()
     ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+    #   Ver si hay bloqueos
+
+    bloqueo = Bloqueado.select().where(Bloqueado.user == user.id).order_by(Bloqueado.id.desc()).first()
+
+    if bloqueo is not None:
+        if now <= bloqueo.fechaDesbloqueo:
+            return JSONResponse(
+                status_code=423,
+                content={"message": f'Usuario {user.username} permanece aún bloquedo hasta {bloqueo.fechaDesbloqueo.strftime("%Y-%m-%d %H:%M:%S")}.'}
+            )    
+    
+    #   Ver si el password es caduco
 
     password_actual = Caducidad.select().where((Caducidad.user == user.id) & (Caducidad.estado == 1)).first()
 
@@ -243,12 +254,14 @@ async def insert_bloqueados(request: BloqueadosRequestModel):
             status_code=200,
             content={"message": 'Usuario no encontrado.'}
         )
-
-    fechaDesbloqueo = datetime.strptime(request.fechaBloqueo, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=15)
+    now = datetime.now()
+    ahora = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
+    fechaBloqueo = ahora
+    fechaDesbloqueo = datetime.strptime(fechaBloqueo, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=15)
     bloqueado = Bloqueado.create(
         user = userBlock.id,
-        fechaBloqueo = request.fechaBloqueo,
-        fechaDesbloqueo = fechaDesbloqueo,
+        fechaBloqueo = fechaBloqueo,
+        fechaDesbloqueo = fechaDesbloqueo.strftime('%Y-%m-%d %H:%M:%S'),
     )
     return bloqueado
 

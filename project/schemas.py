@@ -431,7 +431,6 @@ class FoliosResponseModel(ResponseModel):
 
 class BloqueadosRequestModel(BaseModel):
     user: str
-    fechaBloqueo: str
 
 class BloqueadosResponseModel(ResponseModel):
     id: int
