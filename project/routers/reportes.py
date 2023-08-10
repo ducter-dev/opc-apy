@@ -194,7 +194,7 @@ async def get_patin_report(patin: str, fecha: str, tipo: int):
         res.raise_for_status()
         tipoRep = '_24' if tipo == 24 else ''
         url_report = f"{JASPER_SERVER}/rest_v2/reports/reportes/patines/Patin{patin}{tipoRep}.pdf"
-        print(url_report)
+        
         url_patin = url_report
         params = {"fecha": fecha}
         

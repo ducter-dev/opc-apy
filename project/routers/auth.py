@@ -11,7 +11,7 @@ from ..tokenServices import validate_token, write_token
 
 from ..database import User, Caducidad, Bloqueado, Bitacora
 from datetime import datetime, timedelta
-from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, generar_cadena_aleatoria
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, generar_cadena_aleatoria, obtenerFechaCaducidad
 from ..emails import EmailServices
 from ..logs import LogsServices
 router = APIRouter(prefix='/api/v1/auth')
@@ -119,10 +119,12 @@ async def create_user(user_req: UserRequestModel):
             categoria = user_req.categoria,
             departamento = user_req.departamento
         )
+        
+        fechaCaducidad = obtenerFechaCaducidad(user.created_at.strftime('%Y-%m-%d %H:%M:%S'))
 
         Caducidad.create(
             password = user.password,
-            caducidad = user.created_at,
+            caducidad = fechaCaducidad,
             ultimoAcceso = user.created_at,
             estado = 1,
             user = user.id
@@ -318,11 +320,18 @@ async def recovery_password(request: UserRecuperePasswordRequestModel):
         #   Obtener el usuario por medio del email
         user = User.select().where(User.email == email).first()
         
+        if user is None:
+            return JSONResponse(
+                status_code=419,
+                content={"message": "No se encontró el usuario."}
+            )
+        
         if user.verificado is None:
             return JSONResponse(
                 status_code=419,
                 content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
             )
+
         
         LogsServices.write(f'user {user.username}')
 

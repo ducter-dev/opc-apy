@@ -50,3 +50,8 @@ def generar_cadena_aleatoria(longitud):
     cadena_aleatoria = ''.join(random.choice(caracteres) for _ in range(longitud))
     return cadena_aleatoria
 
+
+def obtenerFechaCaducidad(fecha):
+    fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
+    fechaResult = (fechaDT + timedelta(days=60)).strftime('%Y-%m-%d')
+    return fechaResult
