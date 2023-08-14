@@ -67,7 +67,7 @@ async def login(credentials: HTTPBasicCredentials):
     if password_actual.caducidad <= now:
         return JSONResponse(
             status_code=422,
-            content={"message": "Las credenciales han cadudado. Debe renovar sus credenciales."}
+            content={"message": "Las credenciales han cadudado. Debe renovar sus credenciales.", "data": user.id}
         )
 
     
@@ -184,8 +184,10 @@ async def change_password(request_user: UserChangePasswordRequestModel):
         if user is None:
             return JSONResponse(
                 status_code=422,
-                content={"message": "El correo no se encuentra registrado, verifique su información."}
+                content={"message": "El usuario no se encuentra registrado, verifique su información."}
             )
+        
+        #   Obtenemos los registros de sus passwords para ver que no ponga una repetida
         contrasenas = Caducidad.select().where(Caducidad.user == user.id)
         if len(contrasenas) > 0:
             existPassword = False
@@ -233,7 +235,7 @@ async def change_password(request_user: UserChangePasswordRequestModel):
         enviar_email = EmailServices.enviar_correo_nueva_password(user, req_pass)
         return JSONResponse(
             status_code=200,
-            content={"message": 'Credenciales actualizadas'}
+            content={"message": 'Credenciales actualizadas.'}
         )
     except Exception as e:
         return JSONResponse(
