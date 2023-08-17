@@ -59,7 +59,7 @@ async def get_cargas_diarias_report(fecha: str, tipo: int):
     
 
 @router.get('/ultimas-cargas/{fecha}/tipo/{tipo}')
-async def get_cargas_diarias_report(fecha: str, tipo: int):
+async def get_ultimas_cargas_report(fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -90,7 +90,7 @@ async def get_cargas_diarias_report(fecha: str, tipo: int):
 
 
 @router.get('/lista-llegada/{fecha}/tipo/{tipo}')
-async def get_cargas_diarias_report(fecha: str, tipo: int):
+async def get_lista_llegada_report(fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -121,7 +121,7 @@ async def get_cargas_diarias_report(fecha: str, tipo: int):
 
 
 @router.get('/despacho-diario/{fecha}/tipo/{tipo}')
-async def get_cargas_diarias_report(fecha: str, tipo: int):
+async def get_despacho_diario_report(fecha: str, tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
