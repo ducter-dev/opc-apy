@@ -34,6 +34,7 @@ from .database import BombaReporte
 from .database import BalanceDiario
 from .database import ReportePatin
 from .database import Densidad
+from .database import BalanceMensual
 from .database import database as connection
 
 from .opc import OpcServices
@@ -107,6 +108,7 @@ def startup():
         Bomba,
         BombaReporte,
         BalanceDiario,
+        BalanceMensual,
         ReportePatin,
         Densidad,
     ])

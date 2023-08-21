@@ -4,12 +4,12 @@ from fastapi.responses import JSONResponse, FileResponse
 from typing import List
 from datetime import datetime, timedelta, date
 from ..schemas import FechaReportesRequestModel
-from ..database import BombaReporte, Bomba, PatinData, TankInTrucks, Esfera, BalanceDiario, Patin, ReportePatin
+from ..database import BombaReporte, Bomba, PatinData, TankInTrucks, Esfera, BalanceDiario, Patin, ReportePatin, BalanceMensual
 import peewee
 from peewee import *
 from peewee import fn
-from ..funciones import obtenerDiaAnterior, obtenerUltimoDiaMes
-
+from ..funciones import obtenerDiaAnterior, obtenerUltimoDiaMes, obtenerUltimoDiaMesOrAhora
+from ..logs import LogsServices
 
 import os
 from os.path import join, dirname
@@ -465,9 +465,9 @@ async def get_balance_diario_report(fecha: str, tipo: int):
                         blsNat_turno_rec = blsNat_turno_rec + fa.volUnc
                         blsCor_turno_rec = blsCor_turno_rec + fa.blsCor
                         tons_turno_rec = tons_turno_rec + fa.ton
-                        recibo_nat = blsNat_turno_rec + fa.volUnc
-                        recibo_cor = blsCor_turno_rec + fa.blsCor
-                        recibo_tons = tons_turno_rec + fa.ton
+                        recibo_nat = recibo_nat + fa.volUnc
+                        recibo_cor = recibo_cor + fa.blsCor
+                        recibo_tons = recibo_tons + fa.ton
 
                     dictTurno['recibo_nat'] = blsNat_turno_rec
                     dictTurno['recibo_cor'] = blsCor_turno_rec
@@ -483,12 +483,12 @@ async def get_balance_diario_report(fecha: str, tipo: int):
                 #print(f'Salidas {len(filter_salidas)}')
                 if len(filter_salidas) > 0:
                     for fs in filter_salidas:
-                        ventas_nat = ventas_nat + fs.volNatBls
-                        ventas_cor = ventas_cor + fs.volCorBls
-                        ventas_tons = ventas_tons + fs.masaTons
                         blsNat_turno_venta = blsNat_turno_venta + fs.volNatBls
                         blsCor_turno_venta = blsCor_turno_venta + fs.volCorBls
                         tons_turno_venta = tons_turno_venta + fs.masaTons
+                        ventas_nat = ventas_nat + fs.volNatBls
+                        ventas_cor = ventas_cor + fs.volCorBls
+                        ventas_tons = ventas_tons + fs.masaTons
                     dictTurno['ventas_nat'] = blsNat_turno_venta
                     dictTurno['ventas_cor'] = blsCor_turno_venta
                     dictTurno['ventas_tons'] = tons_turno_venta
@@ -607,9 +607,10 @@ async def get_balance_diario_report(fecha: str, tipo: int):
                             tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
                             tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
                             tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
-                            final_nat = final_nat + tot_volNat_esfera_fin
-                            final_cor = final_cor + tot_volCor_esfera_fin
-                            final_tons = final_tons + tot_tons_esfera_fin
+                    
+                        final_nat = tot_volNat_esfera_fin
+                        final_cor = tot_volCor_esfera_fin
+                        final_tons =  tot_tons_esfera_fin
 
                         dictTurno['final_nat'] = tot_volNat_esfera_fin
                         dictTurno['final_cor'] = tot_volCor_esfera_fin
@@ -847,6 +848,248 @@ async def get_balance_diario_report(fecha: str, tipo: int):
         )
     
 
+@router.get('/balance-mensual/{fecha}/tipo/{tipo}')
+async def get_balance_mensual_report(fecha: str, tipo: int):
+    try:
+        # Función para llenar la tabla de balance mensual
+        # periodo = '2023-08'
+        LogsServices.setNameFile()
+        
+        # Obtener el último día
+        fechaF = obtenerUltimoDiaMesOrAhora(datetime.strptime(fecha, '%Y-%m-%d'))
+        ultimoDiaDT = datetime.strptime(fechaF, '%Y-%m-%d')
+        dia_fin =ultimoDiaDT.day
+        
+        fechaAnt = obtenerDiaAnterior(fecha)
+
+        #   Declaramos los arrays donde almacenaremos la data
+        dataReporte = []
+        dictTotales = {}
+
+        # Variables para llenar el reporte
+        inicial_nat = 0
+        inicial_cor = 0
+        inicial_tons = 0
+        recibo_nat = 0
+        recibo_cor = 0
+        recibo_tons = 0
+        ventas_nat = 0
+        ventas_cor = 0
+        ventas_tons = 0
+        final_nat = 0
+        final_cor = 0
+        final_tons = 0
+
+        # recorremos las fechas
+        for i in range(1, dia_fin+1):
+            fechaDT = datetime(ultimoDiaDT.year, ultimoDiaDT.month, i)
+            fecha = fechaDT.strftime('%Y-%m-%d')
+            fecha_dia = fechaDT.strftime('%d')
+
+            #   inicializamos variables en el ciclo 
+            dictFecha = {}
+
+            # obtenemos la data por día
+            if tipo == 5:
+                dataPatines = PatinData.select().where(PatinData.reporte05 == fecha)
+                dataSalidas = TankInTrucks.select().where(TankInTrucks.reporte05 == fecha)
+            
+            else:
+                dataPatines = PatinData.select().where(PatinData.reporte24 == fecha)
+                dataSalidas = TankInTrucks.select().where(TankInTrucks.reporte24 == fecha)
+            
+            dictFecha['dia'] = fecha_dia
+            blsNat_fecha_rec = 0
+            blsCor_fecha_rec = 0
+            tons_fecha_rec = 0
+            blsNat_fecha_venta = 0
+            blsCor_fecha_venta = 0
+            tons_fecha_venta = 0
+
+            #   Recorriendo las entradas
+            for dP in dataPatines:
+                blsNat_fecha_rec = blsNat_fecha_rec + dP.volUnc
+                blsCor_fecha_rec = blsCor_fecha_rec + dP.blsCor
+                tons_fecha_rec = tons_fecha_rec + dP.ton
+                recibo_nat = recibo_nat + dP.volUnc
+                recibo_cor = recibo_cor + dP.blsCor
+                recibo_tons = recibo_tons + dP.ton
+
+            dictFecha['recibo_nat'] = blsNat_fecha_rec
+            dictFecha['recibo_cor'] = blsCor_fecha_rec
+            dictFecha['recibo_tons'] = tons_fecha_rec
+            
+            #   Recorriendo las salidas
+            for dS in dataSalidas:
+                blsNat_fecha_venta = blsNat_fecha_venta + dS.volNatBls
+                blsCor_fecha_venta = blsCor_fecha_venta + dS.volCorBls
+                tons_fecha_venta = tons_fecha_venta + dS.masaTons
+                ventas_nat = ventas_nat + dS.volNatBls
+                ventas_cor = ventas_cor + dS.volCorBls
+                ventas_tons = ventas_tons + dS.masaTons
+            dictFecha['ventas_nat'] = blsNat_fecha_venta
+            dictFecha['ventas_cor'] = blsCor_fecha_venta
+            dictFecha['ventas_tons'] = tons_fecha_venta
+
+            # Leer data de inventarios de esferas inicio
+            esferas = [1,2]
+                
+
+            tot_volNat_esfera_ini = 0
+            tot_volCor_esfera_ini = 0
+            tot_tons_esfera_ini = 0
+            tot_volNat_esfera_fin = 0
+            tot_volCor_esfera_fin = 0
+            tot_tons_esfera_fin = 0
+
+            if tipo == 5:
+                for j in esferas:
+                    dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fechaAnt, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+            
+                    if dataEsferaInicio is None:
+                        dictFecha['inicial_nat'] = 0
+                        dictFecha['inicial_cor'] = 0
+                        dictFecha['inicial_tons'] = 0
+                    else:
+                        tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                        tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                        tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+                    
+                    dictFecha['inicial_nat'] = tot_volNat_esfera_ini
+                    dictFecha['inicial_cor'] = tot_volCor_esfera_ini
+                    dictFecha['inicial_tons'] = tot_tons_esfera_ini
+
+                    inicial_nat = tot_volNat_esfera_ini
+                    inicial_cor = tot_volCor_esfera_ini
+                    inicial_tons = tot_tons_esfera_ini
+
+
+                    dataEsferaFinal = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                    if dataEsferaFinal is None:
+                        dictFecha['final_nat'] = 0
+                        dictFecha['final_cor'] = 0
+                        dictFecha['final_tons'] = 0
+                    else:
+                        tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                        tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                        tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+                    
+                    final_nat = tot_volNat_esfera_fin
+                    final_cor = tot_volCor_esfera_fin
+                    final_tons = tot_tons_esfera_fin
+
+                    dictFecha['final_nat'] = tot_volNat_esfera_fin
+                    dictFecha['final_cor'] = tot_volCor_esfera_fin
+                    dictFecha['final_tons'] = tot_tons_esfera_fin
+
+                dictFecha['dif_nat'] = tot_volNat_esfera_fin + blsNat_fecha_venta - tot_volNat_esfera_ini + blsNat_fecha_rec
+                dictFecha['dif_cor'] = tot_volCor_esfera_fin + blsCor_fecha_venta - tot_volCor_esfera_ini + blsCor_fecha_rec
+                dictFecha['dif_tons'] = tot_tons_esfera_fin + tons_fecha_venta - tot_tons_esfera_ini + tons_fecha_rec
+
+            else:
+                for j in esferas:
+                    dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fechaAnt, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+            
+                    if dataEsferaInicio is None:
+                        dictFecha['inicial_nat'] = 0
+                        dictFecha['inicial_cor'] = 0
+                        dictFecha['inicial_tons'] = 0
+                    else:
+                        tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
+                        tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
+                        tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
+                    
+                    dictFecha['inicial_nat'] = tot_volNat_esfera_ini
+                    dictFecha['inicial_cor'] = tot_volCor_esfera_ini
+                    dictFecha['inicial_tons'] = tot_tons_esfera_ini
+
+                    inicial_nat = tot_volNat_esfera_ini
+                    inicial_cor = tot_volCor_esfera_ini
+                    inicial_tons = tot_tons_esfera_ini
+
+
+                    dataEsferaFinal = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+
+                    if dataEsferaFinal is None:
+                        dictFecha['final_nat'] = 0
+                        dictFecha['final_cor'] = 0
+                        dictFecha['final_tons'] = 0
+                    else:
+                        tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
+                        tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
+                        tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
+                        dictFecha['final_nat'] = tot_volNat_esfera_fin
+                        dictFecha['final_cor'] = tot_volCor_esfera_fin
+                        dictFecha['final_tons'] = tot_tons_esfera_fin
+
+                    final_nat = tot_volNat_esfera_fin
+                    final_cor = tot_volCor_esfera_fin
+                    final_tons = tot_tons_esfera_fin
+
+                    
+                
+                dictFecha['dif_nat'] = tot_volNat_esfera_fin + blsNat_fecha_venta - tot_volNat_esfera_ini + blsNat_fecha_rec
+                dictFecha['dif_cor'] = tot_volCor_esfera_fin + blsCor_fecha_venta - tot_volCor_esfera_ini + blsCor_fecha_rec
+                dictFecha['dif_tons'] = tot_tons_esfera_fin + tons_fecha_venta - tot_tons_esfera_ini + tons_fecha_rec
+
+            dataReporte.append(dictFecha)
+            dif_nat = final_nat + ventas_nat - inicial_nat + recibo_nat
+            dif_cor = final_cor + ventas_cor - inicial_cor + recibo_cor
+            dif_tons = final_tons + ventas_tons - inicial_tons + recibo_tons
+
+        dictTotales['dia'] = 'TOTAL'
+        dictTotales['inicial_nat'] = inicial_nat
+        dictTotales['inicial_cor'] = inicial_cor
+        dictTotales['inicial_tons'] = inicial_tons
+        dictTotales['recibo_nat'] = recibo_nat
+        dictTotales['recibo_cor'] = recibo_cor
+        dictTotales['recibo_tons'] = recibo_tons
+        dictTotales['ventas_nat'] = ventas_nat
+        dictTotales['ventas_cor'] = ventas_cor
+        dictTotales['ventas_tons'] = ventas_tons
+        dictTotales['final_nat'] = final_nat
+        dictTotales['final_cor'] = final_cor
+        dictTotales['final_tons'] = final_tons
+        dictTotales['dif_nat'] = dif_nat
+        dictTotales['dif_cor'] = dif_cor
+        dictTotales['dif_tons'] = dif_tons
+
+        dataReporte.append(dictTotales)
+        
+        BalanceMensual.truncate_table()
+        for rep in dataReporte:
+            itemSaved = registerBalanceMensualItem(rep)
+
+        hoy = datetime.now().strftime('%Y-%m-%d')
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        tipoRep = '_24' if tipo == 24 else ''
+        url_balance = f"{JASPER_SERVER}/rest_v2/reports/reportes/balances/BalanceMensual{tipoRep}.pdf"
+        params = {
+            "fecha": hoy
+        }
+        
+        res = s.get(url=url_balance, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"balance_{hoy}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
+    
+
 @router.get('/patin-pares/{fecha}/tipo/{tipo}/patin/{patin}')
 async def get_patin_individual_report(fecha: str, tipo: int, patin: int):
     try:
@@ -970,7 +1213,7 @@ async def get_bitacora_report(fecha: str,  tipo: int, croma: str):
     try:
         fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
         fechaI = date(fechaDT.year, fechaDT.month, 1)
-        fechaF = obtenerUltimoDiaMes(datetime.strptime(fecha, '%Y-%m-%d'))
+        fechaF = obtenerUltimoDiaMesOrAhora(datetime.strptime(fecha, '%Y-%m-%d'))
 
         # buffer = io.BytesIO()
         s = requests.session()
@@ -1008,7 +1251,7 @@ async def get_bitacora_report(fecha: str,  tipo: int, croma: str):
 
 
 def registerBalanceDiarioItem(item):
-
+    
     itemSaved = BalanceDiario.create(
         turno = item['turno'],
         inicial_nat = item['inicial_nat'],
@@ -1021,6 +1264,30 @@ def registerBalanceDiarioItem(item):
         ventas_cor = item['ventas_cor'],
         ventas_tons = item['ventas_tons'],
         ventas_pgs = item['ventas_pgs'],
+        final_nat = item['final_nat'],
+        final_cor = item['final_cor'],
+        final_tons = item['final_tons'],
+        dif_nat = item['dif_nat'],
+        dif_cor = item['dif_cor'],
+        dif_tons = item['dif_tons'],
+    )
+
+    return itemSaved
+
+
+def registerBalanceMensualItem(item):
+    LogsServices.write(f"item['dif_nat']: {item['dif_nat']}")
+    itemSaved = BalanceMensual.create(
+        dia = item['dia'],
+        inicial_nat = item['inicial_nat'],
+        inicial_cor = item['inicial_cor'],
+        inicial_tons = item['inicial_tons'],
+        recibo_nat = item['recibo_nat'],
+        recibo_cor = item['recibo_cor'],
+        recibo_tons = item['recibo_tons'],
+        ventas_nat = item['ventas_nat'],
+        ventas_cor = item['ventas_cor'],
+        ventas_tons = item['ventas_tons'],
         final_nat = item['final_nat'],
         final_cor = item['final_cor'],
         final_tons = item['final_tons'],
