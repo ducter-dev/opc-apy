@@ -1234,7 +1234,7 @@ async def get_bitacora_report(fecha: str,  tipo: int, croma: str):
         
         res = s.get(url=url_densidades, params=params, stream=True)
         res.raise_for_status()
-        filename = f"densidades{tipoRep}_{fecha}.pdf"
+        filename = f"cromatografo_mensual_{croma}{tipoRep}_{fecha}.pdf"
         path = f'./downloads/{filename}'
 
         with open(path, 'wb') as f:
