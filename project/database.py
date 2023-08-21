@@ -516,6 +516,30 @@ class BalanceDiario(Model):
         table_name = 'balance_diario'
 
 
+class BalanceMensual(Model):
+    dia = CharField()
+    inicial_nat = DoubleField(null=True)
+    inicial_cor = DoubleField(null=True)
+    inicial_tons = DoubleField(null=True)
+    recibo_nat = DoubleField(null=True)
+    recibo_cor = DoubleField(null=True)
+    recibo_tons = DoubleField(null=True)
+    ventas_nat = DoubleField(null=True)
+    ventas_cor = DoubleField(null=True)
+    ventas_tons = DoubleField(null=True)
+    ventas_pgs = IntegerField(null=True)
+    final_nat = DoubleField(null=True)
+    final_cor = DoubleField(null=True)
+    final_tons = DoubleField(null=True)
+    dif_nat = DoubleField(null=True)
+    dif_cor = DoubleField(null=True)
+    dif_tons = DoubleField(null=True)
+
+    class Meta:
+        database = database
+        table_name = 'balance_mensual'
+
+
 
 class ReportePatin(Model):
     medidor = CharField()

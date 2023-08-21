@@ -43,7 +43,21 @@ def obtenerDiaAnterior(fecha):
 
 def obtenerUltimoDiaMes(any_day):
     last_day = date(any_day.year, any_day.month + 1, 1) - timedelta(days=1)
-    return last_day
+    last_day_dt = datetime.combine(last_day, datetime.min.time())
+    return last_day_dt.strftime("%Y-%m-%d")
+
+
+def obtenerUltimoDiaMesOrAhora(any_day):
+    last_day = date(any_day.year, any_day.month + 1, 1) - timedelta(days=1)
+    last_day_dt = datetime.combine(last_day, datetime.min.time())
+    now = datetime.now()
+    last_day_str = ''
+    if now < last_day_dt:
+        last_day_str = now.strftime("%Y-%m-%d")
+    else:
+        last_day_str = last_day_dt.strftime("%Y-%m-%d")
+
+    return last_day_str
 
 def generar_cadena_aleatoria(longitud):
     caracteres = string.ascii_letters + string.digits
