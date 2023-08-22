@@ -10,11 +10,19 @@ from datetime import datetime, timedelta
 
 router = APIRouter(prefix='/api/v1/users', route_class=VerifyTokenRoute)
 
+from fastapi_pagination import paginate
+from fastapi_pagination.links import Page
 
-@router.get('', response_model=List[UserResponseModel])
+@router.get('', response_model=Page[UserResponseModel])
 async def get_users():
     users = User.select()
-    return [ user for user in users ]
+    return paginate(users)
+
+
+@router.get('/search', response_model=Page[UserResponseModel])
+async def get_users_filter(name: str):
+    users = User.select().where(User.username.contains(name))
+    return paginate(users)
 
 
 
@@ -28,9 +36,11 @@ async def put_user(user_id: int, req: UserRequestPutModel):
             content={"message": 'Usuario no encontrado.'}
         )
 
+    user.nombre = req.nombre
     user.username = req.username
     user.categoria = req.categoria
     user.departamento = req.departamento
+    user.email = req.email
     user.save()
 
     return user

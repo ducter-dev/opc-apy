@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, date
 import random
 import string
+from .logs import LogsServices
 
 def obtenerFecha05Reporte():
     now = datetime.now()
@@ -66,6 +67,9 @@ def generar_cadena_aleatoria(longitud):
 
 
 def obtenerFechaCaducidad(fecha):
-    fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
-    fechaResult = (fechaDT + timedelta(days=60)).strftime('%Y-%m-%d')
-    return fechaResult
+    try:
+        fechaDT = datetime.strptime(fecha, '%Y-%m-%d %H:%M:%S')
+        fechaResult = (fechaDT + timedelta(days=60)).strftime('%Y-%m-%d %H:%M:%S')
+        return fechaResult
+    except Exception as e:
+        LogsServices.write(f'error: {e}')

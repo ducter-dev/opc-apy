@@ -113,6 +113,7 @@ async def create_user(user_req: UserRequestModel):
         hash_password = User.create_password(password_random)
 
         user = User.create(
+            nombre = user_req.nombre,
             username = user_req.username,
             password = hash_password,
             email = user_req.email,
@@ -121,7 +122,6 @@ async def create_user(user_req: UserRequestModel):
         )
         
         fechaCaducidad = obtenerFechaCaducidad(user.created_at.strftime('%Y-%m-%d %H:%M:%S'))
-
         Caducidad.create(
             password = user.password,
             caducidad = fechaCaducidad,
@@ -129,7 +129,6 @@ async def create_user(user_req: UserRequestModel):
             estado = 1,
             user = user.id
         )
-        
         
         enviar_email = EmailServices.enviar_correo_activacion(user, password_random)
         LogsServices.write(f'enviar_email: {enviar_email}')

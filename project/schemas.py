@@ -57,21 +57,25 @@ class ResponseModel(BaseModel):
 
 # --------- user ---------
 class UserRequestModel(BaseModel):
+    nombre: str
     username: str
-    #password: str
     email: str
     categoria: int
     departamento: int
 
 class UserResponseModel(ResponseModel):
     id: int
+    nombre: str
     username: str
+    email: str
     categoria: int
     departamento: int
 
 
 class UserRequestPutModel(BaseModel):
+    nombre: str
     username: str
+    email: str
     categoria: int
     departamento: int
 

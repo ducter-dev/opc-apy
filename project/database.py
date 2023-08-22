@@ -24,6 +24,7 @@ database = MySQLDatabase(DATABASE_DB,
 
 # ---------- usuarios ---------- #
 class User(Model):
+    nombre = CharField()
     username = CharField(max_length=50, unique=True)
     password = CharField(unique=True)
     email = CharField()
