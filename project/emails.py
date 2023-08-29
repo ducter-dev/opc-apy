@@ -325,29 +325,6 @@ class EmailServices():
                         <td style="direction:ltr;font-size:0px;padding:20px 0px 20px 0px;padding-bottom:0px;padding-top:0px;text-align:center;vertical-align:top;">
                         <!--[if mso | IE]>
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                            
-                    <tr>
-                
-                        <td
-                        class="" style="vertical-align:top;width:600px;"
-                        >
-                    <![endif]-->
-                        <div class="mj-column-per-100 outlook-group-fix" style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                            <tr>
-                                <td align="left" style="font-size:0px;padding:0px 0px 0px 25px;padding-top:0px;padding-bottom:0px;word-break:break-word;">
-                                <div style="font-family:Open Sans, Helvetica, Arial, sans-serif;font-size:11px;line-height:22px;text-align:left;color:#797e82;">
-                                    <p style="text-align: center; margin: 10px 0;">Lorem ipsum dolor sit&nbsp;| <a target="_blank" rel="noopener noreferrer" href="#"></a><span style="color:#797e82; text-decoration: underline"> View online version</span></p>
-                                </div>
-                                </td>
-                            </tr>
-                            </table>
-                        </div>
-                        <!--[if mso | IE]>
-                        </td>
-                    
-                    </tr>
-                
                             </table>
                             <![endif]-->
                         </td>
@@ -836,29 +813,6 @@ class EmailServices():
                         <td style="direction:ltr;font-size:0px;padding:20px 0px 20px 0px;padding-bottom:0px;padding-top:0px;text-align:center;vertical-align:top;">
                         <!--[if mso | IE]>
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                            
-                    <tr>
-                
-                        <td
-                        class="" style="vertical-align:top;width:600px;"
-                        >
-                    <![endif]-->
-                        <div class="mj-column-per-100 outlook-group-fix" style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                            <tr>
-                                <td align="left" style="font-size:0px;padding:0px 0px 0px 25px;padding-top:0px;padding-bottom:0px;word-break:break-word;">
-                                <div style="font-family:Open Sans, Helvetica, Arial, sans-serif;font-size:11px;line-height:22px;text-align:left;color:#797e82;">
-                                    <p style="text-align: center; margin: 10px 0;">Lorem ipsum dolor sit&nbsp;| <a target="_blank" rel="noopener noreferrer" href="#"></a><span style="color:#797e82; text-decoration: underline"> View online version</span></p>
-                                </div>
-                                </td>
-                            </tr>
-                            </table>
-                        </div>
-                        <!--[if mso | IE]>
-                        </td>
-                    
-                    </tr>
-                
                             </table>
                             <![endif]-->
                         </td>
@@ -1317,29 +1271,6 @@ class EmailServices():
                         <td style="direction:ltr;font-size:0px;padding:20px 0px 20px 0px;padding-bottom:0px;padding-top:0px;text-align:center;vertical-align:top;">
                         <!--[if mso | IE]>
                             <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                            
-                    <tr>
-                
-                        <td
-                        class="" style="vertical-align:top;width:600px;"
-                        >
-                    <![endif]-->
-                        <div class="mj-column-per-100 outlook-group-fix" style="font-size:13px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                            <tr>
-                                <td align="left" style="font-size:0px;padding:0px 0px 0px 25px;padding-top:0px;padding-bottom:0px;word-break:break-word;">
-                                <div style="font-family:Open Sans, Helvetica, Arial, sans-serif;font-size:11px;line-height:22px;text-align:left;color:#797e82;">
-                                    <p style="text-align: center; margin: 10px 0;">Lorem ipsum dolor sit&nbsp;| <a target="_blank" rel="noopener noreferrer" href="#"></a><span style="color:#797e82; text-decoration: underline"> View online version</span></p>
-                                </div>
-                                </td>
-                            </tr>
-                            </table>
-                        </div>
-                        <!--[if mso | IE]>
-                        </td>
-                    
-                    </tr>
-                
                             </table>
                             <![endif]-->
                         </td>
