@@ -35,22 +35,23 @@ class EmailServices():
     def enviar_correo_activacion(self, user: User, password_plain: str):
         try:
             # Crear el objeto SMTP
-            conexion_smtp = smtplib.SMTP(self.servidor, self.puerto_smtp)
-            conexion_smtp.starttls()
+            conexion_smtp = smtplib.SMTP_SSL(self.servidor, self.puerto_smtp)
+            #conexion_smtp.starttls()
 
             # Autenticarse en el servidor de correo
             conexion_smtp.login(self.usuario, self.clave)
 
             asunto = 'Registro a SCA v2'
             enlace_activacion = self.generar_enlace_activacion(user.id)
-            LogsServices.write(f'enlace_activacion: {enlace_activacion}')
-            
-            sender = 'info@scav2.com'
+
+            sender = 'soporte.sistemas@ducter.con.mx'
+            ccp = 'michel.morales@ducter.com.mx'
             # Crear el objeto MIMEMultipart
             mensaje = MIMEMultipart("alternative")
             mensaje["Subject"] = asunto
             mensaje["From"] = sender
             mensaje["To"] = user.email
+            mensaje['Bcc'] = ccp
 
             contenido_html = self.contenido_email_registed(enlace_activacion, user, password_plain)
             

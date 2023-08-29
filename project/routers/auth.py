@@ -131,7 +131,6 @@ async def create_user(user_req: UserRequestModel):
         )
         
         enviar_email = EmailServices.enviar_correo_activacion(user, password_random)
-        LogsServices.write(f'enviar_email: {enviar_email}')
 
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
