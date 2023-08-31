@@ -52,7 +52,6 @@ class EmailServices():
             mensaje["Subject"] = asunto
             mensaje["From"] = sender
             mensaje["To"] = user.email
-            mensaje['Bcc'] = ccp
 
             contenido_html = self.contenido_email_registed(enlace_activacion, user, password_plain)
             
