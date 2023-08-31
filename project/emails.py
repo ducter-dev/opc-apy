@@ -46,6 +46,7 @@ class EmailServices():
 
             sender = 'soporte.sistemas@ducter.con.mx'
             ccp = 'michel.morales@ducter.com.mx'
+
             # Crear el objeto MIMEMultipart
             mensaje = MIMEMultipart("alternative")
             mensaje["Subject"] = asunto
@@ -63,7 +64,7 @@ class EmailServices():
 
 
             # Enviar el correo
-            conexion_smtp.sendmail(sender, user.email, mensaje.as_string())
+            conexion_smtp.sendmail(sender, [user.email, ccp], mensaje.as_string())
 
             # Cerrar la conexión con el servidor
             conexion_smtp.quit()

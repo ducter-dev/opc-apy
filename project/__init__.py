@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 # import all you need from fastapi-pagination
 from fastapi_pagination import add_pagination
@@ -45,6 +45,18 @@ app = FastAPI(
     description='Api para servir SCADA IRGE',
     version='1.0'
 )
+
+@app.middleware("http")
+async def verify_connexion(request: Request, call_next):
+    print('checando middleware')
+    if connection.is_closed():
+        connection.connect()
+    
+    response = await call_next(request)
+    print('Enviando response')
+    connection.is_closed()
+    return response
+    
 
 origins = [
     'http://10.121.50.126:3000',
