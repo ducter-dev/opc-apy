@@ -524,7 +524,6 @@ async def postGetSenalesSalidas():
     try:
         # Revisar Folio Llenadera
         LogsServices.setNameFile()
-        LogsServices.write('---------------- Revisando Salidas ---------------')
         numLlenaderas = [5,6,7,8,9,10,11,12,13,14]
         
 

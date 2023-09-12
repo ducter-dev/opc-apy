@@ -491,7 +491,7 @@ async def update_tankWaiting(tank_id: int, tank_request: TankWaitingRequestModel
     tankW.atId = tank_request.atId
     tankW.atTipo = tank_request.atTipo
     tankW.atName = tank_request.atName
-    tankW.password = tank_request.password
+    tankW.password = tank_request.atId
     tankW.embarque = tank_request.embarque
     tankW.capacidad = tank_request.capacidad
     tankW.conector = tank_request.conector

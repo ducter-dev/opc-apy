@@ -93,7 +93,6 @@ class TankWaitingRequestModel(BaseModel):
     atId: int
     atTipo: int
     atName: str
-    password: int
     embarque: int
     capacidad: int
     conector: int
