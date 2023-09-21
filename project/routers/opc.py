@@ -99,3 +99,33 @@ async def opc_write(value: int):
         'tag': tag,
         'valor': valor
     }
+
+
+@router.get('/reloj')
+async def get_clock_delta():
+    year = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Year')
+    monthOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Month')
+    dayOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Day')
+    hourOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Hours')
+    minuteOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Mins')
+    secondOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Secs')
+
+    month = convertIntToTimeString(monthOPC)
+    day = convertIntToTimeString(dayOPC)
+    hour = convertIntToTimeString(hourOPC)
+    minute = convertIntToTimeString(minuteOPC)
+    second = convertIntToTimeString(secondOPC)
+
+
+    fecha_hora = f'{year}-{month}-{day} {hour}:{minute}:{second}'
+    return {
+        'fechaHora': fecha_hora
+    }
+
+
+def convertIntToTimeString(number):
+
+    if number < 10:
+        return f'0{number}'
+    else:
+        return f'{number}'

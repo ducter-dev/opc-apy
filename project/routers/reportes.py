@@ -250,7 +250,7 @@ async def get_patin_report(croma: int, fecha: str, tipo: int):
 
 
 @router.get('/bombas/{fecha}')
-async def get_patin_report(fecha: str):
+async def get_bombas_report(fecha: str):
     try:
         
 
