@@ -2,17 +2,22 @@ from datetime import datetime, timedelta, date
 import random
 import string
 from .logs import LogsServices
+from .opc import OpcServices 
 
-def obtenerFecha05Reporte():
-    now = datetime.now()
-    fecha_base = datetime(now.year, now.month, now.day, 5, 30, 0)
-    fecha05 = (now - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > now else now.strftime("%Y-%m-%d")
+async def  obtenerFecha05Reporte():
+    ahora_json = await get_clock()
+    ahora = ahora_json['fechaHora']
+    ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+    fecha_base = datetime(ahoraDT.year, ahoraDT.month, ahoraDT.day, 5, 30, 0)
+    fecha05 = (ahoraDT - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > ahoraDT else ahoraDT.strftime("%Y-%m-%d")
     return fecha05
 
 
-def obtenerFecha24Reporte():
-    now = datetime.now()
-    return now.strftime("%Y-%m-%d")
+async def obtenerFecha24Reporte():
+    ahora_json = await get_clock()
+    ahora = ahora_json['fechaHora']
+    ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+    return ahoraDT.strftime("%Y-%m-%d")
 
 def obtenerTurno05(hora):
     turno = 0
@@ -73,3 +78,32 @@ def obtenerFechaCaducidad(fecha):
         return fechaResult
     except Exception as e:
         LogsServices.write(f'error: {e}')
+
+
+async def get_clock():
+    year = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Year')
+    monthOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Month')
+    dayOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Day')
+    hourOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Hours')
+    minuteOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Mins')
+    secondOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Secs')
+
+    month = convertIntToTimeString(monthOPC)
+    day = convertIntToTimeString(dayOPC)
+    hour = convertIntToTimeString(hourOPC)
+    minute = convertIntToTimeString(minuteOPC)
+    second = convertIntToTimeString(secondOPC)
+
+
+    fecha_hora = f'{year}-{month}-{day} {hour}:{minute}:{second}'
+    return {
+        'fechaHora': fecha_hora
+    }
+
+
+def convertIntToTimeString(number):
+
+    if number < 10:
+        return f'0{number}'
+    else:
+        return f'{number}'

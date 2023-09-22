@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
-from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24, get_clock
 
 from ..database import Cromatografo, Bitacora, Densidad
 from ..schemas import CromatografoResponseModel, DensidadResponseModel
@@ -45,9 +45,10 @@ DENS_1_BUTENO_60 = 0.62562
 async def register_cromatografo():
     try:
         LogsServices.write('----- Iniicando registro de croma ------')
-        now = datetime.now()
-        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
-        hora = now.strftime("%H")
+        ahora_json = await get_clock()
+        ahora = ahora_json['fechaHora']
+        ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+        hora = ahoraDT.strftime("%H")
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
         turno05 = obtenerTurno05(int(hora))
@@ -237,12 +238,12 @@ async def register_cromatografo():
 async def register_densidad():
     try:
         LogsServices.write(f'-----Iniciando Registro ---- de Densidades')
-        now = datetime.now()
-        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
-        hora = now.strftime("%H")
+        ahora_json = await get_clock()
+        ahora = ahora_json['fechaHora']
+        ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+        hora = ahoraDT.strftime("%H")
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
-
         # leer variables 
         preSupEsf1 = OpcServices.readDataPLC(TE_301A_REGISTRO_SPARE_3) / 100
         preSupEsf2 = OpcServices.readDataPLC(TE_301B_REGISTRO_SPARE_3) / 100
@@ -309,7 +310,10 @@ async def register_densidad():
             reporte05 = fecha05,
             reporte24 = fecha24
         )
-        return densidadSaved
+        return JSONResponse(
+            status_code=201,
+            content={"message": "Densidades registradas correctamente."}
+        )
     except Exception as e:
         return JSONResponse(
             status_code=501,
