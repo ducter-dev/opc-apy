@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
-from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24, get_clock
 
 from ..database import Bomba, Bitacora
 from ..schemas import BombaResponseModel
@@ -21,9 +21,10 @@ async def register_bomba():
     try:
         #   Primero obtenemos los valores de las variables
         print('register Bomba')
-        now = datetime.now()
-        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
-        hora = now.strftime("%H")
+        ahora_json = await get_clock()
+        ahora = ahora_json['fechaHora']
+        ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+        hora = ahoraDT.strftime("%H")
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
         turno05 = obtenerTurno05(int(hora))
@@ -135,6 +136,11 @@ async def register_bomba():
             turno05 = turno05,
             reporte24 = fecha24,
             turno24 = turno24
+        )
+
+        return JSONResponse(
+            status_code=201,
+            content={"message": "Bombas insertadas correctamente."}
         )
 
 

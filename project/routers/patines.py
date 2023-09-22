@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from typing import List
 from datetime import datetime, timedelta
-from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24
+from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24, get_clock
 
 from ..database import PatinData, Bitacora
 from ..schemas import PatinRequestModel, PatinResponseModel
@@ -16,9 +16,14 @@ router = APIRouter(prefix='/api/v1/patines', route_class=VerifyTokenRoute)
 async def register_patin():
     try:
         #   Primero obtenemos los valores de las variables
-        now = datetime.now()
-        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
-        hora = now.strftime("%H")
+        ahora_json = await get_clock()
+        print(f'ahora_json: {ahora_json}')
+        ahora = ahora_json['fechaHora']
+        print(f'ahora: {ahora}')
+        ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+        hora = ahoraDT.strftime("%H")
+        print(f'hora: {hora}')
+
         fecha05 = obtenerFecha05Reporte()
         fecha24 = obtenerFecha24Reporte()
         turno05 = obtenerTurno05(int(hora))
