@@ -86,8 +86,8 @@ async def register_esfera():
         MASA_DISP_301B_ENT = 410
         """
 
-        fecha05 = obtenerFecha05Reporte()
-        fecha24 = obtenerFecha24Reporte()
+        fecha05 = await obtenerFecha05Reporte()
+        fecha24 = await obtenerFecha24Reporte()
         ahora_json = await get_clock()
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')

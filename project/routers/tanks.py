@@ -176,7 +176,7 @@ async def create_tanque_entrada_manual(tank_request: TanksEntryRequestModel):
         
         now = datetime.now()
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-        fecha05 = obtenerFecha05Reporte()
+        fecha05 = await obtenerFecha05Reporte()
         fechaEntrada = now.strftime("%Y-%m-%d")
         horaEntrada = now.strftime("%H:%M:%S")
         
@@ -254,7 +254,7 @@ async def create_tanque_entrada_radiofrecuencia():
                 now = datetime.now()
                 fechaHoraEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
                 #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-                fecha05 = obtenerFecha05Reporte()
+                fecha05 = await obtenerFecha05Reporte()
                 fechaEntrada = now.strftime("%Y-%m-%d")
                 horaEntrada = now.strftime("%H:%M:%S")
                 fechaE = f"{fechaEntrada} {horaEntrada}:00"
@@ -389,7 +389,7 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
         now = datetime.now()
         
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-        fecha05 = obtenerFecha05Reporte()
+        fecha05 = await obtenerFecha05Reporte()
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y-%m-%d")
 

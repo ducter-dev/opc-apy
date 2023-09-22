@@ -49,8 +49,8 @@ async def register_cromatografo():
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
-        fecha05 = obtenerFecha05Reporte()
-        fecha24 = obtenerFecha24Reporte()
+        fecha05 = await obtenerFecha05Reporte()
+        fecha24 = await obtenerFecha24Reporte()
         turno05 = obtenerTurno05(int(hora))
         turno24 = obtenerTurno24(int(hora))
 
@@ -242,8 +242,8 @@ async def register_densidad():
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
-        fecha05 = obtenerFecha05Reporte()
-        fecha24 = obtenerFecha24Reporte()
+        fecha05 = await obtenerFecha05Reporte()
+        fecha24 = await obtenerFecha24Reporte()
         # leer variables 
         preSupEsf1 = OpcServices.readDataPLC(TE_301A_REGISTRO_SPARE_3) / 100
         preSupEsf2 = OpcServices.readDataPLC(TE_301B_REGISTRO_SPARE_3) / 100
@@ -284,15 +284,24 @@ async def register_densidad():
         
 
         analisisCrom = (eTANO_IRGE / 10000) * DENS_ETANO_60
-        analisisCrom = (analisisCrom + (mETANO_IRGE) / 10000) * DENS_METANO_60
-        analisisCrom = (analisisCrom + (pROPANO_IRGE) / 10000) * DENS_PROPANO_60
-        analisisCrom = (analisisCrom + (iBUTANO_IRGE) / 10000) * DENS_I_BUTANO_60
-        analisisCrom = (analisisCrom + (nBUTANO_IRGE) / 10000) * DENS_N_BUTANO_60
-        analisisCrom = (analisisCrom + (iPENTANO_IRGE) / 10000) * DENS_I_PENTANO_60
-        analisisCrom = (analisisCrom + (nPENTANO_IRGE) / 10000) * DENS_N_PENTANO_60
-        analisisCrom = (analisisCrom + (pROPILENO_IRGE) / 10000) * DENS_PROPILENO_60
-        analisisCrom = (analisisCrom + (c4_IRGE) / 10000) * DENS_1_BUTENO_60
-        # registrar datos
+        #analisisCrom = (analisisCrom + (mETANO_IRGE) / 10000) * DENS_METANO_60
+        #analisisCrom = (analisisCrom + (pROPANO_IRGE) / 10000) * DENS_PROPANO_60
+        #analisisCrom = (analisisCrom + (iBUTANO_IRGE) / 10000) * DENS_I_BUTANO_60
+        #analisisCrom = (analisisCrom + (nBUTANO_IRGE) / 10000) * DENS_N_BUTANO_60
+        #analisisCrom = (analisisCrom + (iPENTANO_IRGE) / 10000) * DENS_I_PENTANO_60
+        #analisisCrom = (analisisCrom + (nPENTANO_IRGE) / 10000) * DENS_N_PENTANO_60
+        #analisisCrom = (analisisCrom + (pROPILENO_IRGE) / 10000) * DENS_PROPILENO_60
+        #analisisCrom = (analisisCrom + (c4_IRGE) / 10000) * DENS_1_BUTENO_60
+
+        analisisCrom = analisisCrom + ((mETANO_IRGE) / 10000) * DENS_METANO_60
+        analisisCrom = analisisCrom + ((pROPANO_IRGE) / 10000) * DENS_PROPANO_60
+        analisisCrom = analisisCrom + ((iBUTANO_IRGE) / 10000) * DENS_I_BUTANO_60
+        analisisCrom = analisisCrom + ((nBUTANO_IRGE) / 10000) * DENS_N_BUTANO_60
+        analisisCrom = analisisCrom + ((iPENTANO_IRGE) / 10000) * DENS_I_PENTANO_60
+        analisisCrom = analisisCrom + ((nPENTANO_IRGE) / 10000) * DENS_N_PENTANO_60
+        analisisCrom = analisisCrom + ((pROPILENO_IRGE) / 10000) * DENS_PROPILENO_60
+        analisisCrom = analisisCrom + ((c4_IRGE) / 10000) * DENS_1_BUTENO_60
+        # registrar dats
 
         LogsServices.write(f'analisisCrom: {analisisCrom}')
 

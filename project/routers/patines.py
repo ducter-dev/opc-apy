@@ -24,8 +24,8 @@ async def register_patin():
         hora = ahoraDT.strftime("%H")
         print(f'hora: {hora}')
 
-        fecha05 = obtenerFecha05Reporte()
-        fecha24 = obtenerFecha24Reporte()
+        fecha05 = await obtenerFecha05Reporte()
+        fecha24 = await obtenerFecha24Reporte()
         turno05 = obtenerTurno05(int(hora))
         turno24 = obtenerTurno24(int(hora))
 

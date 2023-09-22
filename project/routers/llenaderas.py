@@ -358,7 +358,7 @@ async def post_asignarLlenadera(request: LlenaderaAsignarRequestModel):
 
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         now = datetime.now()
-        fecha05 = obtenerFecha05Reporte()
+        fecha05 = await obtenerFecha05Reporte()
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y-%m-%d")
 

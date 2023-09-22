@@ -25,8 +25,8 @@ async def register_bomba():
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
-        fecha05 = obtenerFecha05Reporte()
-        fecha24 = obtenerFecha24Reporte()
+        fecha05 = await obtenerFecha05Reporte()
+        fecha24 = await obtenerFecha24Reporte()
         turno05 = obtenerTurno05(int(hora))
         turno24 = obtenerTurno24(int(hora))
 
