@@ -4,10 +4,11 @@ from typing import List
 from datetime import datetime, timedelta
 from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24, get_clock
 
-from ..database import PatinData, Bitacora
+from ..database import PatinData, Bitacora, Horas
 from ..schemas import PatinRequestModel, PatinResponseModel
 
 from ..opc import OpcServices
+from ..logs import LogsServices
 
 from ..middlewares import VerifyTokenRoute
 router = APIRouter(prefix='/api/v1/patines', route_class=VerifyTokenRoute)
@@ -15,6 +16,7 @@ router = APIRouter(prefix='/api/v1/patines', route_class=VerifyTokenRoute)
 @router.post('')
 async def register_patin():
     try:
+        LogsServices.write('----- Iniicando registro de patines ------')
         #   Primero obtenemos los valores de las variables
         ahora_json = await get_clock()
         print(f'ahora_json: {ahora_json}')
@@ -247,6 +249,10 @@ async def register_patin():
             turno24 = turno24
         )
 
+        hours_in_db = Horas.select().where(Horas.id == 2).first()
+        hours_in_db.hora = int(hora)
+        hours_in_db.save()
+
         bitacora = Bitacora.create(
             user = 1,
             evento = 9,
@@ -261,6 +267,8 @@ async def register_patin():
             content={"message": 'Patines registrados correctamente.'}
         )
     except Exception as e:
+        LogsServices.write('-------- Error en Patines --------')
+        LogsServices.write(f'Error: {e}')
         return JSONResponse(
             status_code=501,
             content={"message": e}

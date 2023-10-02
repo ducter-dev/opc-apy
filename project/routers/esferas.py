@@ -4,10 +4,11 @@ from typing import List
 from datetime import datetime, timedelta
 from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24, get_clock
 
-from ..database import Esfera
+from ..database import Esfera, Horas
 from ..schemas import EsferaRequestModel, EsferaResponseModel
 
 from ..opc import OpcServices
+from ..logs import LogsServices
 
 from ..middlewares import VerifyTokenRoute
 router = APIRouter(prefix='/api/v1/esferas', route_class=VerifyTokenRoute)
@@ -139,12 +140,17 @@ async def register_esfera():
             turno24 = turno24
         )
 
+        hours_in_db = Horas.select().where(Horas.id == 1).first()
+        hours_in_db.hora = int(hora)
+        hours_in_db.save()
         
         return JSONResponse(
             status_code=201,
             content={"message": 'Esferas registradas correctamente.'}
         )
     except Exception as e:
+        LogsServices.write('-------- Error en Esferas --------')
+        LogsServices.write(f'Error: {e}')
         return JSONResponse(
             status_code=501,
             content={"message": e}

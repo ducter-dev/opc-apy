@@ -572,3 +572,12 @@ class Densidad(Model):
     class Meta:
         database = database
         table_name = 'densidades'
+
+
+class Horas(Model):
+    hora = IntegerField()
+    referencia = CharField()
+
+    class Meta:
+        database = database
+        table_name = 'hours_data'

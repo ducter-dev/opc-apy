@@ -480,7 +480,6 @@ async def get_balance_diario_report(fecha: str, tipo: int):
 
                 # Filtrando la data de salidas
                 filter_salidas = [s for s in dataSalidas if s.turno05 == turno]
-                #print(f'Salidas {len(filter_salidas)}')
                 if len(filter_salidas) > 0:
                     for fs in filter_salidas:
                         blsNat_turno_venta = blsNat_turno_venta + fs.volNatBls

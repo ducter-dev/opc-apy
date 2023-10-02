@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime, timedelta
 from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24, get_clock
 
-from ..database import Bomba, Bitacora
+from ..database import Bomba, Bitacora, Horas
 from ..schemas import BombaResponseModel
 
 from ..opc import OpcServices
@@ -137,6 +137,10 @@ async def register_bomba():
             reporte24 = fecha24,
             turno24 = turno24
         )
+
+        hours_in_db = Horas.select().where(Horas.id == 4).first()
+        hours_in_db.hora = int(hora)
+        hours_in_db.save()
 
         return JSONResponse(
             status_code=201,

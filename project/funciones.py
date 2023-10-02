@@ -21,11 +21,13 @@ async def obtenerFecha24Reporte():
 
 def obtenerTurno05(hora):
     turno = 0
-    if hora >= 6 and hora <= 13: 
+    if hora >= 6 and hora <= 12: 
         turno = 1
-    elif hora >= 14 and hora <= 21:
+    elif hora >= 13 and hora <= 20:
         turno = 2
-    elif hora >= 21 and hora <= 5:
+    elif hora >= 21:
+        turno = 3
+    elif hora <= 5:
         turno = 3
     
     return turno
@@ -37,7 +39,9 @@ def obtenerTurno24(hora):
         turno = 1
     elif hora >= 9 and hora <= 16:
         turno = 2
-    elif hora >= 17 and hora == 0:
+    elif hora >= 17 and hora <= 23:
+        turno = 3
+    elif hora == 0:
         turno = 3
     
     return turno

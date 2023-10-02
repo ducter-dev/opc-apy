@@ -4,7 +4,7 @@ from typing import List
 from datetime import datetime, timedelta
 from ..funciones import obtenerFecha05Reporte, obtenerFecha24Reporte, obtenerTurno05, obtenerTurno24, get_clock
 
-from ..database import Cromatografo, Bitacora, Densidad
+from ..database import Cromatografo, Bitacora, Densidad, Horas
 from ..schemas import CromatografoResponseModel, DensidadResponseModel
 
 from ..opc import OpcServices
@@ -213,6 +213,10 @@ async def register_cromatografo():
             turno24 = turno24
         )
 
+        hours_in_db = Horas.select().where(Horas.id == 3).first()
+        hours_in_db.hora = int(hora)
+        hours_in_db.save()
+        
         bitacora = Bitacora.create(
             user = 1,
             evento = 9,
@@ -319,6 +323,12 @@ async def register_densidad():
             reporte05 = fecha05,
             reporte24 = fecha24
         )
+
+        
+        hours_in_db = Horas.select().where(Horas.id == 5).first()
+        hours_in_db.hora = int(hora)
+        hours_in_db.save()
+
         return JSONResponse(
             status_code=201,
             content={"message": "Densidades registradas correctamente."}

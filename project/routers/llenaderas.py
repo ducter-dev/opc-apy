@@ -629,7 +629,7 @@ async def postGetSenalesSalidas():
                             capacidad = tanqueToExit.capacidad
                         else:
                             fechaEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
-                            fechaInicio = fechaEntrada
+                            fechaInicio = datetime(anioInicio, mesInicio, diaInicio, horaInicio, minutoInicio, 0)
                             report24 = await obtenerFecha24Reporte()
                             report05 = await obtenerFecha05Reporte()
                             producto = 'Propano'
