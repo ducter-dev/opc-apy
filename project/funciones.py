@@ -13,11 +13,15 @@ async def  obtenerFecha05Reporte():
     return fecha05
 
 
-async def obtenerFecha24Reporte():
-    ahora_json = await get_clock()
-    ahora = ahora_json['fechaHora']
-    ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
-    return ahoraDT.strftime("%Y-%m-%d")
+async def obtenerFecha24Reporte(fecha_hora):
+    if fecha_hora == '':
+        ahora_json = await get_clock()
+        ahora = ahora_json['fechaHora']
+        ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+        return ahoraDT.strftime("%Y-%m-%d")
+    else:
+        ahoraDT = datetime.strptime(fecha_hora, '%Y-%m-%d %H:%M:%S')
+        return ahoraDT.strftime("%Y-%m-%d")
 
 def obtenerTurno05(hora):
     turno = 0
