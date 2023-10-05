@@ -177,6 +177,7 @@ async def create_tanque_entrada_manual(tank_request: TanksEntryRequestModel):
         now = datetime.now()
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         fecha05 = await obtenerFecha05Reporte()
+        fecha24 = await obtenerFecha24Reporte('')
         fechaEntrada = now.strftime("%Y-%m-%d")
         horaEntrada = now.strftime("%H:%M:%S")
         
@@ -189,7 +190,7 @@ async def create_tanque_entrada_manual(tank_request: TanksEntryRequestModel):
             conector = tank.conector,
             horaEntrada = horaEntrada,
             fechaEntrada = fechaEntrada,
-            reporte24 = fechaEntrada,
+            reporte24 = fecha24,
             reporte05 = fecha05
         )
         entryInserted = TanksEntry.select().order_by(TanksEntry.id.desc()).first()
@@ -255,6 +256,7 @@ async def create_tanque_entrada_radiofrecuencia():
                 fechaHoraEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
                 #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
                 fecha05 = await obtenerFecha05Reporte()
+                fecha24 = await obtenerFecha24Reporte('')
                 fechaEntrada = now.strftime("%Y-%m-%d")
                 horaEntrada = now.strftime("%H:%M:%S")
                 fechaE = f"{fechaEntrada} {horaEntrada}:00"
@@ -294,7 +296,7 @@ async def create_tanque_entrada_radiofrecuencia():
                         conector = tankBD.conector,
                         horaEntrada = horaEntrada,
                         fechaEntrada = fechaEntrada,
-                        reporte24 = fechaEntrada,
+                        reporte24 = fecha24,
                         reporte05 = fecha05
                     )
                     #entryInserted = TanksEntry.select().order_by(TanksEntry.id.desc()).first()
@@ -390,6 +392,7 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
         
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         fecha05 = await obtenerFecha05Reporte()
+        fecha24 = await obtenerFecha24Reporte('')
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y-%m-%d")
 
@@ -404,7 +407,7 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
             conector = tank.conector,
             horaEntrada = horaEntrada,
             fechaEntrada = fechaEntrada,
-            reporte24 = fechaEntrada,
+            reporte24 = fecha24,
             reporte05 = fecha05
         )
 

@@ -630,8 +630,9 @@ async def postGetSenalesSalidas():
                         else:
                             fechaEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
                             fechaInicio = datetime(anioInicio, mesInicio, diaInicio, horaInicio, minutoInicio, 0)
-                            report24 = await obtenerFecha24Reporte()
+                            fechaInicioStr = fechaInicio.strftime('%Y-%m-%d %H:%M:%S')
                             report05 = await obtenerFecha05Reporte()
+                            report24 = await obtenerFecha24Reporte(fechaInicioStr)
                             producto = 'Propano'
                             productDescripcion = 'Gas L.P.'
                             atID = tanqueToExit.atId

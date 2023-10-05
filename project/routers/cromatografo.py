@@ -50,7 +50,7 @@ async def register_cromatografo():
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
         fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte()
+        fecha24 = await obtenerFecha24Reporte('')
         turno05 = obtenerTurno05(int(hora))
         turno24 = obtenerTurno24(int(hora))
 
@@ -247,7 +247,7 @@ async def register_densidad():
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
         fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte()
+        fecha24 = await obtenerFecha24Reporte('')
         # leer variables 
         preSupEsf1 = OpcServices.readDataPLC(TE_301A_REGISTRO_SPARE_3) / 100
         preSupEsf2 = OpcServices.readDataPLC(TE_301B_REGISTRO_SPARE_3) / 100

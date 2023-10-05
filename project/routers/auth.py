@@ -80,7 +80,7 @@ async def login(credentials: HTTPBasicCredentials):
     }
 
     fecha05 = await obtenerFecha05Reporte()
-    fecha24 = await obtenerFecha24Reporte()
+    fecha24 = await obtenerFecha24Reporte('')
 
     Bitacora.create(
         user = user.id,
@@ -133,7 +133,7 @@ async def create_user(user_req: UserRequestModel):
         enviar_email = EmailServices.enviar_correo_activacion(user, password_random)
 
         fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte()
+        fecha24 = await obtenerFecha24Reporte('')
 
         Bitacora.create(
             user = 1,
