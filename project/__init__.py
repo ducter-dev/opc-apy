@@ -35,6 +35,7 @@ from .database import BalanceDiario
 from .database import ReportePatin
 from .database import Densidad
 from .database import BalanceMensual
+from .database import ReporteEsferas
 from .database import database as connection
 
 from .opc import OpcServices
@@ -123,6 +124,7 @@ def startup():
         BalanceMensual,
         ReportePatin,
         Densidad,
+        ReporteEsferas,
     ])
     LogsServices.setNameFile()
     LogsServices.write('Iniciando api')

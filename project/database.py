@@ -581,3 +581,20 @@ class Horas(Model):
     class Meta:
         database = database
         table_name = 'hours_data'
+
+
+class ReporteEsferas(Model):
+    esfera = CharField()
+    inicialBls = DoubleField(null=True)
+    inicialBls20 = DoubleField(null=True)
+    inicialTons = DoubleField(null=True)
+    actualBls = DoubleField(null=True)
+    actualBls20 = DoubleField(null=True)
+    actualTons = DoubleField(null=True)
+    diferenciaBls = DoubleField(null=True)
+    diferenciaBls20 = DoubleField(null=True)
+    diferenciaTons = DoubleField(null=True)
+
+    class Meta:
+        database = database
+        table_name = 'reporte_esferas'
