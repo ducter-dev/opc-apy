@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from typing import List
 from datetime import datetime, timedelta, date
 from ..schemas import FechaReportesRequestModel
-from ..database import BombaReporte, Bomba, PatinData, TankInTrucks, Esfera, BalanceDiario, Patin, ReportePatin, BalanceMensual
+from ..database import BombaReporte, Bomba, PatinData, TankInTrucks, Esfera, BalanceDiario, Patin, ReportePatin, BalanceMensual, ReporteEsferas
 import peewee
 from peewee import *
 from peewee import fn
@@ -339,7 +339,7 @@ async def get_bombas_report(fecha: str):
     
 
 @router.get('/llenaderas/{llenadera}/fecha/{fecha}/tipo/{tipo}')
-async def get_esferas_report(llenadera: str, fecha: str,  tipo: int):
+async def get_llenaderas_report(llenadera: str, fecha: str,  tipo: int):
     try:
         # buffer = io.BytesIO()
         s = requests.session()
@@ -371,6 +371,107 @@ async def get_esferas_report(llenadera: str, fecha: str,  tipo: int):
             content={"message": e}
         )
     
+
+@router.get('/esferas/fecha/{fecha}/tipo/{tipo}')
+async def get_esferas_inventario_report(fecha: str,  tipo: int):
+    try:
+        #   rellenar tabla
+        if (tipo == 5):
+            # obtener el primer dato del día
+            primerRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte05 == fecha).order_by(Esfera.id.asc()).first()
+            ultimoRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
+            # ultimo dato de hoy
+            primerRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte05 == fecha).order_by(Esfera.id.asc()).first()
+            ultimoRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
+        else:
+            # obtener el primer dato del día
+            primerRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte24 == fecha).order_by(Esfera.id.asc()).first()
+            ultimoRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
+            # ultimo dato de hoy
+            primerRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte24 == fecha).order_by(Esfera.id.asc()).first()
+            ultimoRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
+        
+
+        # Hacemos las sumas y las restas
+        inicialBls_a = primerRegA.volumenBlsNat
+        inicialBls20_a = primerRegA.volumenBlsCor
+        inicialTons_a = primerRegA.volumenTon
+        actualBls_a = ultimoRegA.volumenBlsNat
+        actualBls20_a = ultimoRegA.volumenBlsCor
+        actualTons_a = ultimoRegA.volumenTon
+        diferenciaBls_a = actualBls_a - inicialBls_a
+        diferenciaBls20_a = actualBls20_a - inicialBls20_a
+        diferenciaTons_a = actualTons_a - inicialTons_a
+
+        inicialBls_b = primerRegB.volumenBlsNat
+        inicialBls20_b = primerRegB.volumenBlsCor
+        inicialTons_b = primerRegB.volumenTon 
+        actualBls_b = ultimoRegB.volumenBlsNat
+        actualBls20_b = ultimoRegB.volumenBlsCor
+        actualTons_b = ultimoRegB.volumenTon
+        diferenciaBls_b = actualBls_b - inicialBls_b
+        diferenciaBls20_b = actualBls20_b - inicialBls20_b
+        diferenciaTons_b = actualTons_b - inicialTons_b
+        
+        
+        # guardamos los registros en la bd
+        registroEsfera1 = ReporteEsferas.select().where(ReporteEsferas.id == 1).first()
+        registroEsfera2 = ReporteEsferas.select().where(ReporteEsferas.id == 2).first()
+
+        registroEsfera1.esfera = 'TE-301A'
+        registroEsfera1.inicialBls = inicialBls_a
+        registroEsfera1.inicialBls20 = inicialBls20_a
+        registroEsfera1.inicialTons = inicialTons_a
+        registroEsfera1.actualBls = actualBls_a
+        registroEsfera1.actualBls20 = actualBls20_a
+        registroEsfera1.actualTons = actualTons_a
+        registroEsfera1.diferenciaBls = diferenciaBls_a
+        registroEsfera1.diferenciaBls20 = diferenciaBls20_a
+        registroEsfera1.diferenciaTons = diferenciaTons_a
+        registroEsfera1.save()
+    
+        registroEsfera2.esfera = 'TE-301B'
+        registroEsfera2.inicialBls = inicialBls_b
+        registroEsfera2.inicialBls20 = inicialBls20_b
+        registroEsfera2.inicialTons = inicialTons_b
+        registroEsfera2.actualBls = actualBls_b
+        registroEsfera2.actualBls20 = actualBls20_b
+        registroEsfera2.actualTons = actualTons_b
+        registroEsfera2.diferenciaBls = diferenciaBls_b
+        registroEsfera2.diferenciaBls20 = diferenciaBls20_b
+        registroEsfera2.diferenciaTons = diferenciaTons_b
+        registroEsfera2.save()
+        
+
+        # buffer = io.BytesIO()
+        s = requests.session()
+        auth = ('jasperadmin', 'jasperadmin')
+        url_login = f"{JASPER_SERVER}"
+        res = s.get(url=url_login, auth=auth)
+        res.raise_for_status()
+        tipoRep = '_24' if tipo == 24 else ''
+        url_esferas = f"{JASPER_SERVER}/rest_v2/reports/reportes/esferas/esferas{tipoRep}.pdf"
+        params = {
+            "fecha": fecha
+        }
+        
+        res = s.get(url=url_esferas, params=params, stream=True)
+        res.raise_for_status()
+        filename = f"esferas_{fecha}.pdf"
+        path = f'./downloads/{filename}'
+
+        with open(path, 'wb') as f:
+            f.write(res.content)
+
+        return FileResponse(path=path, filename=filename, media_type='application/pdf')
+
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
+
 
 @router.get('/bitacora/{fecha}/tipo/{tipo}')
 async def get_bitacora_report(fecha: str,  tipo: int):
@@ -875,12 +976,13 @@ async def get_balance_mensual_report(fecha: str, tipo: int):
         ventas_nat = 0
         ventas_cor = 0
         ventas_tons = 0
+        ventas_pgs = 0
         final_nat = 0
         final_cor = 0
         final_tons = 0
 
         # recorremos las fechas
-        for i in range(1, dia_fin+1):
+        for i in range(1, dia_fin + 1):
             fechaDT = datetime(ultimoDiaDT.year, ultimoDiaDT.month, i)
             fecha = fechaDT.strftime('%Y-%m-%d')
             fecha_dia = fechaDT.strftime('%d')
@@ -926,14 +1028,16 @@ async def get_balance_mensual_report(fecha: str, tipo: int):
                 ventas_nat = ventas_nat + dS.volNatBls
                 ventas_cor = ventas_cor + dS.volCorBls
                 ventas_tons = ventas_tons + dS.masaTons
+                
             dictFecha['ventas_nat'] = blsNat_fecha_venta
             dictFecha['ventas_cor'] = blsCor_fecha_venta
             dictFecha['ventas_tons'] = tons_fecha_venta
+            dictFecha['ventas_pgs'] = len(dataSalidas)
+            ventas_pgs = ventas_pgs + len(dataSalidas)
 
             # Leer data de inventarios de esferas inicio
             esferas = [1,2]
                 
-
             tot_volNat_esfera_ini = 0
             tot_volCor_esfera_ini = 0
             tot_tons_esfera_ini = 0
@@ -943,91 +1047,80 @@ async def get_balance_mensual_report(fecha: str, tipo: int):
 
             if tipo == 5:
                 for j in esferas:
-                    dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fechaAnt, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                    dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.esfera == j).order_by(Esfera.id.asc()).first()
             
                     if dataEsferaInicio is None:
-                        dictFecha['inicial_nat'] = 0
-                        dictFecha['inicial_cor'] = 0
-                        dictFecha['inicial_tons'] = 0
+                        LogsServices.write(f'No se encontró el dato de la esfera - inicio: {fecha}')
                     else:
                         tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
                         tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
                         tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
                     
-                    dictFecha['inicial_nat'] = tot_volNat_esfera_ini
-                    dictFecha['inicial_cor'] = tot_volCor_esfera_ini
-                    dictFecha['inicial_tons'] = tot_tons_esfera_ini
-
-                    inicial_nat = tot_volNat_esfera_ini
-                    inicial_cor = tot_volCor_esfera_ini
-                    inicial_tons = tot_tons_esfera_ini
-
-
+                    if i == 1:
+                        inicial_nat = tot_volNat_esfera_ini
+                        inicial_cor = tot_volCor_esfera_ini
+                        inicial_tons = tot_tons_esfera_ini
+                    
                     dataEsferaFinal = Esfera.select().where(Esfera.reporte05 == fecha, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
 
                     if dataEsferaFinal is None:
-                        dictFecha['final_nat'] = 0
-                        dictFecha['final_cor'] = 0
-                        dictFecha['final_tons'] = 0
+                        LogsServices.write(f'No se encontró el dato de la esfera - final: {fecha}')
                     else:
                         tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
                         tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
                         tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
                     
-                    final_nat = tot_volNat_esfera_fin
-                    final_cor = tot_volCor_esfera_fin
-                    final_tons = tot_tons_esfera_fin
-
-                    dictFecha['final_nat'] = tot_volNat_esfera_fin
-                    dictFecha['final_cor'] = tot_volCor_esfera_fin
-                    dictFecha['final_tons'] = tot_tons_esfera_fin
-
+                    if dia_fin == i:
+                        final_nat = tot_volNat_esfera_fin
+                        final_cor = tot_volCor_esfera_fin
+                        final_tons = tot_tons_esfera_fin    
+                
+                dictFecha['inicial_nat'] = tot_volNat_esfera_ini
+                dictFecha['inicial_cor'] = tot_volCor_esfera_ini
+                dictFecha['inicial_tons'] = tot_tons_esfera_ini
+                dictFecha['final_nat'] = tot_volNat_esfera_fin
+                dictFecha['final_cor'] = tot_volCor_esfera_fin
+                dictFecha['final_tons'] = tot_tons_esfera_fin
                 dictFecha['dif_nat'] = tot_volNat_esfera_fin + blsNat_fecha_venta - tot_volNat_esfera_ini + blsNat_fecha_rec
                 dictFecha['dif_cor'] = tot_volCor_esfera_fin + blsCor_fecha_venta - tot_volCor_esfera_ini + blsCor_fecha_rec
                 dictFecha['dif_tons'] = tot_tons_esfera_fin + tons_fecha_venta - tot_tons_esfera_ini + tons_fecha_rec
 
             else:
                 for j in esferas:
-                    dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fechaAnt, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                    dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.esfera == j).order_by(Esfera.id.asc()).first()
             
                     if dataEsferaInicio is None:
-                        dictFecha['inicial_nat'] = 0
-                        dictFecha['inicial_cor'] = 0
-                        dictFecha['inicial_tons'] = 0
+                        LogsServices.write(f'No se encontró el dato de la esfera - inicio: {fecha}')
                     else:
                         tot_volNat_esfera_ini = tot_volNat_esfera_ini + dataEsferaInicio.volumenBlsNat
                         tot_volCor_esfera_ini = tot_volCor_esfera_ini + dataEsferaInicio.volumenBlsCor
                         tot_tons_esfera_ini = tot_tons_esfera_ini + dataEsferaInicio.volumenTon
                     
-                    dictFecha['inicial_nat'] = tot_volNat_esfera_ini
-                    dictFecha['inicial_cor'] = tot_volCor_esfera_ini
-                    dictFecha['inicial_tons'] = tot_tons_esfera_ini
-
-                    inicial_nat = tot_volNat_esfera_ini
-                    inicial_cor = tot_volCor_esfera_ini
-                    inicial_tons = tot_tons_esfera_ini
-
+                    if i == 1:
+                        inicial_nat = tot_volNat_esfera_ini
+                        inicial_cor = tot_volCor_esfera_ini
+                        inicial_tons = tot_tons_esfera_ini
 
                     dataEsferaFinal = Esfera.select().where(Esfera.reporte24 == fecha, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
 
                     if dataEsferaFinal is None:
-                        dictFecha['final_nat'] = 0
-                        dictFecha['final_cor'] = 0
-                        dictFecha['final_tons'] = 0
+                        LogsServices.write(f'No se encontró el dato de la esfera - final: {fecha}')
                     else:
                         tot_volNat_esfera_fin = tot_volNat_esfera_fin + dataEsferaFinal.volumenBlsNat
                         tot_volCor_esfera_fin = tot_volCor_esfera_fin + dataEsferaFinal.volumenBlsCor
                         tot_tons_esfera_fin = tot_tons_esfera_fin + dataEsferaFinal.volumenTon
-                        dictFecha['final_nat'] = tot_volNat_esfera_fin
-                        dictFecha['final_cor'] = tot_volCor_esfera_fin
-                        dictFecha['final_tons'] = tot_tons_esfera_fin
-
-                    final_nat = tot_volNat_esfera_fin
-                    final_cor = tot_volCor_esfera_fin
-                    final_tons = tot_tons_esfera_fin
-
                     
-                
+                    if dia_fin == i:
+                        final_nat = tot_volNat_esfera_fin
+                        final_cor = tot_volCor_esfera_fin
+                        final_tons = tot_tons_esfera_fin    
+
+                dictFecha['inicial_nat'] = tot_volNat_esfera_ini
+                dictFecha['inicial_cor'] = tot_volCor_esfera_ini
+                dictFecha['inicial_tons'] = tot_tons_esfera_ini
+                dictFecha['final_nat'] = tot_volNat_esfera_fin
+                dictFecha['final_cor'] = tot_volCor_esfera_fin
+                dictFecha['final_tons'] = tot_tons_esfera_fin
                 dictFecha['dif_nat'] = tot_volNat_esfera_fin + blsNat_fecha_venta - tot_volNat_esfera_ini + blsNat_fecha_rec
                 dictFecha['dif_cor'] = tot_volCor_esfera_fin + blsCor_fecha_venta - tot_volCor_esfera_ini + blsCor_fecha_rec
                 dictFecha['dif_tons'] = tot_tons_esfera_fin + tons_fecha_venta - tot_tons_esfera_ini + tons_fecha_rec
@@ -1036,7 +1129,7 @@ async def get_balance_mensual_report(fecha: str, tipo: int):
             dif_nat = final_nat + ventas_nat - inicial_nat + recibo_nat
             dif_cor = final_cor + ventas_cor - inicial_cor + recibo_cor
             dif_tons = final_tons + ventas_tons - inicial_tons + recibo_tons
-
+        
         dictTotales['dia'] = 'TOTAL'
         dictTotales['inicial_nat'] = inicial_nat
         dictTotales['inicial_cor'] = inicial_cor
@@ -1047,18 +1140,20 @@ async def get_balance_mensual_report(fecha: str, tipo: int):
         dictTotales['ventas_nat'] = ventas_nat
         dictTotales['ventas_cor'] = ventas_cor
         dictTotales['ventas_tons'] = ventas_tons
+        dictTotales['ventas_pgs'] = ventas_pgs
         dictTotales['final_nat'] = final_nat
         dictTotales['final_cor'] = final_cor
         dictTotales['final_tons'] = final_tons
         dictTotales['dif_nat'] = dif_nat
         dictTotales['dif_cor'] = dif_cor
         dictTotales['dif_tons'] = dif_tons
-
+        
         dataReporte.append(dictTotales)
         
         BalanceMensual.truncate_table()
         for rep in dataReporte:
             itemSaved = registerBalanceMensualItem(rep)
+        
 
         hoy = datetime.now().strftime('%Y-%m-%d')
         # buffer = io.BytesIO()
@@ -1275,7 +1370,6 @@ def registerBalanceDiarioItem(item):
 
 
 def registerBalanceMensualItem(item):
-    LogsServices.write(f"item['dif_nat']: {item['dif_nat']}")
     itemSaved = BalanceMensual.create(
         dia = item['dia'],
         inicial_nat = item['inicial_nat'],
@@ -1287,6 +1381,7 @@ def registerBalanceMensualItem(item):
         ventas_nat = item['ventas_nat'],
         ventas_cor = item['ventas_cor'],
         ventas_tons = item['ventas_tons'],
+        ventas_pgs = item['ventas_pgs'],
         final_nat = item['final_nat'],
         final_cor = item['final_cor'],
         final_tons = item['final_tons'],
