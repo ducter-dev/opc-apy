@@ -151,7 +151,6 @@ async def get_despacho_diario_report(fecha: str, tipo: int):
         )
     
 
-
 @router.get('/esferas/{esfera}/fecha/{fecha}/tipo/{tipo}')
 async def get_esferas_report(esfera: str, fecha: str, tipo: int):
     try:
@@ -248,14 +247,16 @@ async def get_patin_report(croma: int, fecha: str, tipo: int):
         )
     
 
-
-@router.get('/bombas/{fecha}')
-async def get_bombas_report(fecha: str):
+@router.get('/bombas/{fecha}/tipo/{tipo}')
+async def get_bombas_report(fecha: str, tipo: int):
     try:
         
-
         # Obtener los registros de las bombas filtrando por fecha
-        registros = Bomba.select().where(Bomba.reporte24 == fecha)
+        if tipo == 5:
+            registros = Bomba.select().where(Bomba.reporte05 == fecha)
+            
+        else:
+            registros = Bomba.select().where(Bomba.reporte24 == fecha)
 
         # escribir los registros en bombas_report
         oper_ba301a = ""
@@ -267,7 +268,6 @@ async def get_bombas_report(fecha: str):
         oper_ba301c = ""
         mantto_ba301c = ""
         stat_ba301c = ""
-
         #   Borrar registros de reporte de Bombas
         BombaReporte.truncate_table()
 
@@ -320,11 +320,14 @@ async def get_bombas_report(fecha: str):
         res.raise_for_status()
 
         url_bombas = f"{JASPER_SERVER}/rest_v2/reports/reportes/bombas/bombas.pdf"
-        params = {"fecha": fecha}
+        params = {
+            "fecha": fecha,
+            "tipo": tipo
+        }
         
         res = s.get(url=url_bombas, params=params, stream=True)
         res.raise_for_status()
-        filename = f"Bombas_{fecha}.pdf"
+        filename = f"Bombas_{fecha}_{tipo}.pdf"
         path = f'./downloads/{filename}'
 
         with open(path, 'wb') as f:
@@ -376,19 +379,20 @@ async def get_llenaderas_report(llenadera: str, fecha: str,  tipo: int):
 async def get_esferas_inventario_report(fecha: str,  tipo: int):
     try:
         #   rellenar tabla
+        fechaAnt = obtenerDiaAnterior(fecha)
         if (tipo == 5):
             # obtener el primer dato del día
-            primerRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte05 == fecha).order_by(Esfera.id.asc()).first()
+            primerRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte05 == fechaAnt).order_by(Esfera.id.desc()).first()
             ultimoRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
             # ultimo dato de hoy
-            primerRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte05 == fecha).order_by(Esfera.id.asc()).first()
+            primerRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte05 == fechaAnt).order_by(Esfera.id.desc()).first()
             ultimoRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
         else:
             # obtener el primer dato del día
-            primerRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte24 == fecha).order_by(Esfera.id.asc()).first()
+            primerRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte24 == fechaAnt).order_by(Esfera.id.desc()).first()
             ultimoRegA = Esfera.select().where(Esfera.esfera == 1).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
             # ultimo dato de hoy
-            primerRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte24 == fecha).order_by(Esfera.id.asc()).first()
+            primerRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte24 == fechaAnt).order_by(Esfera.id.desc()).first()
             ultimoRegB = Esfera.select().where(Esfera.esfera == 2).where(Esfera.reporte05 == fecha).order_by(Esfera.id.desc()).first()
         
 

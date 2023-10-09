@@ -586,8 +586,10 @@ async def postGetSenalesSalidas():
                     LogsServices.write(f'Registrado en servicio {registerInService}')
                     volumen = OpcServices.readDataPLC(getVolumenLlenadera(llenadera.numero))
                     volumenBls = volumen / 158.9873
+                    volumenBlsTruncado = int(volumenBls * 1000) / 1000
                     volumen20 = OpcServices.readDataPLC(getVolumenCorrLlenadera(llenadera.numero))
                     volumen20Bls = volumen20 / 158.9873
+                    volumen20BlsTruncado = int(volumen20Bls * 1000) / 1000
                     masa = OpcServices.readDataPLC(getMasaCorrLlenadera(llenadera.numero))
                     masaTons = masa / 1000
                     densidad = OpcServices.readDataPLC(getDensidadLlenadera(llenadera.numero)) / 10000
@@ -656,9 +658,9 @@ async def postGetSenalesSalidas():
                             llenadera = llenadera.numero,
                             folioPLC = folioLlenadera,
                             volNatLts = volumen,
-                            volNatBls = volumenBls,
+                            volNatBls = volumenBlsTruncado,
                             volCorLts = volumen20,
-                            volCorBls = volumen20Bls,
+                            volCorBls = volumen20BlsTruncado,
                             masa = masa,
                             masaTons = masaTons,
                             densidadNat = densidad,
