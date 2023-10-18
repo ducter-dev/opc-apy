@@ -4,32 +4,39 @@ import string
 from .logs import LogsServices
 from .opc import OpcServices 
 
-async def  obtenerFecha05Reporte():
-    ahora_json = await get_clock()
-    ahora = ahora_json['fechaHora']
-    ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
-    fecha_base = datetime(ahoraDT.year, ahoraDT.month, ahoraDT.day, 5, 30, 0)
-    fecha05 = (ahoraDT - timedelta(days=1)).strftime("%Y-%m-%d") if fecha_base > ahoraDT else ahoraDT.strftime("%Y-%m-%d")
-    return fecha05
-
-
-async def obtenerFecha24Reporte(fecha_hora):
-    if fecha_hora == '':
-        ahora_json = await get_clock()
-        ahora = ahora_json['fechaHora']
-        ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
-        return ahoraDT.strftime("%Y-%m-%d")
+def obtenerFecha05Reporte(hora, fecha):
+    """ LogsServices.write('------obtenerFecha05Reporte-------')
+    LogsServices.write(f'hora: {hora}')
+    LogsServices.write(f'fecha: {fecha}') """
+    if hora <= 5: 
+        fechaAnt = obtenerDiaAnterior(fecha)
+        #LogsServices.write(f'fechaAnt: {fechaAnt}')
+        #LogsServices.write('-------------')
+        return fechaAnt
     else:
-        ahoraDT = datetime.strptime(fecha_hora, '%Y-%m-%d %H:%M:%S')
-        return ahoraDT.strftime("%Y-%m-%d")
+        #LogsServices.write(f'fecha: {fecha}')
+        #LogsServices.write('-------------')
+        return fecha
+
+def obtenerFecha24Reporte(hora, fecha):
+    #LogsServices.write('------obtenerFecha05Reporte-------')
+    if hora == 0: 
+        fechaAnt = obtenerDiaAnterior(fecha)
+        #LogsServices.write(f'fechaAnt: {fechaAnt}')
+        #LogsServices.write('-------------')
+        return fechaAnt
+    else:
+        #LogsServices.write(f'fecha: {fecha}')
+        #LogsServices.write('-------------')
+        return fecha
 
 def obtenerTurno05(hora):
     turno = 0
-    if hora >= 6 and hora <= 12: 
+    if hora >= 6 and hora <= 13: 
         turno = 1
-    elif hora >= 13 and hora <= 20:
+    elif hora >= 14 and hora <= 21:
         turno = 2
-    elif hora >= 21:
+    elif hora >= 22:
         turno = 3
     elif hora <= 5:
         turno = 3
@@ -43,7 +50,7 @@ def obtenerTurno24(hora):
         turno = 1
     elif hora >= 9 and hora <= 16:
         turno = 2
-    elif hora >= 17 and hora <= 23:
+    elif hora >= 17:
         turno = 3
     elif hora == 0:
         turno = 3
@@ -54,6 +61,12 @@ def obtenerDiaAnterior(fecha):
     fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
     fechaResult = (fechaDT - timedelta(days=1)).strftime('%Y-%m-%d')
     return fechaResult
+
+def obtenerDiaPosterior(fecha):
+    fechaDT = datetime.strptime(fecha, '%Y-%m-%d')
+    fechaResult = (fechaDT + timedelta(days=1)).strftime('%Y-%m-%d')
+    return fechaResult
+
 
 def obtenerUltimoDiaMes(any_day):
     last_day = date(any_day.year, any_day.month + 1, 1) - timedelta(days=1)
@@ -96,11 +109,11 @@ async def get_clock():
     minuteOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Mins')
     secondOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Secs')
 
-    month = convertIntToTimeString(monthOPC)
-    day = convertIntToTimeString(dayOPC)
-    hour = convertIntToTimeString(hourOPC)
-    minute = convertIntToTimeString(minuteOPC)
-    second = convertIntToTimeString(secondOPC)
+    month = convertTimeIntToString(monthOPC)
+    day = convertTimeIntToString(dayOPC)
+    hour = convertTimeIntToString(hourOPC)
+    minute = convertTimeIntToString(minuteOPC)
+    second = convertTimeIntToString(secondOPC)
 
 
     fecha_hora = f'{year}-{month}-{day} {hour}:{minute}:{second}'
@@ -109,9 +122,11 @@ async def get_clock():
     }
 
 
-def convertIntToTimeString(number):
-
+def convertTimeIntToString(number):
+    numbersStr = ''
     if number < 10:
-        return f'0{number}'
+        numbersStr = f'0{number}'
     else:
-        return f'{number}'
+        numbersStr = f'{number}'
+    
+    return numbersStr

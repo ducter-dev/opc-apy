@@ -24,11 +24,12 @@ async def register_bomba():
         ahora_json = await get_clock()
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
+        dateStr = ahoraDT.strftime("%Y-%m-%d")
         hora = ahoraDT.strftime("%H")
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
-        turno05 = obtenerTurno05(int(hora))
-        turno24 = obtenerTurno24(int(hora))
+        fecha05 = obtenerFecha05Reporte(ahoraDT.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(ahoraDT.hour, dateStr)
+        turno05 = obtenerTurno05(ahoraDT.hour)
+        turno24 = obtenerTurno24(ahoraDT.hour)
 
         BA_301A_STATUS = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Bombas.BA_301A_STATUS')
         BA_301A_MODE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Bombas.BA_301A_MODE')
@@ -40,20 +41,20 @@ async def register_bomba():
         BA_301C_MODE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Bombas.BA_301C_MODE')
         BA_301C_TIME = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Bombas.BA_301C_TIME')
 
-        minOper1 = (BA_301A_TIME / 10000) * 60
-        totTiempoOper1 = f"{BA_301A_MODE}:0{int(minOper1)}" if int(minOper1) < 10 else f"{BA_301A_MODE}:{int(minOper1)}"
+        minOper1 = round((BA_301A_TIME / 10000) * 60)
+        totTiempoOper1 = f"{BA_301A_MODE}:0{round(minOper1)}" if round(minOper1) < 10 else f"{BA_301A_MODE}:{round(minOper1)}"
         print(f'BA_301A_MODE: {BA_301A_MODE}')
         print(f"minOper1 {minOper1}")
         print(f'totTiempoOper1: {totTiempoOper1}')
 
-        minOper2 = (BA_301B_TIME / 10000) * 60
-        totTiempoOper2 = f"{BA_301B_MODE}:0{int(minOper2)}" if int(minOper2) < 10 else f"{BA_301B_MODE}:{int(minOper2)}"
+        minOper2 = round((BA_301B_TIME / 10000) * 60)
+        totTiempoOper2 = f"{BA_301B_MODE}:0{round(minOper2)}" if round(minOper2) < 10 else f"{BA_301B_MODE}:{round(minOper2)}"
         print(f'BA_301B_MODE: {BA_301B_MODE}')
         print(f"minOper2 {minOper2}")
         print(f'totTiempoOper2: {totTiempoOper2}')
 
-        minOper3 = (BA_301C_TIME / 10000) * 60
-        totTiempoOper3 = f"{BA_301C_MODE}:0{int(minOper3)}" if int(minOper3) < 10 else f"{BA_301C_MODE}:{int(minOper3)}"
+        minOper3 = round((BA_301C_TIME / 10000) * 60)
+        totTiempoOper3 = f"{BA_301C_MODE}:0{round(minOper3)}" if round(minOper3) < 10 else f"{BA_301C_MODE}:{round(minOper3)}"
         print(f'BA_301C_MODE: {BA_301C_MODE}')
         print(f"minOper3: {minOper3}")
         print(f'totTiempoOper3: {totTiempoOper3}')

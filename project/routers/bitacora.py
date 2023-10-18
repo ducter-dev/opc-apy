@@ -16,8 +16,9 @@ async def create_bitacora(bitacora: BitacoraRequestModel, request: Request):
     try:
         now = datetime.now()
         ahora = now.strftime("%Y-%m-%d %H:%M:%S")
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
+        dateStr = now.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(now.hour, dateStr)
         host = request.client.host
 
         bitacora = Bitacora.create(

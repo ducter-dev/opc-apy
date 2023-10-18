@@ -8,7 +8,7 @@ from ..database import BombaReporte, Bomba, PatinData, TankInTrucks, Esfera, Bal
 import peewee
 from peewee import *
 from peewee import fn
-from ..funciones import obtenerDiaAnterior, obtenerUltimoDiaMes, obtenerUltimoDiaMesOrAhora
+from ..funciones import obtenerDiaAnterior, obtenerUltimoDiaMes, obtenerUltimoDiaMesOrAhora, obtenerDiaPosterior
 from ..logs import LogsServices
 
 import os
@@ -517,7 +517,7 @@ async def get_balance_diario_report(fecha: str, tipo: int):
         # 1. Obtener los registro iniciales de las 0, 8, y 16
         # 2. Obtener los registro finales de las 8, 16 y 24 hrs
         fechaAnt = obtenerDiaAnterior(fecha)
-        
+    
         strTurno1 = '00-08' if tipo == 24 else '05-13'
         strTurno2 = '08-16' if tipo == 24 else '13-21'
         strTurno3 = '16-24' if tipo == 24 else '21-05'
@@ -616,7 +616,7 @@ async def get_balance_diario_report(fecha: str, tipo: int):
 
                 for j in esferas:
                     if turno == 1:
-                        dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fechaAnt, Esfera.turno05 == 3, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte05 == fechaAnt, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
                         dictTurno['turno'] = strTurnos[turno - 1]
 
                         if dataEsferaInicio is None:
@@ -786,7 +786,7 @@ async def get_balance_diario_report(fecha: str, tipo: int):
 
                 for j in esferas:
                     if turno == 1:
-                        dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fechaAnt, Esfera.turno24 == 3, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
+                        dataEsferaInicio = Esfera.select().where(Esfera.reporte24 == fechaAnt, Esfera.esfera == j).order_by(Esfera.id.desc()).first()
                         dictTurno['turno'] = strTurnos[turno - 1]
 
                         if dataEsferaInicio is None:

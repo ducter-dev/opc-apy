@@ -358,9 +358,11 @@ async def post_asignarLlenadera(request: LlenaderaAsignarRequestModel):
 
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
         now = datetime.now()
-        fecha05 = await obtenerFecha05Reporte()
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y-%m-%d")
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+        dateStr = now.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
 
         #   Agregar la tanque a última asignación 
         ultimaAsignacion = TankAssign.select().where(TankAssign.id == 1).first()
@@ -471,7 +473,7 @@ async def post_reasignarAsignacion():
             return JSONResponse(
                 status_code=404,
                 content={
-                  "estado": False,
+                    "estado": False,
                     "message": "OPC servidor no disponible."
                 }
             )
@@ -633,8 +635,8 @@ async def postGetSenalesSalidas():
                             fechaEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
                             fechaInicio = datetime(anioInicio, mesInicio, diaInicio, horaInicio, minutoInicio, 0)
                             fechaInicioStr = fechaInicio.strftime('%Y-%m-%d %H:%M:%S')
-                            report05 = await obtenerFecha05Reporte()
-                            report24 = await obtenerFecha24Reporte(fechaInicioStr)
+                            report05 = obtenerFecha05Reporte(int(horaFin), fecha)
+                            report24 = obtenerFecha24Reporte(int(horaFin), fecha)
                             producto = 'Propano'
                             productDescripcion = 'Gas L.P.'
                             atID = tanqueToExit.atId
@@ -676,8 +678,8 @@ async def postGetSenalesSalidas():
                             reporte24 =  report24,
                             reporte05 =  report05,
                             tipoCarga = tipoCarga,
-                            turno05 = obtenerTurno05(horaFin),
-                            turno24 = obtenerTurno24(horaFin)
+                            turno05 = obtenerTurno05(int(horaFin) + 1),
+                            turno24 = obtenerTurno24(int(horaFin) + 1)
                         )
                         if registerInService == True:
                             tanqueToExit.delete_instance()

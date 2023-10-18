@@ -19,17 +19,15 @@ async def register_patin():
         LogsServices.write('----- Iniicando registro de patines ------')
         #   Primero obtenemos los valores de las variables
         ahora_json = await get_clock()
-        print(f'ahora_json: {ahora_json}')
         ahora = ahora_json['fechaHora']
-        print(f'ahora: {ahora}')
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
-        print(f'hora: {hora}')
+        dateStr = ahoraDT.strftime("%Y-%m-%d")
 
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
-        turno05 = obtenerTurno05(int(hora))
-        turno24 = obtenerTurno24(int(hora))
+        fecha05 = obtenerFecha05Reporte(ahoraDT.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(ahoraDT.hour, dateStr)
+        turno05 = obtenerTurno05(ahoraDT.hour)
+        turno24 = obtenerTurno24(ahoraDT.hour)
 
         DI_401A_NAT_PROM = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.DI-401A_NAT_PROM')
         DI_401A_COR_PROM = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Patines.DI-401A_COR_PROM')
@@ -250,7 +248,7 @@ async def register_patin():
         )
 
         hours_in_db = Horas.select().where(Horas.id == 2).first()
-        hours_in_db.hora = int(hora)
+        hours_in_db.hora = ahoraDT.hour
         hours_in_db.save()
 
         bitacora = Bitacora.create(

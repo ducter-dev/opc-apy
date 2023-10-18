@@ -16,7 +16,9 @@ router = APIRouter(prefix='/api/v1/esferas', route_class=VerifyTokenRoute)
 @router.post('')
 async def register_esfera():
     try:
-    #   Primero obtenemos los valores de las variables
+        
+        LogsServices.write('-------- Registrando Esferas --------')
+        #   Primero obtenemos los valores de las variables
         PRES_PI_301A = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.PRES_PI_301A')
         TEMP_TI_301A = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.TEMP_TI_301A')
         DENS_DI_NAT_301A = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.DENS_DI_NAT_301A')
@@ -33,7 +35,6 @@ async def register_esfera():
         MASA_NETA_301A_DEC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.MASA_NETA_301A_DEC')
         MASA_DISP_301A_ENT = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.MASA_DISP_301A_ENT')
         MASA_DISP_301A_DEC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Esferas.MASA_DISP_301A_DEC')
-        print(PRES_PI_301A)
         """
         PRES_PI_301A = 813
         TEMP_TI_301A = 2108
@@ -87,15 +88,21 @@ async def register_esfera():
         MASA_DISP_301B_ENT = 410
         """
 
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
         ahora_json = await get_clock()
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
-        turno05 = obtenerTurno05(int(hora))
-        turno24 = obtenerTurno24(int(hora))
-    
+        dateStr = ahoraDT.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte(ahoraDT.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(ahoraDT.hour, dateStr)
+        turno05 = obtenerTurno05(ahoraDT.hour)
+        turno24 = obtenerTurno24(ahoraDT.hour)
+        
+        """ LogsServices.write(f'fecha05: {fecha05}')
+        LogsServices.write(f'fecha24: {fecha24}')
+        LogsServices.write(f'turno05: {turno05}')
+        LogsServices.write(f'turno24: {turno24}') """
+
         esferaRegister1 = Esfera.create(
             hora = f"{hora}:00",
             presion = PRES_PI_301A / 100,
@@ -141,7 +148,7 @@ async def register_esfera():
         )
 
         hours_in_db = Horas.select().where(Horas.id == 1).first()
-        hours_in_db.hora = int(hora)
+        hours_in_db.hora = ahoraDT.hour
         hours_in_db.save()
         
         return JSONResponse(

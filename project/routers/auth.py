@@ -43,6 +43,7 @@ async def login(credentials: HTTPBasicCredentials):
     
     now = datetime.now()
     ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+    dateStr = now.strftime("%Y-%m-%d")
     #   Ver si hay bloqueos
 
     bloqueo = Bloqueado.select().where(Bloqueado.user == user.id).order_by(Bloqueado.id.desc()).first()
@@ -79,8 +80,8 @@ async def login(credentials: HTTPBasicCredentials):
         "verificado": user.verificado.strftime("%Y-%m-%d %H:%M:%S")
     }
 
-    fecha05 = await obtenerFecha05Reporte()
-    fecha24 = await obtenerFecha24Reporte('')
+    fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
+    fecha24 = obtenerFecha24Reporte(now.hour, dateStr)
 
     Bitacora.create(
         user = user.id,
@@ -131,9 +132,12 @@ async def create_user(user_req: UserRequestModel):
         )
         
         enviar_email = EmailServices.enviar_correo_activacion(user, password_random)
-
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
+        now = datetime.now()
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+        dateStr = now.strftime("%Y-%m-%d")
+        
+        fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(now.hour, dateStr)
 
         Bitacora.create(
             user = 1,

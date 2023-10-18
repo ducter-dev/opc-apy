@@ -176,10 +176,12 @@ async def create_tanque_entrada_manual(tank_request: TanksEntryRequestModel):
         
         now = datetime.now()
         #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
         fechaEntrada = now.strftime("%Y-%m-%d")
         horaEntrada = now.strftime("%H:%M:%S")
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+        dateStr = now.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(now.hour, dateStr)
         
         TanksEntry.create(
             posicion = tank_request.posicion,
@@ -254,12 +256,12 @@ async def create_tanque_entrada_radiofrecuencia():
                 
                 now = datetime.now()
                 fechaHoraEntrada = now.strftime("%Y-%m-%d %H:%M:%S")
+                fecha = now.strftime("%Y-%m-%d")
                 #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-                fecha05 = await obtenerFecha05Reporte()
-                fecha24 = await obtenerFecha24Reporte('')
+                fecha05 = obtenerFecha05Reporte(now.hour, fecha)
+                fecha24 = obtenerFecha24Reporte(now.hour, fecha)
                 fechaEntrada = now.strftime("%Y-%m-%d")
                 horaEntrada = now.strftime("%H:%M:%S")
-                fechaE = f"{fechaEntrada} {horaEntrada}:00"
                 waitingListCount = TankWaiting.select().where(TankWaiting.reporte05 == fecha05)
                 
                 if tankBD is None:
@@ -280,7 +282,7 @@ async def create_tanque_entrada_radiofrecuencia():
                     tank_lastEntry.capacidad = tankBD.capacidad90
                     tank_lastEntry.conector = tankBD.conector
                     tank_lastEntry.tipoEntrada = 2
-                    tank_lastEntry.fechaEntrada = fechaE
+                    tank_lastEntry.fechaEntrada = fechaHoraEntrada
                     tank_lastEntry.posicion = len(waitingListCount) + 1
                     tank_lastEntry.statusSol = 2
                     tank_lastEntry.save()
@@ -389,12 +391,14 @@ async def create_tanque_espera(tank_request: TanksEntryRequestModel):
         #OpcServices.writeOPC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.RFMAN_VOLAUTOR',tank.capacidad)
 
         now = datetime.now()
-        
-        #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
         horaEntrada = now.strftime("%H:%M:%S")
         fechaEntrada = now.strftime("%Y-%m-%d")
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+        dateStr = now.strftime("%Y-%m-%d")
+        
+        #   Se valida la hora con respecto a la hora base para determinar la fecha de jornada, si fecha base es mayor a la hora actual se resta 1 día.
+        fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(now.hour, dateStr)
 
         tankWaiting = TankWaiting.create(
             posicion = tank_request.posicion,

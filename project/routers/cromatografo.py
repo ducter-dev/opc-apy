@@ -49,37 +49,38 @@ async def register_cromatografo():
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
-        turno05 = obtenerTurno05(int(hora))
-        turno24 = obtenerTurno24(int(hora))
+        dateStr = ahoraDT.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte(ahoraDT.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(ahoraDT.hour, dateStr)
+        turno05 = obtenerTurno05(ahoraDT.hour)
+        turno24 = obtenerTurno24(ahoraDT.hour)
 
         c6_IRGE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.C6_IRGE')
-        LogsServices.write(f'C6_IRGE: {c6_IRGE}')
         pROPANO_IRGE = OpcServices.readDataPLC(PROPANO_IRGE)
-        LogsServices.write(f'PROPANO_IRGE: {pROPANO_IRGE}')
         pROPILENO_IRGE = OpcServices.readDataPLC(PROPILENO_IRGE)
-        LogsServices.write(f'PROPILENO_IRGE: {pROPILENO_IRGE}')
         iBUTANO_IRGE = OpcServices.readDataPLC(IBUTANO_IRGE)
-        LogsServices.write(f'IBUTANO_IRGE: {iBUTANO_IRGE}')
         nBUTANO_IRGE = OpcServices.readDataPLC(NBUTANO_IRGE)
-        LogsServices.write(f'NBUTANO_IRGE: {nBUTANO_IRGE}')
         c4_IRGE = OpcServices.readDataPLC(C4_IRGE)
-        LogsServices.write(f'C4_IRGE: {c4_IRGE}')
         iPENTANO_IRGE = OpcServices.readDataPLC(IPENTANO_IRGE)
-        LogsServices.write(f'IPENTANO_IRGE: {iPENTANO_IRGE}')
         nPENTANO_IRGE = OpcServices.readDataPLC(NPENTANO_IRGE)
-        LogsServices.write(f'NPENTANO_IRGE: {nPENTANO_IRGE}')
         mETANO_IRGE = OpcServices.readDataPLC(METANO_IRGE)
-        LogsServices.write(f'METANO_IRGE: {mETANO_IRGE}')
         eTILENO_IRGE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.ETILENO_IRGE')
-        LogsServices.write(f'ETILENO_IRGE: {eTILENO_IRGE}')
         eTANO_IRGE = OpcServices.readDataPLC(ETANO_IRGE)
-        LogsServices.write(f'ETANO_IRGE: {eTANO_IRGE}')
         oLEFINAS_IRGE = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Reportes.Cromatografia.OLEFINAS_IRGE')
-        LogsServices.write(f'OLEFINAS_IRGE: {oLEFINAS_IRGE}')
         dENSIDAD_IRGE = OpcServices.readDataPLC(DENSIDAD_IRGE)
-        LogsServices.write(f'DENSIDAD_IRGE: {dENSIDAD_IRGE}')
+        """ LogsServices.write(f'C6_IRGE: {c6_IRGE}')
+        LogsServices.write(f'PROPANO_IRGE: {pROPANO_IRGE}')
+        LogsServices.write(f'PROPILENO_IRGE: {pROPILENO_IRGE}')
+        LogsServices.write(f'IBUTANO_IRGE: {iBUTANO_IRGE}')
+        LogsServices.write(f'NBUTANO_IRGE: {nBUTANO_IRGE}')
+        LogsServices.write(f'C4_IRGE: {c4_IRGE}')
+        LogsServices.write(f'IPENTANO_IRGE: {iPENTANO_IRGE}')
+        LogsServices.write(f'NPENTANO_IRGE: {nPENTANO_IRGE}')
+        LogsServices.write(f'METANO_IRGE: {mETANO_IRGE}')
+        LogsServices.write(f'ETILENO_IRGE: {eTILENO_IRGE}')
+        LogsServices.write(f'ETANO_IRGE: {eTANO_IRGE}')
+        LogsServices.write(f'OLEFINAS_IRGE: {oLEFINAS_IRGE}')
+        LogsServices.write(f'DENSIDAD_IRGE: {dENSIDAD_IRGE}') """
 
 
         cromatografo1 = Cromatografo.create(
@@ -214,7 +215,7 @@ async def register_cromatografo():
         )
 
         hours_in_db = Horas.select().where(Horas.id == 3).first()
-        hours_in_db.hora = int(hora)
+        hours_in_db.hora = ahoraDT.hour
         hours_in_db.save()
         
         bitacora = Bitacora.create(
@@ -246,8 +247,9 @@ async def register_densidad():
         ahora = ahora_json['fechaHora']
         ahoraDT = datetime.strptime(ahora, '%Y-%m-%d %H:%M:%S')
         hora = ahoraDT.strftime("%H")
-        fecha05 = await obtenerFecha05Reporte()
-        fecha24 = await obtenerFecha24Reporte('')
+        dateStr = ahoraDT.strftime("%Y-%m-%d")
+        fecha05 = obtenerFecha05Reporte(ahoraDT.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(ahoraDT.hour, dateStr)
         # leer variables 
         preSupEsf1 = OpcServices.readDataPLC(TE_301A_REGISTRO_SPARE_3) / 100
         preSupEsf2 = OpcServices.readDataPLC(TE_301B_REGISTRO_SPARE_3) / 100
@@ -257,14 +259,14 @@ async def register_densidad():
         densNatEsf2 = OpcServices.readDataPLC(DENS_DI_NAT_301B) / 10000
         densitometro = OpcServices.readDataPLC(PODER_CALOR) / 10000
         cromatografo = OpcServices.readDataPLC(DENSIDAD_IRGE) / 10000
-        LogsServices.write(f'preSupEsf1: {preSupEsf1}')
+        """ LogsServices.write(f'preSupEsf1: {preSupEsf1}')
         LogsServices.write(f'preSupEsf2: {preSupEsf2}')
         LogsServices.write(f'preInfEsf1: {preInfEsf1}')
         LogsServices.write(f'preInfEsf2: {preInfEsf2}')
         LogsServices.write(f'densNatEsf1: {densNatEsf1}')
         LogsServices.write(f'densNatEsf2: {densNatEsf2}')
         LogsServices.write(f'densitometro: {densitometro}')
-        LogsServices.write(f'cromatografo: {cromatografo}')
+        LogsServices.write(f'cromatografo: {cromatografo}') """
         
         # datos para analisis
         eTANO_IRGE = OpcServices.readDataPLC(ETANO_IRGE)
@@ -276,7 +278,7 @@ async def register_densidad():
         nPENTANO_IRGE = OpcServices.readDataPLC(NPENTANO_IRGE)
         pROPILENO_IRGE = OpcServices.readDataPLC(PROPILENO_IRGE)
         c4_IRGE = OpcServices.readDataPLC(C4_IRGE)
-        LogsServices.write(f'eTANO_IRGE: {eTANO_IRGE}')
+        """ LogsServices.write(f'eTANO_IRGE: {eTANO_IRGE}')
         LogsServices.write(f'mETANO_IRGE: {mETANO_IRGE}')
         LogsServices.write(f'pROPANO_IRGE: {pROPANO_IRGE}')
         LogsServices.write(f'iBUTANO_IRGE: {iBUTANO_IRGE}')
@@ -284,7 +286,7 @@ async def register_densidad():
         LogsServices.write(f'iPENTANO_IRGE: {iPENTANO_IRGE}')
         LogsServices.write(f'nPENTANO_IRGE: {nPENTANO_IRGE}')
         LogsServices.write(f'pROPILENO_IRGE: {pROPILENO_IRGE}')
-        LogsServices.write(f'c4_IRGE: {c4_IRGE}')
+        LogsServices.write(f'c4_IRGE: {c4_IRGE}') """
         
 
         analisisCrom = (eTANO_IRGE / 10000) * DENS_ETANO_60
@@ -326,7 +328,7 @@ async def register_densidad():
 
         
         hours_in_db = Horas.select().where(Horas.id == 5).first()
-        hours_in_db.hora = int(hora)
+        hours_in_db.hora = ahoraDT.hour
         hours_in_db.save()
 
         return JSONResponse(
