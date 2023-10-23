@@ -308,7 +308,7 @@ async def create_tanque_entrada_radiofrecuencia():
                     return entryInserted
         else:
             return JSONResponse(
-                status_code=501,
+                status_code=201,
                 content={"message": 'No exite tanque para registar.'}
             )
     except Exception as e:
