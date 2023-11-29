@@ -20,83 +20,88 @@ templates = Jinja2Templates(directory="templates")
 
 @router.post('/login')
 async def login(credentials: HTTPBasicCredentials):
-
-    user = User.select().where(User.username == credentials.username).first()
-    if user is None:
-        return JSONResponse(
-            status_code=419,
-            content={"message": "Las credenciales no coinciden con nuestros registros."}
-        )
-    
-    user_valid = User.validate_password(credentials.password, user.password)
-    if user_valid is False:
-        return JSONResponse(
-            status_code=419,
-            content={"message": "Las credenciales no coinciden con nuestros registros."}
-        )
-    
-    if user.verificado is None:
-        return JSONResponse(
-            status_code=420,
-            content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
-        )
-    
-    now = datetime.now()
-    ahora = now.strftime("%Y-%m-%d %H:%M:%S")
-    dateStr = now.strftime("%Y-%m-%d")
-    #   Ver si hay bloqueos
-
-    bloqueo = Bloqueado.select().where(Bloqueado.user == user.id).order_by(Bloqueado.id.desc()).first()
-
-    if bloqueo is not None:
-        if now <= bloqueo.fechaDesbloqueo:
+    try:
+        user = User.select().where(User.username == credentials.username).first()
+        if user is None:
             return JSONResponse(
-                status_code=423,
-                content={"message": f'Usuario {user.username} permanece aún bloquedo hasta {bloqueo.fechaDesbloqueo.strftime("%Y-%m-%d %H:%M:%S")}.'}
-            )    
-    
-    #   Ver si el password es caduco
+                status_code=419,
+                content={"message": "Las credenciales no coinciden con nuestros registros."}
+            )
+        
+        user_valid = User.validate_password(credentials.password, user.password)
+        if user_valid is False:
+            return JSONResponse(
+                status_code=419,
+                content={"message": "Las credenciales no coinciden con nuestros registros."}
+            )
+        
+        if user.verificado is None:
+            return JSONResponse(
+                status_code=420,
+                content={"message": "El usuario no se ha verificado, debe verificar su cuenta primero."}
+            )
+        
+        now = datetime.now()
+        ahora = now.strftime("%Y-%m-%d %H:%M:%S")
+        dateStr = now.strftime("%Y-%m-%d")
+        #   Ver si hay bloqueos
 
-    password_actual = Caducidad.select().where((Caducidad.user == user.id) & (Caducidad.estado == 1)).first()
+        bloqueo = Bloqueado.select().where(Bloqueado.user == user.id).order_by(Bloqueado.id.desc()).first()
 
-    if password_actual is None:
-        return JSONResponse(
-            status_code=421,
-            content={"message": "Error en la caducidad de credenciales."}
+        if bloqueo is not None:
+            if now <= bloqueo.fechaDesbloqueo:
+                return JSONResponse(
+                    status_code=423,
+                    content={"message": f'Usuario {user.username} permanece aún bloquedo hasta {bloqueo.fechaDesbloqueo.strftime("%Y-%m-%d %H:%M:%S")}.'}
+                )    
+        
+        #   Ver si el password es caduco
+
+        password_actual = Caducidad.select().where((Caducidad.user == user.id) & (Caducidad.estado == 1)).first()
+
+        if password_actual is None:
+            return JSONResponse(
+                status_code=421,
+                content={"message": "Error en la caducidad de credenciales."}
+            )
+        
+        if password_actual.caducidad <= now:
+            return JSONResponse(
+                status_code=422,
+                content={"message": "Las credenciales han cadudado. Debe renovar sus credenciales.", "data": user.id}
+            )
+
+        
+        user_dict = {
+            "id": user.id,
+            "username": user.username,
+            "categoria": user.categoria,
+            "departamento": user.departamento,
+            "verificado": user.verificado.strftime("%Y-%m-%d %H:%M:%S")
+        }
+
+        fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
+        fecha24 = obtenerFecha24Reporte(now.hour, dateStr)
+
+        Bitacora.create(
+            user = user.id,
+            evento = 1,
+            actividad = f"El usuario {user.username} ha iniciado sesión.",
+            fecha = ahora,
+            reporte24 = fecha24,
+            reporte05 = fecha05
         )
-    
-    if password_actual.caducidad <= now:
+        
+        data_dic = {
+            "user": user_dict,
+            "token": write_token(user_dict)
+        }
+        return data_dic
+    except Exception as e:
         return JSONResponse(
-            status_code=422,
-            content={"message": "Las credenciales han cadudado. Debe renovar sus credenciales.", "data": user.id}
+            status_code=501,
+            content={"message": e}
         )
-
-    
-    user_dict = {
-        "id": user.id,
-        "username": user.username,
-        "categoria": user.categoria,
-        "departamento": user.departamento,
-        "verificado": user.verificado.strftime("%Y-%m-%d %H:%M:%S")
-    }
-
-    fecha05 = obtenerFecha05Reporte(now.hour, dateStr)
-    fecha24 = obtenerFecha24Reporte(now.hour, dateStr)
-
-    Bitacora.create(
-        user = user.id,
-        evento = 1,
-        actividad = f"El usuario {user.username} ha iniciado sesión.",
-        fecha = ahora,
-        reporte24 = fecha24,
-        reporte05 = fecha05
-    )
-    
-    data_dic = {
-        "user": user_dict,
-        "token": write_token(user_dict)
-    }
-    return data_dic
 
 #@router.post('/register', response_model=UserResponseModel)
 @router.post('/register', response_model=UserResponseModel)
@@ -254,23 +259,28 @@ async def verify_token(Authorization: str = Header(None)):
 
 @router.post('/bloqueados', response_model=BloqueadosResponseModel)
 async def insert_bloqueados(request: BloqueadosRequestModel):
-    userBlock = User.select().where(User.username == request.user).first()
-    if userBlock is None:
-        return JSONResponse(
-            status_code=200,
-            content={"message": 'Usuario no encontrado.'}
+    try:
+        userBlock = User.select().where(User.username == request.user).first()
+        if userBlock is None:
+            return JSONResponse(
+                status_code=200,
+                content={"message": 'Usuario no encontrado.'}
+            )
+        now = datetime.now()
+        ahora = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
+        fechaBloqueo = ahora
+        fechaDesbloqueo = datetime.strptime(fechaBloqueo, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=15)
+        bloqueado = Bloqueado.create(
+            user = userBlock.id,
+            fechaBloqueo = fechaBloqueo,
+            fechaDesbloqueo = fechaDesbloqueo.strftime('%Y-%m-%d %H:%M:%S'),
         )
-    now = datetime.now()
-    ahora = datetime.strftime(now, '%Y-%m-%d %H:%M:%S')
-    fechaBloqueo = ahora
-    fechaDesbloqueo = datetime.strptime(fechaBloqueo, '%Y-%m-%d %H:%M:%S') + timedelta(minutes=15)
-    bloqueado = Bloqueado.create(
-        user = userBlock.id,
-        fechaBloqueo = fechaBloqueo,
-        fechaDesbloqueo = fechaDesbloqueo.strftime('%Y-%m-%d %H:%M:%S'),
-    )
-    return bloqueado
-
+        return bloqueado
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={"message": e}
+        )
 
 @router.post('/bloqueados/user')
 async def status_bloqueados(request: BloqueadosUserRequestModel):

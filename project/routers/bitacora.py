@@ -46,32 +46,44 @@ async def get_bitacora(fecha: str):
 
 @router.put('/{bitacora_id}', response_model=BitacoraResponseModel)
 async def edit_bitacora(bitacora_id: int, bitacora_request: BitacoraRequestModel):
-    bitacora = Bitacora.select().where(Bitacora.id == bitacora_id).first()
-    if bitacora is None:
+    try:
+        bitacora = Bitacora.select().where(Bitacora.id == bitacora_id).first()
+        if bitacora is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Registro de bitacora no encontrado"}
+            )
+        bitacora.usuario = bitacora_request.usuario
+        bitacora.actividad = bitacora_request.actividad
+        bitacora.ubicacion = bitacora_request.ubicacion
+        bitacora.fecha = bitacora_request.fecha
+        bitacora.reporte24 = bitacora_request.reporte24
+        bitacora.reporte05 = bitacora_request.reporte05
+        bitacora.save()
+        
+        return bitacora
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={"message": "Registro de bitacora no encontrado"}
-        )
-    bitacora.usuario = bitacora_request.usuario
-    bitacora.actividad = bitacora_request.actividad
-    bitacora.ubicacion = bitacora_request.ubicacion
-    bitacora.fecha = bitacora_request.fecha
-    bitacora.reporte24 = bitacora_request.reporte24
-    bitacora.reporte05 = bitacora_request.reporte05
-    bitacora.save()
-    
-    return bitacora
+        status_code=501,
+        content={"message": e}
+    )
 
 
 @router.delete('/{bitacora_id}', response_model=BitacoraResponseModel)
 async def delete_bitacora(bitacora_id: int):
-    bitacora = Bitacora.select().where(Bitacora.id == bitacora_id).first()
-    if bitacora is None:
+    try:
+        bitacora = Bitacora.select().where(Bitacora.id == bitacora_id).first()
+        if bitacora is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Registro en bitacora no encontrado"}
+            )
+
+        bitacora.delete_instance()
+
+        return bitacora
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={"message": "Registro en bitacora no encontrado"}
-        )
-
-    bitacora.delete_instance()
-
-    return bitacora
+        status_code=501,
+        content={"message": e}
+    )

@@ -50,33 +50,44 @@ async def get_llenaderas():
 
 @router.put('/{llenadera_id}', response_model=LlenaderaResponseModel)
 async def edit_llenadera(llenadera_id: int, llenadera_request: LlenaderaRequestModel):
-    llenadera = Llenadera.select().where(Llenadera.id == llenadera_id).first()
-    if llenadera is None:
+    try:
+        llenadera = Llenadera.select().where(Llenadera.id == llenadera_id).first()
+        if llenadera is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Llenadera no encontrada"}
+            )
+
+        llenadera.numero = llenadera_request.numero
+        llenadera.conector = llenadera_request.conector
+        llenadera.tipo = llenadera_request.tipo
+        llenadera.save()
+        
+        return llenadera
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={"message": "Llenadera no encontrada"}
-        )
-
-    llenadera.numero = llenadera_request.numero
-    llenadera.conector = llenadera_request.conector
-    llenadera.tipo = llenadera_request.tipo
-    llenadera.save()
-    
-    return llenadera
-
+        status_code=401,
+        content={"message": e}
+    )
 
 @router.delete('/{llenadera_id}', response_model=LlenaderaResponseModel)
 async def delete_llenadera(llenadera_id: int):
-    llenadera = Llenadera.select().where(Llenadera.id == llenadera_id).first()
-    if llenadera is None:
+    try:
+        llenadera = Llenadera.select().where(Llenadera.id == llenadera_id).first()
+        if llenadera is None:
+            return JSONResponse(
+                status_code=404,
+                content={"message": "Llenadera no encontrada"}
+            )
+
+        llenadera.delete_instance()
+
+        return llenadera
+    except Exception as e:
         return JSONResponse(
-            status_code=404,
-            content={"message": "Llenadera no encontrada"}
-        )
-
-    llenadera.delete_instance()
-
-    return llenadera
+        status_code=401,
+        content={"message": e}
+    )
     
 
 # ------------ Estado Llenaderas ------------
@@ -94,7 +105,7 @@ async def post_changeEstado(request: EstadoLlenaderaRequesteModel):
         )
     except Exception as e:
         return JSONResponse(
-        status_code=501,
+        status_code=401,
         content={"message": str(e)}
     )
 
@@ -157,9 +168,17 @@ async def post_aceptarAsignaciones():
 
 @router.post('/asignacion/verificar')
 async def post_aceptarAsignaciones():
-    LogsServices.setNameFile()
-    OpcServices.writeOPC(path_statusVerificado, 0)
-
+    try:
+        LogsServices.setNameFile()
+        OpcServices.writeOPC(path_statusVerificado, 0)
+    except Exception as e:
+        return JSONResponse(
+            status_code=501,
+            content={
+                "estado": False,
+                "message": str(e)
+            }
+        )
 
 
 # -> asignar

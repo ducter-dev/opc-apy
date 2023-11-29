@@ -102,25 +102,27 @@ def obtenerFechaCaducidad(fecha):
 
 
 async def get_clock():
-    year = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Year')
-    monthOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Month')
-    dayOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Day')
-    hourOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Hours')
-    minuteOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Mins')
-    secondOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Secs')
+    try:
+        year = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Year')
+        monthOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Month')
+        dayOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Day')
+        hourOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Hours')
+        minuteOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Mins')
+        secondOPC = OpcServices.readDataPLC('GE_ETHERNET.PLC_SCA_TULA.Applications.Radiofrecuencia.EntryExit.uDCS_Secs')
 
-    month = convertTimeIntToString(monthOPC)
-    day = convertTimeIntToString(dayOPC)
-    hour = convertTimeIntToString(hourOPC)
-    minute = convertTimeIntToString(minuteOPC)
-    second = convertTimeIntToString(secondOPC)
+        month = convertTimeIntToString(monthOPC)
+        day = convertTimeIntToString(dayOPC)
+        hour = convertTimeIntToString(hourOPC)
+        minute = convertTimeIntToString(minuteOPC)
+        second = convertTimeIntToString(secondOPC)
 
 
-    fecha_hora = f'{year}-{month}-{day} {hour}:{minute}:{second}'
-    return {
-        'fechaHora': fecha_hora
-    }
-
+        fecha_hora = f'{year}-{month}-{day} {hour}:{minute}:{second}'
+        return {
+            'fechaHora': fecha_hora
+        }
+    except Exception as e:
+        LogsServices.write(f'error: {e}')
 
 def convertTimeIntToString(number):
     numbersStr = ''
