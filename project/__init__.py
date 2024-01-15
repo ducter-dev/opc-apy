@@ -144,6 +144,12 @@ def shutdown():
         connection.close()
         print('close')
 
+@app.exception_handler(Exception)
+async def exeception_handler(request, exc):
+    # Manejar la excepción aquí
+    LogsServices.setNameFile()
+    LogsServices.write(str(exc))
+    return {"error": str(exc)}
 
 
 
